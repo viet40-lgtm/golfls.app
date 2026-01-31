@@ -1,0 +1,16 @@
+{
+  "projectId": "prj_rXqoZJbNNvXncI6g8z28wxvBhoSb",
+  "orgId": "team_UadqyfzUAL2nk3nwNBeODbZF",
+  "projectName": "golfls.app",
+  "settings": {
+    "createdAt": 1764936195056,
+    "framework": "nextjs",
+    "devCommand": null,
+    "installCommand": null,
+    "buildCommand": null,
+    "outputDirectory": null,
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "24.x"
+  }
+}
