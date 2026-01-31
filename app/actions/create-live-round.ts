@@ -424,6 +424,9 @@ export async function saveLiveScore(data: {
     scorerId?: string;
 }) {
     try {
+        console.log(`SERVER ACTION: saveLiveScore - Round: ${data.liveRoundId}, Hole: ${data.holeNumber}, Scorer: ${data.scorerId}`);
+        console.log(`Scores to save: ${JSON.stringify(data.playerScores)}`);
+
         // Get the live round with course and holes
         const liveRound = await prisma.liveRound.findUnique({
             where: { id: data.liveRoundId },
@@ -502,6 +505,7 @@ export async function saveLiveScore(data: {
                     }
                 });
             }
+            console.log(`Saved score for player ${liveRoundPlayer.guestName || liveRoundPlayer.playerId}: ${ps.strokes}`);
 
             // Recalculate totals
             const allScores = await prisma.liveScore.findMany({
