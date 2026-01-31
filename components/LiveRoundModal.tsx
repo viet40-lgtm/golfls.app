@@ -107,9 +107,9 @@ export function LiveRoundModal({
     if (!isOpen) return null;
 
     const handleSave = async () => {
-        const parVal = isNaN(par) ? (existingRound?.par || 68) : par;
-        const ratingVal = isNaN(rating) ? (existingRound?.rating || 63.8) : rating;
-        const slopeVal = isNaN(slope) ? (existingRound?.slope || 100) : slope;
+        const parVal = parseInt(par.toString()) || (existingRound?.par || 68);
+        const ratingVal = parseFloat(rating.toString()) || (existingRound?.rating || 63.8);
+        const slopeVal = parseInt(slope.toString()) || (existingRound?.slope || 100);
 
         setIsSaving(true);
         try {
@@ -126,7 +126,6 @@ export function LiveRoundModal({
 
                 if (result.success) {
                     onClose();
-                    // Move to the round without scrolling
                     router.push(`/live?roundId=${existingRound.id}`, { scroll: false });
                     router.refresh();
                 } else {
@@ -140,6 +139,8 @@ export function LiveRoundModal({
                     setIsSaving(false);
                     return;
                 }
+
+                // 1. Create the Round
                 const result = await createLiveRound({
                     name: name || 'Live Round',
                     date: date || today,
@@ -152,40 +153,47 @@ export function LiveRoundModal({
 
                 if (result.success && result.liveRoundId) {
 
-                    // Auto-Add Current User as Player #1
+                    // 2. Add Current User (Best Effort)
                     if (currentUserId) {
-                        const tId = selectedTeeId || selectedCourseId && allCourses.find(c => c.id === (selectedCourseId || courseId))?.teeBoxes.find((t: any) => t.id === selectedTeeId)?.id;
-                        // Determine the effective tee ID used in State
-                        // We need to re-find it if it wasn't explicitly set in state yet (e.g. initial load)
-                        let effectiveTeeId = selectedTeeId;
-                        if (!effectiveTeeId) {
-                            const c = allCourses.find(c => c.id === (selectedCourseId || courseId));
-                            const w = c?.teeBoxes.find((t: any) => t.name.toLowerCase().includes('white'));
-                            const d = defaultTeeBoxId ? c?.teeBoxes.find((t: any) => t.id === defaultTeeBoxId) : null;
-                            effectiveTeeId = d?.id || w?.id || c?.teeBoxes[0]?.id;
-                        }
+                        try {
+                            const c = allCourses.find(c => c.id === cId);
+                            // Determine best tee: Selected -> Default Prop -> White -> First Available
+                            let targetTeeId = selectedTeeId;
 
-                        if (effectiveTeeId) {
-                            await addPlayerToLiveRound({
-                                liveRoundId: result.liveRoundId,
-                                playerId: currentUserId,
-                                teeBoxId: effectiveTeeId
-                            });
-
-                            // Add to local storage group immediately
-                            const saved = localStorage.getItem(`live_scoring_my_group_${result.liveRoundId}`);
-                            let currentIds: string[] = saved ? JSON.parse(saved) : [];
-                            if (!currentIds.includes(currentUserId)) {
-                                currentIds.push(currentUserId);
-                                localStorage.setItem(`live_scoring_my_group_${result.liveRoundId}`, JSON.stringify(currentIds));
+                            if (!targetTeeId && c) {
+                                const white = c.teeBoxes.find((t: any) => t.name.toLowerCase().includes('white'));
+                                const def = defaultTeeBoxId ? c.teeBoxes.find((t: any) => t.id === defaultTeeBoxId) : null;
+                                targetTeeId = def?.id || white?.id || c.teeBoxes[0]?.id;
                             }
+
+                            if (targetTeeId) {
+                                await addPlayerToLiveRound({
+                                    liveRoundId: result.liveRoundId,
+                                    playerId: currentUserId,
+                                    teeBoxId: targetTeeId
+                                });
+
+                                // Local storage sync
+                                const saved = localStorage.getItem(`live_scoring_my_group_${result.liveRoundId}`);
+                                let currentIds: string[] = saved ? JSON.parse(saved) : [];
+                                if (!currentIds.includes(currentUserId)) {
+                                    currentIds.push(currentUserId);
+                                    localStorage.setItem(`live_scoring_my_group_${result.liveRoundId}`, JSON.stringify(currentIds));
+                                }
+                            }
+                        } catch (addPlayerError) {
+                            console.error("Failed to auto-add player, but round was created:", addPlayerError);
+                            // We do NOT stop here, we still want to redirect to the valid round
                         }
                     }
 
                     onClose();
-                    // Move to the new round
-                    router.push(`/live?roundId=${result.liveRoundId}`, { scroll: false });
-                    router.refresh();
+                    router.replace(`/live?roundId=${result.liveRoundId}`);
+                    // Force a hard refresh to ensure state is clean
+                    setTimeout(() => {
+                        window.location.href = `/live?roundId=${result.liveRoundId}`;
+                    }, 500);
+
                 } else {
                     showAlert('Error', 'Creation Failed: ' + (result.error || 'Server Error'));
                     setIsSaving(false);
