@@ -27,7 +27,7 @@ export async function recalculateAllHandicaps() {
                 // 2. Sort Rounds Chronologically
                 // Filter out rounds with no score or no tee box
                 const validRounds = player.rounds
-                    .filter((rp: any) => (rp.grossScore || rp.adjustedGrossScore) && (rp.teeBoxId || rp.teeBox))
+                    .filter((rp: any) => rp.grossScore && (rp.teeBoxId || rp.teeBox))
                     .map((rp: any) => ({
                         id: rp.id,
                         date: rp.round.date,
