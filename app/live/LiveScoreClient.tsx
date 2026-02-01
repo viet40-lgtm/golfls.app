@@ -720,6 +720,7 @@ export default function LiveScoreClient({
 
     // State to toggle visibility of top detail sections (Round Selector & Course Info)
     const [showDetails, setShowDetails] = useState(true);
+    const [isRoundDropdownOpen, setIsRoundDropdownOpen] = useState(false);
 
 
 
@@ -1503,41 +1504,53 @@ export default function LiveScoreClient({
                         </div>
 
                         <div className="relative">
-                            <select
-                                id="round-selector"
-                                value={liveRoundId || ""}
-                                onChange={(e) => {
-                                    const newId = e.target.value;
-                                    if (newId && newId !== liveRoundId) {
-                                        window.location.href = `/live?roundId=${newId}`;
-                                    }
-                                }}
-                                className="w-full px-1 py-1 mt-1 text-[15pt] !bg-black !text-white rounded-xl font-bold outline-none appearance-none pr-8 cursor-pointer border border-black"
-                                style={{ backgroundColor: 'black', color: 'white', opacity: 1, colorScheme: 'dark' }}
+                            <button
+                                onClick={() => setIsRoundDropdownOpen(!isRoundDropdownOpen)}
+                                className="w-full px-1 py-1 mt-1 text-[15pt] bg-black text-white rounded-xl font-bold flex justify-between items-center transition-all active:scale-[0.99] border border-black"
                             >
-                                <option value="" disabled>-- Select a Round --</option>
-                                {allLiveRounds.map(round => {
-                                    const dayOfWeek = round.date ? new Date(round.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' }) : '';
-                                    const displayName = dayOfWeek ? `${dayOfWeek} - ${round.name.replace(/New Orleans/gi, '').trim()}` : round.name.replace(/New Orleans/gi, '').trim();
-                                    const isSelected = round.id === liveRoundId;
-                                    return (
-                                        <option
-                                            key={round.id}
-                                            value={round.id}
-                                            style={{
-                                                color: isSelected ? '#ffffff' : '#a1a1aa',
-                                                backgroundColor: 'black',
-                                                fontWeight: isSelected ? 'bold' : 'normal'
-                                            }}
-                                        >
-                                            {displayName}
-                                        </option>
-                                    );
-                                })}
-                            </select>
-                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-white">
-                                <span className="text-sm">▼</span>
-                            </div>
+                                <span className="truncate">
+                                    {(() => {
+                                        const r = allLiveRounds.find(r => r.id === liveRoundId);
+                                        if (!r) return "-- Select a Round --";
+                                        const dayOfWeek = r.date ? new Date(r.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' }) : '';
+                                        return dayOfWeek ? `${dayOfWeek} - ${r.name.replace(/New Orleans/gi, '').trim()}` : r.name.replace(/New Orleans/gi, '').trim();
+                                    })()}
+                                </span>
+                                <span className="text-xs ml-1">▼</span>
+                            </button>
+
+                            {isRoundDropdownOpen && (
+                                <>
+                                    <div
+                                        className="fixed inset-0 z-40 bg-transparent"
+                                        onClick={() => setIsRoundDropdownOpen(false)}
+                                    />
+                                    <div className="absolute top-full left-0 right-0 mt-0.5 bg-black text-white rounded-xl border border-zinc-800 shadow-2xl z-50 overflow-hidden py-1">
+                                        {allLiveRounds.map((round) => {
+                                            const dayOfWeek = round.date ? new Date(round.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' }) : '';
+                                            const displayName = dayOfWeek ? `${dayOfWeek} - ${round.name.replace(/New Orleans/gi, '').trim()}` : round.name.replace(/New Orleans/gi, '').trim();
+                                            const isSelected = round.id === liveRoundId;
+
+                                            return (
+                                                <button
+                                                    key={round.id}
+                                                    onClick={() => {
+                                                        setIsRoundDropdownOpen(false);
+                                                        window.location.href = `/live?roundId=${round.id}`;
+                                                    }}
+                                                    className={`w-full text-left px-2 py-2 text-[15pt] transition-colors border-b border-zinc-900 last:border-0 ${isSelected ? 'bg-zinc-800 text-white font-black' : 'text-zinc-400 hover:bg-zinc-900'
+                                                        }`}
+                                                >
+                                                    <div className="flex justify-between items-center">
+                                                        <span>{displayName}</span>
+                                                        {isSelected && <div className="w-2 h-2 rounded-full bg-green-500" />}
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}
