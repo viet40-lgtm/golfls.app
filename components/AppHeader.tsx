@@ -61,9 +61,9 @@ export default function AppHeader({ playerId }: { playerId?: string | null }) {
     return (
         <>
             <header className="sticky top-0 z-50 px-1 py-1">
-                <div className="max-w-7xl mx-auto bg-white/80 backdrop-blur-md border border-gray-100 shadow-sm rounded-none px-3 py-2 flex justify-between items-center transition-all duration-300">
+                <div className="max-w-7xl mx-auto bg-white/80 backdrop-blur-md border border-gray-100 shadow-sm rounded-none p-1 flex justify-between items-center transition-all duration-300">
                     {/* Left: Logo */}
-                    <Link href="/" className="flex items-center gap-2 group transition-all">
+                    <Link href={isAuthenticated ? '/live' : '/'} className="flex items-center gap-2 group transition-all">
                         <div className="bg-black text-white p-1.5 rounded-lg group-hover:scale-110 transition-transform">
                             <span role="img" aria-label="golf" className="text-xl">⛳</span>
                         </div>
@@ -95,7 +95,7 @@ export default function AppHeader({ playerId }: { playerId?: string | null }) {
                             <div className="relative menu-container">
                                 <button
                                     onClick={() => setIsMenuOpen(!isMenuOpen)}
-                                    className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 text-black border border-gray-100 px-4 py-2 rounded-xl text-sm font-bold transition-all active:scale-95"
+                                    className="flex items-center gap-2 bg-black text-white border border-black p-1 rounded-xl text-xs font-black transition-all active:scale-95 hover:bg-zinc-800 uppercase tracking-widest"
                                 >
                                     <Menu className="w-4 h-4" />
                                     <span>Menu</span>
@@ -104,7 +104,12 @@ export default function AppHeader({ playerId }: { playerId?: string | null }) {
                                 {isMenuOpen && (
                                     <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200">
                                         <div className="p-2 space-y-1">
-                                            <MenuLink href="/" icon={<Home className="w-4 h-4" />} label="Home" onClick={() => setIsMenuOpen(false)} />
+                                            <MenuLink
+                                                href={isAuthenticated ? "/live" : "/"}
+                                                icon={<Home className="w-4 h-4" />}
+                                                label={isAuthenticated ? "Live Round" : "Home"}
+                                                onClick={() => setIsMenuOpen(false)}
+                                            />
                                             <MenuLink href="/settings" icon={<Settings className="w-4 h-4" />} label="Settings" onClick={() => setIsMenuOpen(false)} />
                                             <div className="h-px bg-gray-50 my-2 mx-2"></div>
                                             <button

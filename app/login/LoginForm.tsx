@@ -59,7 +59,7 @@ export default function LoginForm({ initialEmail }: { initialEmail?: string }) {
     }, [initialEmail, mode])
 
     return (
-        <main className="auth-container">
+        <main className="auth-container" suppressHydrationWarning>
             <style jsx>{`
                 .auth-container {
                     min-height: 100vh;

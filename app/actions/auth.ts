@@ -5,25 +5,38 @@ import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
 
 export async function login(prevState: any, formData: FormData) {
-    const email = formData.get('email') as string
+    const input = formData.get('email') as string
     const password = formData.get('password') as string
 
-    if (!email || !password) return { error: 'Please enter both Email and Password' }
+    if (!input || !password) return { error: 'Please enter both Email/ID and Password' }
     if (password.length < 4) return { error: 'Password must be at least 4 characters' }
 
     try {
-        const player = await prisma.player.findUnique({
-            where: { email: email.toLowerCase().trim() }
+        const player = await prisma.player.findFirst({
+            where: {
+                OR: [
+                    { email: input.toLowerCase().trim() },
+                    { playerId: input.toUpperCase().trim() }
+                ]
+            }
         })
 
-        if (!player || !player.password || !(await bcrypt.compare(password, player.password))) {
-            return { error: 'Invalid Email or Password' }
+        if (!player || !player.password) {
+            return { error: 'Invalid Email, ID, or Password' }
+        }
+
+        const isMatch = await bcrypt.compare(password, player.password);
+        if (!isMatch) {
+            return { error: 'Invalid Email, ID, or Password' }
         }
 
         const cookieStore = await cookies()
         cookieStore.set('session_userId', player.id, { httpOnly: true, path: '/' })
         cookieStore.set('auth_status', 'true', { path: '/' })
-        cookieStore.set('last_email', email.toLowerCase().trim(), { path: '/', maxAge: 60 * 60 * 24 * 30 })
+        // Store the input used (if it looks like an email) or the player's primary email
+        if (player.email) {
+            cookieStore.set('last_email', player.email, { path: '/', maxAge: 60 * 60 * 24 * 30 })
+        }
 
         if (player.name) {
             cookieStore.set('player_name', player.name, { path: '/' })
@@ -31,8 +44,8 @@ export async function login(prevState: any, formData: FormData) {
 
         return { success: true }
     } catch (e) {
-        console.error('Login error:', e)
-        return { error: 'An error occurred during sign in' }
+        console.error('Login CRITICAL error:', e)
+        return { error: 'A system error occurred during sign in. Please try again.' }
     }
 }
 

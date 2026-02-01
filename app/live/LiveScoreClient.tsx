@@ -1408,18 +1408,18 @@ export default function LiveScoreClient({
         <div className="min-h-screen bg-gray-50 pb-1 text-zinc-900">
 
 
-            <main className="max-w-xl mx-auto px-1 pt-1 space-y-2">
+            <main className="max-w-xl mx-auto px-1 pt-1 space-y-1">
                 {/* Round Selector - Visibility Controlled by 'Details' toggle */}
                 {showDetails && (
-                    <div className="bg-white rounded-none p-1 border border-zinc-200 shadow-xl flex flex-col justify-center space-y-1">
+                    <div className="bg-white rounded-xl p-1 border border-zinc-200 shadow-xl flex flex-col justify-center space-y-1">
                         <div className="flex justify-between items-center">
                             <label htmlFor="round-selector" className="text-xs font-black text-zinc-400 uppercase tracking-widest ml-1">Select Round</label>
-                            <div className="flex gap-2">
+                            <div className="flex gap-1">
                                 {/* Transfer button - Admin only */}
                                 {liveRoundId && isAdmin && (
                                     <button
                                         onClick={() => setIsAddToClubModalOpen(true)}
-                                        className="bg-green-600 text-white text-[15pt] font-bold px-1 py-1 rounded-none hover:bg-green-700 transition-all shadow-md active:scale-95"
+                                        className="bg-green-600 text-white text-[15pt] font-bold px-1 py-1 rounded-xl hover:bg-green-700 transition-all shadow-md active:scale-95"
                                     >
                                         Transfer
                                     </button>
@@ -1455,7 +1455,7 @@ export default function LiveScoreClient({
                                                 }
                                             });
                                         }}
-                                        className="bg-red-600 text-white text-[15pt] font-bold px-1 py-1 rounded-none hover:bg-red-700 transition-all shadow-md active:scale-95"
+                                        className="bg-red-600 text-white text-xs font-black p-1 rounded-xl hover:bg-red-700 transition-all shadow-md active:scale-95 uppercase tracking-widest"
                                     >
                                         Delete
                                     </button>
@@ -1488,14 +1488,14 @@ export default function LiveScoreClient({
                                                 }
                                             });
                                         }}
-                                        className="bg-red-600 text-white text-[15pt] font-bold px-1 py-1 rounded-none hover:bg-red-700 transition-all shadow-md active:scale-95"
+                                        className="bg-red-600 text-white text-xs font-black p-1 rounded-xl hover:bg-red-700 transition-all shadow-md active:scale-95 uppercase tracking-widest"
                                     >
                                         Delete
                                     </button>
                                 )}
                                 <button
                                     onClick={handleCreateNewRound}
-                                    className="px-1 py-1 bg-black text-white rounded-none text-[15pt] font-bold hover:bg-gray-800 transition-colors shadow-md active:scale-95"
+                                    className="p-1 bg-black text-white rounded-xl text-xs font-black hover:bg-zinc-800 transition-all shadow-md active:scale-95 uppercase tracking-widest"
                                 >
                                     New
                                 </button>
@@ -1512,7 +1512,7 @@ export default function LiveScoreClient({
                                         window.location.href = `/live?roundId=${newId}`;
                                     }
                                 }}
-                                className="w-full px-1 py-1 mt-1 text-[15pt] !bg-black !text-white rounded-none font-bold outline-none appearance-none pr-8 cursor-pointer border border-black"
+                                className="w-full px-1 py-1 mt-1 text-[15pt] !bg-black !text-white rounded-xl font-bold outline-none appearance-none pr-8 cursor-pointer border border-black"
                                 style={{ backgroundColor: 'black', color: 'white', opacity: 1, colorScheme: 'dark' }}
                             >
                                 <option value="" disabled>-- Select a Round --</option>
@@ -1535,7 +1535,7 @@ export default function LiveScoreClient({
                                     );
                                 })}
                             </select>
-                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-white">
                                 <span className="text-sm">▼</span>
                             </div>
                         </div>
@@ -1545,16 +1545,16 @@ export default function LiveScoreClient({
 
                 {/* Course Info Card */}
                 {showDetails && (
-                    <div className="bg-white/80 backdrop-blur-xl rounded-none p-1 border border-zinc-200 shadow-xl">
+                    <div className="bg-white/80 backdrop-blur-xl rounded-xl p-1 border border-zinc-200 shadow-xl">
                         <div className="flex justify-between items-start">
                             <div className="flex-1">
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1">
                                     <h2 className="text-2xl font-black text-zinc-900 tracking-tighter italic uppercase">{(defaultCourse?.name || 'Round').replace(/New Orleans/gi, '').trim()}</h2>
                                     {isLocked && (
-                                        <span className="bg-red-50 text-red-600 text-[10pt] font-black px-2 py-0.5 rounded-full uppercase border border-red-100">Locked</span>
+                                        <span className="bg-red-50 text-red-600 text-[10pt] font-black px-1 py-0.5 rounded-full uppercase border border-red-100">Locked</span>
                                     )}
                                 </div>
-                                <div className="flex flex-nowrap gap-x-2 text-[13pt] text-gray-500 mt-1 overflow-x-auto">
+                                <div className="flex flex-nowrap gap-x-1 text-[13pt] text-gray-500 mt-1 overflow-x-auto">
                                     <span className="whitespace-nowrap">P:{initialRound?.par ?? defaultCourse?.holes?.reduce((a, b) => a + b.par, 0)}</span>
                                     <span className="whitespace-nowrap">R:{initialRound?.rating ?? defaultCourse?.teeBoxes?.[0]?.rating}</span>
                                     <span className="whitespace-nowrap">S:{initialRound?.slope ?? defaultCourse?.teeBoxes?.[0]?.slope}</span>
@@ -1568,17 +1568,17 @@ export default function LiveScoreClient({
                                         const teeIndicator = teeName.toLowerCase().includes('white') ? 'W'
                                             : teeName.toLowerCase().includes('gold') ? 'G'
                                                 : teeName.charAt(0).toUpperCase();
-                                        return teeIndicator && <span className="px-2 py-0.5 rounded text-[12pt] font-bold bg-white text-black border border-black whitespace-nowrap">{teeIndicator}</span>;
+                                        return teeIndicator && <span className="px-1 py-0.5 rounded text-[12pt] font-bold bg-white text-black border border-black whitespace-nowrap">{teeIndicator}</span>;
                                     })()}
                                 </div>
                             </div>
                             <div className="flex flex-col gap-1">
 
                                 {true && ( // Always show these buttons for navigation
-                                    <div className="flex flex-col gap-2">
+                                    <div className="flex flex-col gap-1">
                                         <button
                                             onClick={() => setIsPlayerModalOpen(true)}
-                                            className="bg-white border border-zinc-200 text-zinc-900 text-xs font-black px-1 py-1 rounded-none hover:bg-zinc-50 transition-all shadow-md active:scale-95 uppercase tracking-widest"
+                                            className="bg-black text-white border border-black text-xs font-black px-1 py-1 rounded-xl hover:bg-zinc-800 transition-all shadow-md active:scale-95 uppercase tracking-widest"
                                         >
                                             Players
                                         </button>
@@ -1587,7 +1587,7 @@ export default function LiveScoreClient({
                                                 setRoundModalMode('edit');
                                                 setIsRoundModalOpen(true);
                                             }}
-                                            className="bg-white border border-zinc-200 text-zinc-900 text-xs font-black px-1 py-1 rounded-none hover:bg-zinc-50 transition-all shadow-md active:scale-95 uppercase tracking-widest"
+                                            className="bg-black text-white border border-black text-xs font-black px-1 py-1 rounded-xl hover:bg-zinc-800 transition-all shadow-md active:scale-95 uppercase tracking-widest"
                                         >
                                             Course
                                         </button>
@@ -1653,25 +1653,24 @@ export default function LiveScoreClient({
                 {/* GPS SECTION */}
                 {
                     initialRound && (
-                        <div className="bg-white/80 backdrop-blur-xl rounded-none p-1 border border-zinc-200 shadow-xl space-y-1">
-                            <div className="flex justify-between items-center border-b border-zinc-100 pb-4">
-                                <div className="flex items-center gap-3">
-                                    <h2 className="text-lg font-black text-zinc-900 italic uppercase tracking-tighter">GPS</h2>
+                        <div className="bg-white/80 backdrop-blur-xl rounded-xl p-1 border border-zinc-200 shadow-xl space-y-1">
+                            <div className="flex justify-between items-center border-b border-zinc-100 pb-1">
+                                <div className="flex items-center gap-1">
                                     {canUpdate && (
                                         <button
                                             onClick={() => setIsGPSEnabled(!isGPSEnabled)}
-                                            className={`px-1 py-1 rounded-none text-xs font-black transition-all shadow-md active:scale-95 uppercase tracking-widest ${isGPSEnabled
+                                            className={`px-1 py-1 rounded-xl text-xs font-black transition-all shadow-md active:scale-95 uppercase tracking-widest ${isGPSEnabled
                                                 ? 'bg-green-600 text-white animate-pulse'
-                                                : 'bg-zinc-100 text-zinc-400'
+                                                : 'bg-blue-600 text-white'
                                                 }`}
                                         >
-                                            {isGPSEnabled ? 'Active' : 'Offline'}
+                                            GPS {isGPSEnabled ? 'ON' : 'OFF'}
                                         </button>
                                     )}
                                 </div>
                                 <button
                                     onClick={() => setShowDetails(!showDetails)}
-                                    className="px-1 py-1 bg-zinc-800 text-zinc-300 rounded-none text-xs font-black transition-all hover:bg-zinc-700 uppercase tracking-widest"
+                                    className="px-1 py-1 bg-black text-white rounded-xl text-xs font-black transition-all hover:bg-zinc-800 uppercase tracking-widest shadow-md"
                                 >
                                     Details
                                 </button>
@@ -1685,16 +1684,16 @@ export default function LiveScoreClient({
 
                                         if (!userLocation) {
                                             return (
-                                                <div className="bg-gray-100 text-gray-500 p-1 rounded-xl border-2 border-dashed border-gray-300 text-center mb-2 shadow-inner">
-                                                    <p className="font-medium text-[15pt] animate-pulse py-6">🛰️ Waiting for GPS...</p>
+                                                <div className="bg-gray-100 text-gray-500 p-1 rounded-full border-2 border-dashed border-gray-300 text-center mb-1 shadow-inner">
+                                                    <p className="font-medium text-[15pt] animate-pulse py-1">🛰️ Waiting for GPS...</p>
                                                 </div>
                                             );
                                         }
 
                                         if (!currentHole?.latitude || !currentHole?.longitude) {
                                             return (
-                                                <div className="bg-yellow-50 text-yellow-700 p-1 rounded-xl text-center mb-2 shadow-inner border-2 border-yellow-400">
-                                                    <p className="font-medium text-[15pt] py-6">📍 Coordinates missing for Hole {activeHole}</p>
+                                                <div className="bg-yellow-50 text-yellow-700 p-1 rounded-full text-center mb-1 shadow-inner border-2 border-yellow-400">
+                                                    <p className="font-medium text-[15pt] py-1">📍 Coordinates missing for Hole {activeHole}</p>
                                                 </div>
                                             );
                                         }
@@ -1734,7 +1733,7 @@ export default function LiveScoreClient({
                                             );
 
                                             return (
-                                                <div className={`absolute ${positionClass} flex items-center gap-1 text-white text-[22pt] font-extrabold z-10 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]`}>
+                                                <div className={`absolute ${positionClass} flex items-center gap-1 text-white text-[18pt] font-extrabold z-10 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]`}>
                                                     {side === 'LEFT' ? (
                                                         <>
                                                             {Numbers}
@@ -1751,16 +1750,16 @@ export default function LiveScoreClient({
                                         };
 
                                         return (
-                                            <div className="bg-green-600 text-white w-full mx-auto p-1 rounded-xl text-center mb-2 border-2 border-black shadow-inner relative overflow-hidden">
+                                            <div className="bg-green-600 text-white w-full mx-auto p-1 rounded-xl text-center mb-1 border-2 border-black shadow-inner relative overflow-hidden">
                                                 {/* Left Elements */}
-                                                {renderElement('LEFT', 2, 'top-2 left-2')}
-                                                {renderElement('LEFT', 1, 'bottom-2 left-2')}
+                                                {renderElement('LEFT', 2, 'top-1 left-1')}
+                                                {renderElement('LEFT', 1, 'bottom-1 left-1')}
 
                                                 {/* Right Elements */}
-                                                {renderElement('RIGHT', 2, 'top-2 right-2')}
-                                                {renderElement('RIGHT', 1, 'bottom-2 right-2')}
+                                                {renderElement('RIGHT', 2, 'top-1 right-1')}
+                                                {renderElement('RIGHT', 1, 'bottom-1 right-1')}
 
-                                                <p className="font-black text-[90pt] leading-none flex items-center justify-center pt-2 pb-4">
+                                                <p className="font-black text-[75pt] leading-none flex items-center justify-center pt-1 pb-1">
                                                     {dist || (dist === 0 ? '0' : '--')}
                                                 </p>
                                             </div>
@@ -1769,7 +1768,7 @@ export default function LiveScoreClient({
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-6 gap-2">
+                            <div className="grid grid-cols-6 gap-1">
                                 {defaultCourse?.holes.map(hole => {
                                     // Use selected group if available, otherwise check all players in the round
                                     const playersForStatus = selectedPlayers.length > 0 ? selectedPlayers : rankedPlayers;
@@ -1800,7 +1799,7 @@ export default function LiveScoreClient({
                                             key={hole.holeNumber}
                                             onClick={() => setActiveHole(hole.holeNumber)}
                                             className={`
-                                            flex flex-col items-center justify-center py-1 rounded-none transition-all duration-300 active:scale-90
+                                            flex flex-col items-center justify-center py-1 rounded-xl transition-all duration-300 active:scale-90
                                             ${btnClass}
                                         `}
                                             title={`Hole ${hole.holeNumber}`}
@@ -1822,7 +1821,7 @@ export default function LiveScoreClient({
                 {/* PLAYERS SECTION (Scoring) */}
                 {
                     true && ( // Always show scoring section, even if locked (read-only)
-                        <div id="scoring-section" className="bg-white/80 backdrop-blur-xl rounded-none p-1 border border-zinc-200 shadow-xl space-y-1">
+                        <div id="scoring-section" className="bg-white/80 backdrop-blur-xl rounded-xl p-1 border border-zinc-200 shadow-xl space-y-1">
                             <div className="flex justify-between items-center border-b border-zinc-100 pb-1">
                                 <h2 className="text-lg font-black text-zinc-900 italic uppercase tracking-tighter">Players ({effectiveScoringPlayers.length})</h2>
                                 {
@@ -1997,7 +1996,7 @@ export default function LiveScoreClient({
                                                 // Blue if: has unsaved changes OR hole is not yet scored
                                                 // Black if: hole is scored AND no unsaved changes
                                                 return (hasUnsavedChanges || !isHoleScored) ? 'bg-green-600 text-white shadow-lg' : 'bg-zinc-100 text-zinc-500';
-                                            })()} w-[50%] ml-auto italic uppercase tracking-tighter text-lg font-black py-1 rounded-none shadow-xl transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3`}
+                                            })()} w-[50%] ml-auto italic uppercase tracking-tighter text-lg font-black py-1 rounded-xl shadow-xl transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-1`}
                                         >
                                             <div className="relative">
                                                 <span className={isSaving ? 'invisible' : 'visible'}>
@@ -2066,10 +2065,10 @@ export default function LiveScoreClient({
                                         }
 
                                         return (
-                                            <div key={player.id} className="bg-white border border-zinc-100 rounded-none p-1 flex justify-between items-center group transition-all hover:bg-zinc-50 shadow-sm">
-                                                <div className="flex items-center gap-4">
+                                            <div key={player.id} className="bg-white border border-zinc-100 rounded-xl p-1 flex justify-between items-center group transition-all hover:bg-zinc-50 shadow-sm">
+                                                <div className="flex items-center gap-1">
                                                     <div className="flex flex-col items-start leading-tight">
-                                                        <div className="flex items-center gap-2">
+                                                        <div className="flex items-center gap-1">
                                                             <div className="font-black text-zinc-900 text-xl italic uppercase tracking-tighter">{splitName(player.name).first}</div>
                                                             {(() => {
                                                                 const tee = getPlayerTee(player);
@@ -2083,7 +2082,7 @@ export default function LiveScoreClient({
                                                                         : 'bg-zinc-500 text-white';
 
                                                                 return (
-                                                                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${colorClass} uppercase tracking-widest`}>
+                                                                    <span className={`text-[10px] font-black px-1 py-0.5 rounded-md ${colorClass} uppercase tracking-widest`}>
                                                                         {letter}
                                                                     </span>
                                                                 );
@@ -2091,7 +2090,7 @@ export default function LiveScoreClient({
                                                         </div>
                                                         <div className="text-zinc-500 text-xs font-black uppercase tracking-widest">{splitName(player.name).last}</div>
                                                     </div>
-                                                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <button
                                                             onClick={() => movePlayerOrder(index, 'up')}
                                                             disabled={index === 0}
@@ -2123,7 +2122,7 @@ export default function LiveScoreClient({
                                                     {canUpdate && (
                                                         <button
                                                             onClick={() => updateScore(player.id, false)}
-                                                            className="w-12 h-12 rounded-none bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 font-black shadow-md active:scale-90 transition-all hover:bg-red-50 hover:border-red-500/30 text-2xl"
+                                                            className="w-12 h-12 rounded-xl bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 font-black shadow-md active:scale-90 transition-all hover:bg-red-50 hover:border-red-500/30 text-2xl"
                                                             title="Decrease Score"
                                                         >
                                                             -
@@ -2148,11 +2147,11 @@ export default function LiveScoreClient({
                             </div>
 
                             {effectiveScoringPlayers.length === 0 && (
-                                <div className="py-8 text-center bg-gray-50 rounded-xl border border-dashed border-gray-300 mb-2">
-                                    <p className="text-gray-500 font-bold text-[15pt] mb-4">No players selected for scoring.</p>
+                                <div className="py-1 text-center bg-gray-50 rounded-xl border border-dashed border-gray-300 mb-1">
+                                    <p className="text-gray-500 font-bold text-[15pt] mb-1">No players selected for scoring.</p>
                                     <button
                                         onClick={() => setIsPlayerModalOpen(true)}
-                                        className="bg-black text-white px-6 py-2 rounded-full font-bold text-[15pt] shadow-md active:scale-95 transition-all"
+                                        className="bg-black text-white px-1 py-1 rounded-xl font-bold text-[15pt] shadow-md active:scale-95 transition-all"
                                     >
                                         Add Players / Join
                                     </button>
@@ -2163,17 +2162,17 @@ export default function LiveScoreClient({
                 }
 
 
-                <div className="pt-4"></div>
+                <div className="pt-1"></div>
                 {/* Live Scores Summary */}
                 {
                     summaryPlayers.length > 0 ? (
-                        <div id="summary-section" className="mt-8 space-y-4">
-                            <div className="flex gap-3">
+                        <div id="summary-section" className="mt-1 space-y-1">
+                            <div className="flex gap-1">
                                 <button
                                     onClick={() => router.refresh()}
-                                    className="flex-1 bg-white border border-zinc-200 text-zinc-900 rounded-[20px] py-4 text-sm font-black uppercase tracking-widest hover:bg-zinc-50 transition-all shadow-md active:scale-95"
+                                    className="flex-1 bg-white border border-zinc-200 text-zinc-900 rounded-xl py-1 text-sm font-black uppercase tracking-widest hover:bg-zinc-50 transition-all shadow-md active:scale-95"
                                 >
-                                    Refresh Leaderboard ({summaryPlayers.length})
+                                    Leaderboard ({summaryPlayers.length})
                                 </button>
                                 {isAdmin && (
                                     <>
@@ -2222,7 +2221,7 @@ export default function LiveScoreClient({
 
                                                     // HTML for this player - Optimized for mobile & Dark Mode
                                                     html += `
-                                                    <table width="100%" bgcolor="#ffffff" cellpadding="0" cellspacing="0" border="0" style="box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 8px; margin-bottom: 8px; border: 2px solid #d1d5db;">
+                                                    <table width="100%" bgcolor="#ffffff" cellpadding="0" cellspacing="0" border="0" style="box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 8px; margin-bottom: 1px; border: 2px solid #d1d5db;">
                                                         <tr>
                                                             <td>
                                                                 <div style="background: #1d4ed8; padding: 1px; color: white;">
@@ -2232,8 +2231,8 @@ export default function LiveScoreClient({
                                                                                 <table cellpadding="1" cellspacing="0" border="0" style="color: white;">
                                                                                     <tr>
                                                                                         <td style="font-weight: bold; font-size: 13pt; line-height: 1.1; color: white;">${firstName}</td>
-                                                                                        <td style="padding-left: 2px;">
-                                                                                            ${teeLetter ? `<span style="font-size: 11pt; font-weight: 900; padding: 1px 3px; border-radius: 2px; background: ${teeLetter === 'W' ? '#e5e7eb; color: #1f2937' : '#fef3c7; color: #92400e'}; border: 1px solid #000;">${teeLetter}</span>` : ''}
+                                                                                        <td style="padding-left: 1px;">
+                                                                                            ${teeLetter ? `<span style="font-size: 11pt; font-weight: 900; padding: 1px 1px; border-radius: 2px; background: ${teeLetter === 'W' ? '#e5e7eb; color: #1f2937' : '#fef3c7; color: #92400e'}; border: 1px solid #000;">${teeLetter}</span>` : ''}
                                                                                         </td>
                                                                                     </tr>
                                                                                     <tr>
@@ -2244,18 +2243,18 @@ export default function LiveScoreClient({
                                                                             <td align="right" style="vertical-align: middle; padding: 1px;">
                                                                                 <table cellpadding="1" cellspacing="0" border="0" style="color: white;">
                                                                                     <tr>
-                                                                                        <td style="background-image: linear-gradient(#ffffff, #ffffff) !important; background-color: #ffffff !important; color: ${toParColor} !important; font-weight: bold; border-radius: 4px; padding: 2px 4px; font-size: 11pt; text-align: center; min-width: 40px; border: 1px solid #000;">
+                                                                                        <td style="background-image: linear-gradient(#ffffff, #ffffff) !important; background-color: #ffffff !important; color: ${toParColor} !important; font-weight: bold; border-radius: 4px; padding: 1px 1px; font-size: 11pt; text-align: center; min-width: 40px; border: 1px solid #000;">
                                                                                             ${toParStr}
                                                                                         </td>
-                                                                                        <td style="text-align: center; padding-left: 4px;">
+                                                                                        <td style="text-align: center; padding-left: 1px;">
                                                                                             <div style="font-size: 11pt; font-weight: bold; opacity: 0.8; color: white;">GRS</div>
                                                                                             <div style="font-size: 11pt; font-weight: bold; color: white;">${p.totalGross}</div>
                                                                                         </td>
-                                                                                        <td style="text-align: center; padding-left: 4px;">
+                                                                                        <td style="text-align: center; padding-left: 1px;">
                                                                                             <div style="font-size: 11pt; font-weight: bold; opacity: 0.8; color: white;">HCP</div>
                                                                                             <div style="font-size: 11pt; font-weight: bold; color: white;">${p.strokesReceivedSoFar}</div>
                                                                                         </td>
-                                                                                        <td style="text-align: center; padding-left: 4px;">
+                                                                                        <td style="text-align: center; padding-left: 1px;">
                                                                                             <div style="font-size: 11pt; font-weight: bold; opacity: 0.8; color: white;">NET</div>
                                                                                             <div style="font-size: 11pt; font-weight: bold; color: white;">${p.totalNet}</div>
                                                                                         </td>
@@ -2336,7 +2335,7 @@ export default function LiveScoreClient({
                                                     showAlert('Error', 'Failed to copy scorecard');
                                                 }
                                             }}
-                                            className="w-12 h-12 flex items-center justify-center bg-white border border-zinc-200 text-zinc-500 rounded-full hover:bg-zinc-50 hover:text-zinc-900 transition-all shadow-md active:scale-95"
+                                            className="w-12 h-12 flex items-center justify-center bg-white border border-zinc-200 text-zinc-500 rounded-xl hover:bg-zinc-50 hover:text-zinc-900 transition-all shadow-md active:scale-95"
                                             title="Copy Scorecard"
                                         >
                                             <Copy size={20} />
@@ -2378,7 +2377,7 @@ export default function LiveScoreClient({
                                                     showAlert('Error', 'Failed to copy emails');
                                                 }
                                             }}
-                                            className="w-12 h-12 flex items-center justify-center bg-white border border-zinc-200 text-zinc-500 rounded-full hover:bg-zinc-50 hover:text-zinc-900 transition-all shadow-md active:scale-95"
+                                            className="w-12 h-12 flex items-center justify-center bg-white border border-zinc-200 text-zinc-500 rounded-xl hover:bg-zinc-50 hover:text-zinc-900 transition-all shadow-md active:scale-95"
                                             title="Copy Emails"
                                         >
                                             <Mail size={20} />
@@ -2440,7 +2439,7 @@ export default function LiveScoreClient({
                                                                 <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;border-collapse:collapse;">
                                                                     <!-- TITLE -->
                                                                     <tr>
-                                                                        <td style="padding:12px;background:#000000;color:#ffffff;font-size:18px;font-weight:bold;text-align:center;">
+                                                                        <td style="padding:1px;background:#000000;color:#ffffff;font-size:18px;font-weight:bold;text-align:center;">
                                                                             ${roundName.replace('New Orleans', '')}<br/>
                                                                             Leaderboard
                                                                             <!-- ID: ${Date.now()} -->
@@ -2476,7 +2475,7 @@ export default function LiveScoreClient({
 
                                                         html += `
                                                         <!-- PLAYER SPACER -->
-                                                        <tr><td height="12"></td></tr>
+                                                        <tr><td height="1"></td></tr>
                                                         
                                                         <!-- PLAYER CARD -->
                                                         <tr>
@@ -2484,14 +2483,14 @@ export default function LiveScoreClient({
                                                                 <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
                                                                     <!-- PLAYER HEADER -->
                                                                     <tr>
-                                                                        <td style="padding:8px;background:#1F4FD8;background-image:linear-gradient(#1F4FD8,#1F4FD8);color:#ffffff;">
+                                                                        <td style="padding:1px;background:#1F4FD8;background-image:linear-gradient(#1F4FD8,#1F4FD8);color:#ffffff;">
                                                                             <table width="100%" cellpadding="0" cellspacing="0">
                                                                                 <tr>
                                                                                     <!-- NAME (Bottom-Left, Stacked) -->
                                                                                     <td style="color:#ffffff;font-size:16px;font-weight:bold;line-height:1.2;">
                                                                                         ${firstName}<br/>
                                                                                         ${lastName}
-                                                                                        ${teeLetter ? `<span style="background:#ffffff;color:#000;padding:1px 4px;border-radius:3px;font-size:10px;margin-left:4px;vertical-align:middle;">${teeLetter}</span>` : ''}
+                                                                                        ${teeLetter ? `<span style="background:#ffffff;color:#000;padding:1px 1px;border-radius:3px;font-size:10px;margin-left:1px;vertical-align:middle;">${teeLetter}</span>` : ''}
                                                                                     </td>
                                                                                     
                                                                                     <!-- STATS (Right) -->
@@ -2499,22 +2498,22 @@ export default function LiveScoreClient({
                                                                                         <table cellpadding="0" cellspacing="0">
                                                                                             <tr>
                                                                                                 <!-- TO PAR BADGE -->
-                                                                                                <td valign="bottom" style="padding-right:8px;padding-bottom:2px;">
-                                                                                                    <span style="background:#ffffff;color:#000000;padding:3px 6px;border-radius:4px;font-weight:bold;font-size:14px;display:inline-block;">${toParStr}</span>
+                                                                                                <td valign="bottom" style="padding-right:1px;padding-bottom:1px;">
+                                                                                                    <span style="background:#ffffff;color:#000000;padding:1px 1px;border-radius:4px;font-weight:bold;font-size:14px;display:inline-block;">${toParStr}</span>
                                                                                                 </td>
                                                                                                 
                                                                                                 <!-- STATS GRID -->
                                                                                                 <td>
                                                                                                     <table cellpadding="0" cellspacing="0">
                                                                                                         <tr>
-                                                                                                            <td align="center" style="padding:0 4px;color:#cbd5e1;font-size:9px;font-weight:bold;text-transform:uppercase;">GRS</td>
-                                                                                                            <td align="center" style="padding:0 4px;color:#cbd5e1;font-size:9px;font-weight:bold;text-transform:uppercase;">HCP</td>
-                                                                                                            <td align="center" style="padding:0 4px;color:#cbd5e1;font-size:9px;font-weight:bold;text-transform:uppercase;">NET</td>
+                                                                                                            <td align="center" style="padding:0 1px;color:#cbd5e1;font-size:9px;font-weight:bold;text-transform:uppercase;">GRS</td>
+                                                                                                            <td align="center" style="padding:0 1px;color:#cbd5e1;font-size:9px;font-weight:bold;text-transform:uppercase;">HCP</td>
+                                                                                                            <td align="center" style="padding:0 1px;color:#cbd5e1;font-size:9px;font-weight:bold;text-transform:uppercase;">NET</td>
                                                                                                         </tr>
                                                                                                         <tr>
-                                                                                                            <td align="center" style="padding:0 4px;color:#ffffff;font-size:14px;font-weight:bold;">${frontGross}+${backGross}=${p.totalGross}</td>
-                                                                                                            <td align="center" style="padding:0 4px;color:#ffffff;font-size:14px;font-weight:bold;">${ch}/${ch}</td>
-                                                                                                            <td align="center" style="padding:0 4px;color:#ffffff;font-size:14px;font-weight:bold;">${p.totalNet}</td>
+                                                                                                            <td align="center" style="padding:0 1px;color:#ffffff;font-size:14px;font-weight:bold;">${frontGross}+${backGross}=${p.totalGross}</td>
+                                                                                                            <td align="center" style="padding:0 1px;color:#ffffff;font-size:14px;font-weight:bold;">${ch}/${ch}</td>
+                                                                                                            <td align="center" style="padding:0 1px;color:#ffffff;font-size:14px;font-weight:bold;">${p.totalNet}</td>
                                                                                                         </tr>
                                                                                                     </table>
                                                                                                 </td>
@@ -2567,7 +2566,7 @@ export default function LiveScoreClient({
                                                             }
 
                                                             html += `
-                                                            <td style="border:1px solid #CCCCCC;background:${bg};background-image:linear-gradient(${bg},${bg});text-align:center;padding:8px 0;width:11.11%;">
+                                                            <td style="border:1px solid #CCCCCC;background:${bg};background-image:linear-gradient(${bg},${bg});text-align:center;padding:1px 0;width:11.11%;">
                                                                 <div style="font-size:11px;color:${color};opacity:0.8;">${h}/${holePar}</div>
                                                                 <div style="font-size:14px;font-weight:bold;color:${color};">${score || '-'}</div>
                                                             </td>
@@ -2603,7 +2602,7 @@ export default function LiveScoreClient({
                                                             }
 
                                                             html += `
-                                                            <td style="border:1px solid #CCCCCC;background:${bg};background-image:linear-gradient(${bg},${bg});text-align:center;padding:8px 0;width:11.11%;">
+                                                            <td style="border:1px solid #CCCCCC;background:${bg};background-image:linear-gradient(${bg},${bg});text-align:center;padding:1px 0;width:11.11%;">
                                                                 <div style="font-size:11px;color:${color};opacity:0.8;">${h}/${holePar}</div>
                                                                 <div style="font-size:14px;font-weight:bold;color:${color};">${score || '-'}</div>
                                                             </td>
@@ -2648,7 +2647,7 @@ export default function LiveScoreClient({
                                                     // No success alert per request
                                                 });
                                             }}
-                                            className="w-12 h-12 flex items-center justify-center bg-green-50 text-green-600 border border-green-200 rounded-full hover:bg-green-100 transition-all shadow-md active:scale-95"
+                                            className="w-12 h-12 flex items-center justify-center bg-green-50 text-green-600 border border-green-200 rounded-xl hover:bg-green-100 transition-all shadow-md active:scale-95"
                                             title="Send Scorecard to All"
                                         >
                                             <Send size={20} />
@@ -2657,20 +2656,20 @@ export default function LiveScoreClient({
                                 )}
                                 <button
                                     onClick={() => setIsStatsModalOpen(true)}
-                                    className="w-12 h-12 bg-white border border-zinc-200 text-zinc-500 rounded-full flex items-center justify-center hover:bg-zinc-50 hover:text-zinc-900 transition-all shadow-md active:scale-95"
+                                    className="w-12 h-12 bg-white border border-zinc-200 text-zinc-500 rounded-xl flex items-center justify-center hover:bg-zinc-50 hover:text-zinc-900 transition-all shadow-md active:scale-95"
                                     title="View Stats"
                                 >
                                     <Bird size={24} />
                                 </button>
                                 <button
                                     onClick={() => setIsPoolModalOpen(true)}
-                                    className="px-6 h-12 rounded-full text-sm font-black uppercase tracking-widest transition-all bg-green-600 text-white border border-green-700 hover:bg-green-700 shadow-md active:scale-95"
+                                    className="px-1 h-12 rounded-xl text-sm font-black uppercase tracking-widest transition-all bg-green-600 text-white border border-green-700 hover:bg-green-700 shadow-md active:scale-95"
                                 >
-                                    $5 Pool
+                                    BFT
                                 </button>
                             </div>
 
-                            <div className="space-y-4">
+                            <div className="space-y-1">
                                 {rankedPlayers.map((p, i) => {
                                     let toParStr = "E";
                                     let toParClass = "text-green-600";
@@ -2708,11 +2707,11 @@ export default function LiveScoreClient({
                                     return (
                                         <div key={p.id} className="bg-white/80 backdrop-blur-xl rounded-[32px] overflow-hidden border border-zinc-200 shadow-xl">
                                             {/* Player Header */}
-                                            <div className="bg-gradient-to-r from-green-600/5 to-transparent p-6 border-b border-zinc-100">
+                                            <div className="bg-gradient-to-r from-green-600/5 to-transparent p-1 border-b border-zinc-100">
                                                 <div className="flex justify-between items-center">
-                                                    <div className="flex items-center gap-4">
+                                                    <div className="flex items-center gap-1">
                                                         <div className="flex flex-col">
-                                                            <div className="font-black text-zinc-900 text-2xl italic uppercase tracking-tighter leading-none flex items-center gap-2">
+                                                            <div className="font-black text-zinc-900 text-2xl italic uppercase tracking-tighter leading-none flex items-center gap-1">
                                                                 {splitName(p.name).first}
                                                                 {(() => {
                                                                     const tee = getPlayerTee(p);
@@ -2725,7 +2724,7 @@ export default function LiveScoreClient({
                                                                             : 'bg-zinc-500 text-white';
 
                                                                     return (
-                                                                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${colorClass} uppercase tracking-widest`}>
+                                                                        <span className={`text-[10px] font-black px-1 py-0.5 rounded-md ${colorClass} uppercase tracking-widest`}>
                                                                             {letter}
                                                                         </span>
                                                                     );
@@ -2735,7 +2734,7 @@ export default function LiveScoreClient({
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex gap-6 items-end">
+                                                    <div className="flex gap-1 items-end">
                                                         <div className={`text-4xl font-black italic tracking-tighter ${p.toPar < 0 ? 'text-red-600' : p.toPar > 0 ? 'text-zinc-400' : 'text-green-600'}`}>
                                                             {toParStr}
                                                         </div>
@@ -2894,19 +2893,19 @@ export default function LiveScoreClient({
                             </div>
                         </div>
                     ) : (
-                        <div key="no-players" className="bg-white rounded-xl shadow-lg border-2 border-gray-300 p-8 text-center m-1">
+                        <div key="no-players" className="bg-white rounded-full shadow-lg border-2 border-gray-300 p-8 text-center m-1">
                             <p className="text-gray-500 font-bold text-[15pt]">No players have joined this round yet.</p>
                         </div>
                     )
                 }
 
                 {/* Score Legend */}
-                <div className="bg-white rounded-xl shadow-md p-2 m-1 flex flex-wrap gap-x-6 gap-y-2 items-center justify-center text-[15pt]">
+                <div className="bg-white rounded-full shadow-md p-2 m-1 flex flex-wrap gap-x-6 gap-y-2 items-center justify-center text-[15pt]">
                     <div className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-yellow-300 shadow-sm"></div>(-2)</div>
-                    <div className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-green-300 shadow-sm"></div>(-1)</div>
-                    <div className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-white border-2 border-gray-300 shadow-sm"></div>(E)</div>
-                    <div className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-orange-200 shadow-sm"></div>(+1)</div>
-                    <div className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-red-300 shadow-sm"></div>(+2)</div>
+                    <div className="flex items-center gap-2"><div className="w-5 h-5 rounded-xl bg-green-300 shadow-sm"></div>(-1)</div>
+                    <div className="flex items-center gap-2"><div className="w-5 h-5 rounded-xl bg-white border-2 border-gray-300 shadow-sm"></div>(E)</div>
+                    <div className="flex items-center gap-2"><div className="w-5 h-5 rounded-xl bg-orange-200 shadow-sm"></div>(+1)</div>
+                    <div className="flex items-center gap-2"><div className="w-5 h-5 rounded-xl bg-red-300 shadow-sm"></div>(+2)</div>
                 </div>
 
 
@@ -2933,7 +2932,7 @@ export default function LiveScoreClient({
                                 <h1 className="text-[18pt] font-bold text-gray-900 tracking-tight text-left ml-3">Round Stats</h1>
                                 <button
                                     onClick={() => setIsStatsModalOpen(false)}
-                                    className="px-1 py-2 bg-black text-white rounded-full text-[14pt] font-bold hover:bg-gray-800 transition-colors mr-3"
+                                    className="px-1 py-2 bg-black text-white rounded-xl text-[14pt] font-bold hover:bg-gray-800 transition-colors mr-3"
                                 >
                                     Close
                                 </button>
@@ -3015,7 +3014,7 @@ export default function LiveScoreClient({
                                         e.stopPropagation();
                                         setBirdiePlayers([]);
                                     }}
-                                    className="w-full bg-black text-white rounded-full py-2 text-[15pt] font-bold hover:bg-gray-800 transition-colors shadow-md active:scale-95"
+                                    className="w-full bg-black text-white rounded-xl py-2 text-[15pt] font-bold hover:bg-gray-800 transition-colors shadow-md active:scale-95"
                                 >
                                     Close
                                 </button>
@@ -3055,7 +3054,7 @@ export default function LiveScoreClient({
                                         e.stopPropagation();
                                         setEaglePlayers([]);
                                     }}
-                                    className="w-full bg-black text-white rounded-full py-2 text-[15pt] font-bold hover:bg-gray-800 transition-colors shadow-md active:scale-95"
+                                    className="w-full bg-black text-white rounded-xl py-2 text-[15pt] font-bold hover:bg-gray-800 transition-colors shadow-md active:scale-95"
                                 >
                                     Close
                                 </button>
