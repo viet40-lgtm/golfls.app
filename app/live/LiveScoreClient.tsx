@@ -1753,7 +1753,7 @@ export default function LiveScoreClient({
                                             );
 
                                             return (
-                                                <div className={`absolute ${positionClass} flex items-center gap-1 text-white text-[18pt] font-extrabold z-10 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]`}>
+                                                <div className={`absolute ${positionClass} flex items-center gap-1 text-white text-[19pt] font-extrabold z-10 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]`}>
                                                     {side === 'LEFT' ? (
                                                         <>
                                                             {Numbers}
@@ -1779,7 +1779,7 @@ export default function LiveScoreClient({
                                                 {renderElement('RIGHT', 2, 'top-1 right-1')}
                                                 {renderElement('RIGHT', 1, 'bottom-1 right-1')}
 
-                                                <p className="font-black text-[75pt] leading-none flex items-center justify-center pt-1 pb-1">
+                                                <p className="font-black text-[76pt] leading-none flex items-center justify-center pt-1 pb-1">
                                                     {dist || (dist === 0 ? '0' : '--')}
                                                 </p>
                                             </div>
