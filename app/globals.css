@@ -66,6 +66,10 @@ small {
   font-size: 18pt !important;
 }
 
+.text-xl {
+  font-size: 20pt !important;
+}
+
 /* Base interactive styles */
 input,
 select,
