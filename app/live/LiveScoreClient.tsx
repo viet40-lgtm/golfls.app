@@ -1405,7 +1405,7 @@ export default function LiveScoreClient({
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-20 text-zinc-900">
+        <div className="min-h-screen bg-gray-50 pb-1 text-zinc-900">
 
 
             <main className="max-w-xl mx-auto px-1 pt-1 space-y-2">
@@ -1845,7 +1845,7 @@ export default function LiveScoreClient({
                 {
                     true && ( // Always show scoring section, even if locked (read-only)
                         <div id="scoring-section" className="bg-white/80 backdrop-blur-xl rounded-none p-1 border border-zinc-200 shadow-xl space-y-1">
-                            <div className="flex justify-between items-center border-b border-zinc-100 pb-4">
+                            <div className="flex justify-between items-center border-b border-zinc-100 pb-1">
                                 <h2 className="text-lg font-black text-zinc-900 italic uppercase tracking-tighter">Players ({effectiveScoringPlayers.length})</h2>
                                 {
                                     effectiveScoringPlayers.length > 0 && (
@@ -2035,7 +2035,7 @@ export default function LiveScoreClient({
                                     )
                                 }
                             </div>
-                            <div className="space-y-4">
+                            <div className="space-y-1">
                                 {[...effectiveScoringPlayers]
                                     .map((player, index) => {
                                         const score = getScore(player.id, activeHole);
