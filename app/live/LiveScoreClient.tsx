@@ -1411,7 +1411,7 @@ export default function LiveScoreClient({
             <main className="max-w-xl mx-auto px-1 pt-1 space-y-2">
                 {/* Round Selector - Visibility Controlled by 'Details' toggle */}
                 {showDetails && (
-                    <div className="bg-white rounded-[32px] p-6 border border-zinc-200 shadow-xl flex flex-col justify-center space-y-4">
+                    <div className="bg-white rounded-[32px] p-1 border border-zinc-200 shadow-xl flex flex-col justify-center space-y-4">
                         <div className="flex justify-between items-center">
                             <label htmlFor="round-selector" className="text-xs font-black text-zinc-400 uppercase tracking-widest ml-1">Current Round</label>
                             <div className="flex gap-2">
@@ -1567,7 +1567,7 @@ export default function LiveScoreClient({
 
                 {/* Course Info Card */}
                 {showDetails && (
-                    <div className="bg-white/80 backdrop-blur-xl rounded-[32px] p-6 border border-zinc-200 shadow-xl">
+                    <div className="bg-white/80 backdrop-blur-xl rounded-[32px] p-1 border border-zinc-200 shadow-xl">
                         <div className="flex justify-between items-start">
                             <div className="flex-1">
                                 <div className="flex items-center gap-2">
@@ -1676,7 +1676,7 @@ export default function LiveScoreClient({
                 {/* GPS SECTION */}
                 {
                     initialRound && (
-                        <div className="bg-white/80 backdrop-blur-xl rounded-[32px] p-6 border border-zinc-200 shadow-xl space-y-4">
+                        <div className="bg-white/80 backdrop-blur-xl rounded-[32px] p-1 border border-zinc-200 shadow-xl space-y-4">
                             <div className="flex justify-between items-center border-b border-zinc-100 pb-4">
                                 <div className="flex items-center gap-3">
                                     <h2 className="text-lg font-black text-zinc-900 italic uppercase tracking-tighter">GPS Tracker</h2>
