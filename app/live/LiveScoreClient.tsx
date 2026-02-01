@@ -1512,7 +1512,7 @@ export default function LiveScoreClient({
                                         window.location.href = `/live?roundId=${newId}`;
                                     }
                                 }}
-                                className="w-full px-1 py-1 text-[15pt] bg-black text-white rounded-none font-bold outline-none appearance-none pr-8 cursor-pointer"
+                                className="w-full px-1 py-1 mt-1 text-[15pt] bg-black text-white rounded-none font-bold outline-none appearance-none pr-8 cursor-pointer border border-black"
                             >
                                 <option value="" disabled>-- Select a Round --</option>
                                 {allLiveRounds.map(round => {
