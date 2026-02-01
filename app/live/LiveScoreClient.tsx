@@ -1512,8 +1512,12 @@ export default function LiveScoreClient({
                                     {(() => {
                                         const r = allLiveRounds.find(r => r.id === liveRoundId);
                                         if (!r) return "-- Select a Round --";
-                                        const dayOfWeek = r.date ? new Date(r.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' }) : '';
-                                        return dayOfWeek ? `${dayOfWeek} - ${r.name.replace(/New Orleans/gi, '').trim()}` : r.name.replace(/New Orleans/gi, '').trim();
+                                        if (!r.date) return r.name.replace(/New Orleans/gi, '').trim();
+                                        const dateObj = new Date(r.date + 'T12:00:00');
+                                        const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+                                        const day = dateObj.getDate().toString().padStart(2, '0');
+                                        const dayOfWeek = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+                                        return `${month}/${day} ${dayOfWeek}: ${r.name.replace(/New Orleans/gi, '').trim()}`;
                                     })()}
                                 </span>
                                 <span className="text-xs ml-1">▼</span>
@@ -1527,8 +1531,11 @@ export default function LiveScoreClient({
                                     />
                                     <div className="absolute top-full left-0 right-0 mt-0.5 bg-black text-white rounded-xl border border-zinc-800 shadow-2xl z-50 overflow-y-auto max-h-[300px] py-1">
                                         {allLiveRounds.map((round) => {
-                                            const dayOfWeek = round.date ? new Date(round.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' }) : '';
-                                            const displayName = dayOfWeek ? `${dayOfWeek} - ${round.name.replace(/New Orleans/gi, '').trim()}` : round.name.replace(/New Orleans/gi, '').trim();
+                                            const dateObj = round.date ? new Date(round.date + 'T12:00:00') : null;
+                                            const month = dateObj ? (dateObj.getMonth() + 1).toString().padStart(2, '0') : '';
+                                            const day = dateObj ? dateObj.getDate().toString().padStart(2, '0') : '';
+                                            const dayOfWeek = dateObj ? dateObj.toLocaleDateString('en-US', { weekday: 'short' }) : '';
+                                            const displayName = dateObj ? `${month}/${day} ${dayOfWeek}: ${round.name.replace(/New Orleans/gi, '').trim()}` : round.name.replace(/New Orleans/gi, '').trim();
                                             const isSelected = round.id === liveRoundId;
 
                                             return (
