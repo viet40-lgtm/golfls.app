@@ -1519,8 +1519,17 @@ export default function LiveScoreClient({
                                 {allLiveRounds.map(round => {
                                     const dayOfWeek = round.date ? new Date(round.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' }) : '';
                                     const displayName = dayOfWeek ? `${dayOfWeek} - ${round.name.replace(/New Orleans/gi, '').trim()}` : round.name.replace(/New Orleans/gi, '').trim();
+                                    const isSelected = round.id === liveRoundId;
                                     return (
-                                        <option key={round.id} value={round.id}>
+                                        <option
+                                            key={round.id}
+                                            value={round.id}
+                                            style={{
+                                                color: isSelected ? '#ffffff' : '#a1a1aa',
+                                                backgroundColor: 'black',
+                                                fontWeight: isSelected ? 'bold' : 'normal'
+                                            }}
+                                        >
                                             {displayName}
                                         </option>
                                     );
