@@ -13,6 +13,7 @@ export async function createPlayer(formData: FormData) {
     const birthday = formData.get('birthday') as string | null;
     const dateStarted = formData.get('dateStarted') as string | null;
     const handicapIndex = formData.get('handicapIndex') as string | null;
+    const estimateHandicap = formData.get('estimateHandicap') as string | null;
 
     if (!name || name.trim() === '') {
         return { success: false, error: 'Name is required' };
@@ -38,6 +39,7 @@ export async function createPlayer(formData: FormData) {
                 dateStarted: dateStarted || null,
                 preferredTeeBox: preferredTeeBox || null,
                 handicapIndex: handicapIndex ? parseFloat(handicapIndex) : 0,
+                estimateHandicap: estimateHandicap ? parseInt(estimateHandicap) : 0,
             }
         });
 

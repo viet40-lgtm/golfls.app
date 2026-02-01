@@ -19,6 +19,7 @@ model Player {
   dateStarted      String?
   preferredTeeBox  String?
   handicapIndex    Float             @default(0)
+  estimateHandicap Int?              @default(0)
   resetToken       String?           @unique
   resetTokenExpiry DateTime?
   createdAt        DateTime          @default(now())

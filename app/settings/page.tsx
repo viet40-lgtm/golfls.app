@@ -97,7 +97,7 @@ export default function SettingsPage() {
                 <section className="space-y-3">
                     <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">App Preferences</h2>
                     <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
-                        <SettingsItem icon={<Bell className="w-5 h-5" />} label="Notifications" active={false} />
+                        <SettingsItem icon={<Bell className="w-5 h-5" />} label="Notifications" />
                         <SettingsItem icon={<Shield className="w-5 h-5" />} label="Privacy & Security" />
                         <SettingsItem icon={<Info className="w-5 h-5" />} label="Version 1.0.6" hideArrow />
                     </div>
@@ -130,6 +130,7 @@ function PlayerProfileModal({ initialData, onClose, onSave }: { initialData: any
         phone: initialData?.phone || '',
         password: '',
         handicapIndex: initialData?.handicapIndex?.toString() || '0',
+        estimateHandicap: initialData?.estimateHandicap?.toString() || '0',
         preferredTeeBox: initialData?.preferredTeeBox || 'White'
     });
 
@@ -144,6 +145,7 @@ function PlayerProfileModal({ initialData, onClose, onSave }: { initialData: any
         fd.append('email', formData.email.trim());
         fd.append('phone', formData.phone.trim());
         fd.append('handicapIndex', formData.handicapIndex);
+        fd.append('estimateHandicap', formData.estimateHandicap);
         fd.append('preferredTeeBox', formData.preferredTeeBox);
         if (formData.password) fd.append('password', formData.password);
 
@@ -161,7 +163,7 @@ function PlayerProfileModal({ initialData, onClose, onSave }: { initialData: any
         <div className="fixed inset-0 z-[100] bg-white animate-in slide-in-from-bottom duration-300 flex flex-col">
             {/* Modal Header */}
             <div className="px-4 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md">
-                <button onClick={onClose} className="p-2 hover:bg-gray-50 rounded-full transition-colors">
+                <button onClick={onClose} className="p-2 hover:bg-gray-50 rounded-full transition-colors" title="Close">
                     <X className="w-6 h-6" />
                 </button>
                 <h2 className="text-lg font-black italic uppercase tracking-tighter">Edit Profile</h2>
@@ -206,26 +208,34 @@ function PlayerProfileModal({ initialData, onClose, onSave }: { initialData: any
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <ProfileInput
-                                label="Handicap Index"
+                                label="Index"
                                 type="number"
                                 step="0.1"
                                 value={formData.handicapIndex}
                                 onChange={v => setFormData({ ...formData, handicapIndex: v })}
                             />
-                            <div className="space-y-1.5">
-                                <label className="text-[10pt] font-black text-gray-400 uppercase tracking-widest ml-1">Prefer Tee Box</label>
-                                <select
-                                    className="w-full px-4 py-4 bg-gray-50 border-transparent focus:bg-white focus:border-black rounded-2xl transition-all outline-none font-bold text-lg"
-                                    value={formData.preferredTeeBox}
-                                    onChange={e => setFormData({ ...formData, preferredTeeBox: e.target.value })}
-                                >
-                                    <option value="White">White</option>
-                                    <option value="Blue">Blue</option>
-                                    <option value="Gold">Gold</option>
-                                    <option value="Red">Red</option>
-                                    <option value="Black">Black</option>
-                                </select>
-                            </div>
+                            <ProfileInput
+                                label="Estimate Handicap"
+                                type="number"
+                                value={formData.estimateHandicap}
+                                onChange={v => setFormData({ ...formData, estimateHandicap: v })}
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label htmlFor="pref-tee-box" className="text-[10pt] font-black text-gray-400 uppercase tracking-widest ml-1">Prefer Tee Box</label>
+                            <select
+                                id="pref-tee-box"
+                                className="w-full px-4 py-4 bg-gray-50 border-transparent focus:bg-white focus:border-black rounded-2xl transition-all outline-none font-bold text-lg"
+                                value={formData.preferredTeeBox}
+                                onChange={e => setFormData({ ...formData, preferredTeeBox: e.target.value })}
+                                title="Preferred Tee Box"
+                            >
+                                <option value="White">White</option>
+                                <option value="Blue">Blue</option>
+                                <option value="Gold">Gold</option>
+                                <option value="Red">Red</option>
+                                <option value="Black">Black</option>
+                            </select>
                         </div>
                     </div>
 
@@ -248,9 +258,12 @@ function PlayerProfileModal({ initialData, onClose, onSave }: { initialData: any
                     </div>
 
                     {/* Help text */}
-                    <p className="text-xs text-gray-400 font-medium px-1 italic">
-                        Leave the password field blank if you don't want to change it.
-                    </p>
+                    <div className="space-y-1 px-1 italic text-gray-400">
+                        <p className="text-xs font-bold uppercase tracking-wider text-black/40">Minimu 4 number or text</p>
+                        <p className="text-xs font-medium">
+                            Leave the password field blank if you don't want to change it.
+                        </p>
+                    </div>
                 </div>
             </form>
 
@@ -262,6 +275,7 @@ function PlayerProfileModal({ initialData, onClose, onSave }: { initialData: any
                         disabled={isLoading || !initialData}
                         onClick={handleSubmit}
                         className="w-full bg-black text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                        title="Save Profile"
                     >
                         {isLoading ? (
                             <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />

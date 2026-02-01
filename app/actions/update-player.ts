@@ -21,6 +21,7 @@ export async function getCurrentPlayerProfile() {
                 email: true,
                 phone: true,
                 handicapIndex: true,
+                estimateHandicap: true,
                 preferredTeeBox: true,
                 playerId: true,
             }
@@ -45,6 +46,7 @@ export async function updatePlayerProfile(formData: FormData) {
     const dateStarted = formData.get('dateStarted') as string;
     const preferredTeeBox = formData.get('preferredTeeBox') as string;
     const handicapIndex = formData.get('handicapIndex') as string;
+    const estimateHandicap = formData.get('estimateHandicap') as string;
     const password = formData.get('password') as string;
 
     const name = `${firstName.trim()} ${lastName.trim()}`;
@@ -58,6 +60,7 @@ export async function updatePlayerProfile(formData: FormData) {
             dateStarted: dateStarted || null,
             preferredTeeBox: preferredTeeBox || null,
             handicapIndex: handicapIndex ? parseFloat(handicapIndex) : 0,
+            estimateHandicap: estimateHandicap ? parseInt(estimateHandicap) : 0,
         };
 
         if (password && password.trim() !== '') {

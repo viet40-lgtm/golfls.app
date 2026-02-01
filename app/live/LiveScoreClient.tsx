@@ -1507,6 +1507,7 @@ export default function LiveScoreClient({
                             <button
                                 onClick={() => setIsRoundDropdownOpen(!isRoundDropdownOpen)}
                                 className="w-full px-1 py-1 mt-1 text-[15pt] bg-black text-white rounded-xl font-bold flex justify-between items-center transition-all active:scale-[0.99] border border-black"
+                                title="Select Round"
                             >
                                 <span className="truncate">
                                     {(() => {
@@ -2017,6 +2018,7 @@ export default function LiveScoreClient({
                                                 // Black if: hole is scored AND no unsaved changes
                                                 return (hasUnsavedChanges || !isHoleScored) ? 'bg-green-600 text-white shadow-lg' : 'bg-zinc-100 text-zinc-500';
                                             })()} ml-auto italic uppercase tracking-tighter text-lg font-black p-1 rounded-xl shadow-xl transition-all active:scale-[0.98] disabled:opacity-50`}
+                                            title={`Save Hole ${activeHole}`}
                                         >
                                             <div className="relative">
                                                 <span className={isSaving ? 'invisible' : 'visible'}>
