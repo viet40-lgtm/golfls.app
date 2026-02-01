@@ -9,24 +9,24 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #0f172a;
+  --foreground: #000000;
   --card: #ffffff;
-  --card-foreground: #0f172a;
+  --card-foreground: #000000;
   --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --primary: #0f172a;
-  --primary-foreground: #f8fafc;
+  --popover-foreground: #000000;
+  --primary: #000000;
+  --primary-foreground: #ffffff;
   --secondary: #f1f5f9;
-  --secondary-foreground: #0f172a;
+  --secondary-foreground: #000000;
   --muted: #f1f5f9;
-  --muted-foreground: #64748b;
+  --muted-foreground: #000000; /* No gray */
   --accent: #f1f5f9;
-  --accent-foreground: #0f172a;
+  --accent-foreground: #000000;
   --destructive: #ef4444;
-  --destructive-foreground: #f8fafc;
+  --destructive-foreground: #ffffff;
   --border: #e2e8f0;
   --input: #e2e8f0;
-  --ring: #0f172a;
+  --ring: #000000;
   --radius: 0.75rem;
 }
 
@@ -40,6 +40,18 @@ body {
   font-feature-settings: "rlig" 1, "calt" 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-size: 15pt;
+  font-weight: 500; /* Default to a solid weight, not thin */
+}
+
+/* Enforce "No Gray" on common text utilities if they rely on opacity or lighter colors */
+.text-gray-500, .text-gray-400, .text-gray-600, .text-zinc-400, .text-zinc-500 {
+    color: #000000 !important;
+}
+
+/* Secondary font size preference */
+.text-sm, .text-xs, small {
+    font-size: 13pt !important;
 }
 
 /* Base interactive styles */
