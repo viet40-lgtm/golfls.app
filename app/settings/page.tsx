@@ -258,11 +258,15 @@ function PlayerProfileModal({ initialData, onClose, onSave }: { initialData: any
                     </div>
 
                     {/* Help text */}
-                    <div className="space-y-1 px-1 italic text-gray-400">
-                        <p className="text-xs font-bold uppercase tracking-wider text-black/40">Minimu 4 number or text</p>
-                        <p className="text-xs font-medium">
-                            Leave the password field blank if you don't want to change it.
-                        </p>
+                    <div className="space-y-2 px-1">
+                        <div className="flex items-center gap-2 text-zinc-400 uppercase tracking-tighter">
+                            <div className="w-1 h-1 rounded-full bg-zinc-300" />
+                            <p className="text-xs font-black">Minimum 4 numbers or text</p>
+                        </div>
+                        <div className="flex items-center gap-2 text-zinc-500 italic tracking-tight">
+                            <div className="w-1 h-1 rounded-full bg-zinc-300" />
+                            <p className="text-xs font-bold">Leave blank to keep your current password</p>
+                        </div>
                     </div>
                 </div>
             </form>
