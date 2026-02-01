@@ -264,7 +264,7 @@ export function LiveRoundModal({
                         >
                             <option value="" disabled>-- Select Course --</option>
                             {allCourses?.map(c => (
-                                <option key={c.id} value={c.id}>{c.name}</option>
+                                <option key={c.id} value={c.id}>{c.name.replace(/New Orleans/gi, '').trim()}</option>
                             ))}
                         </select>
                     </div>

@@ -19,7 +19,8 @@
   --secondary: #f1f5f9;
   --secondary-foreground: #000000;
   --muted: #f1f5f9;
-  --muted-foreground: #000000; /* No gray */
+  --muted-foreground: #000000;
+  /* No gray */
   --accent: #f1f5f9;
   --accent-foreground: #000000;
   --destructive: #ef4444;
@@ -41,17 +42,26 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-size: 15pt;
-  font-weight: 500; /* Default to a solid weight, not thin */
+  font-weight: 500;
+  /* Default to a solid weight, not thin */
 }
 
 /* Enforce "No Gray" on common text utilities if they rely on opacity or lighter colors */
-.text-gray-500, .text-gray-400, .text-gray-600, .text-zinc-400, .text-zinc-500 {
-    color: #000000 !important;
+.text-gray-500,
+.text-gray-400,
+.text-gray-600,
+.text-zinc-400,
+.text-zinc-500 {
+  color: #000000 !important;
 }
 
-/* Secondary font size preference */
-.text-sm, .text-xs, small {
-    font-size: 13pt !important;
+/* Enforce ALL text to be 15pt as requested */
+.text-sm,
+.text-xs,
+.text-lg,
+.text-base,
+small {
+  font-size: 15pt !important;
 }
 
 /* Base interactive styles */

@@ -1514,7 +1514,7 @@ export default function LiveScoreClient({
                                     const r = allLiveRounds.find(r => r.id === liveRoundId);
                                     if (!r) return "-- Select a Round --";
                                     const dayOfWeek = r.date ? new Date(r.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' }) : '';
-                                    return dayOfWeek ? `${dayOfWeek} - ${r.name.replace('New Orleans', '').trim()}` : r.name.replace('New Orleans', '').trim();
+                                    return dayOfWeek ? `${dayOfWeek} - ${r.name.replace(/New Orleans/gi, '').trim()}` : r.name.replace(/New Orleans/gi, '').trim();
                                 })()}
                             </span>
                             <span className="text-sm">▼</span>
@@ -1552,7 +1552,7 @@ export default function LiveScoreClient({
                                             >
                                                 <div className="flex flex-col">
                                                     <span className={`text-[16pt] font-bold ${isSelected ? 'text-green-700' : 'text-gray-900'}`}>
-                                                        {dayOfWeek ? `${dayOfWeek} - ` : ''}{round.name.replace('New Orleans', '').trim()}
+                                                        {dayOfWeek ? `${dayOfWeek} - ` : ''}{round.name.replace(/New Orleans/gi, '').trim()}
                                                     </span>
                                                 </div>
                                             </button>
@@ -1571,7 +1571,7 @@ export default function LiveScoreClient({
                         <div className="flex justify-between items-start">
                             <div className="flex-1">
                                 <div className="flex items-center gap-2">
-                                    <h2 className="text-2xl font-black text-zinc-900 tracking-tighter italic uppercase">{defaultCourse?.name || 'Round'}</h2>
+                                    <h2 className="text-2xl font-black text-zinc-900 tracking-tighter italic uppercase">{(defaultCourse?.name || 'Round').replace(/New Orleans/gi, '').trim()}</h2>
                                     {isLocked && (
                                         <span className="bg-red-50 text-red-600 text-[10pt] font-black px-2 py-0.5 rounded-full uppercase border border-red-100">Locked</span>
                                     )}
@@ -1645,7 +1645,7 @@ export default function LiveScoreClient({
                     isAdmin={isAdmin}
                     currentUserId={currentUserId}
                     courseData={defaultCourse ? {
-                        courseName: defaultCourse.name,
+                        courseName: defaultCourse.name.replace(/New Orleans/gi, '').trim(),
                         teeBoxes: defaultCourse.teeBoxes,
                         par: defaultCourse.holes.reduce((sum, h) => sum + h.par, 0),
                         roundTeeBox: initialRound ? {
