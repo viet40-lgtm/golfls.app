@@ -1413,7 +1413,7 @@ export default function LiveScoreClient({
                 {showDetails && (
                     <div className="bg-white rounded-none p-1 border border-zinc-200 shadow-xl flex flex-col justify-center space-y-1">
                         <div className="flex justify-between items-center">
-                            <label htmlFor="round-selector" className="text-xs font-black text-zinc-400 uppercase tracking-widest ml-1">Current Round</label>
+                            <label htmlFor="round-selector" className="text-xs font-black text-zinc-400 uppercase tracking-widest ml-1">Select Round</label>
                             <div className="flex gap-2">
                                 {/* Transfer button - Admin only */}
                                 {liveRoundId && isAdmin && (
@@ -1502,65 +1502,33 @@ export default function LiveScoreClient({
                             </div>
                         </div>
 
-                        <button
-                            id="round-selector"
-                            aria-label="Select Round"
-                            onClick={() => setIsRoundSelectModalOpen(true)}
-                            className="flex-1 px-1 py-1 text-[15pt] bg-black text-white rounded-none font-bold hover:bg-gray-800 transition-colors flex justify-between items-center min-w-0"
-                        >
-                            <span className="truncate mr-2">
-                                {(() => {
-                                    if (!liveRoundId) return "-- Select a Round --";
-                                    const r = allLiveRounds.find(r => r.id === liveRoundId);
-                                    if (!r) return "-- Select a Round --";
-                                    const dayOfWeek = r.date ? new Date(r.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' }) : '';
-                                    return dayOfWeek ? `${dayOfWeek} - ${r.name.replace(/New Orleans/gi, '').trim()}` : r.name.replace(/New Orleans/gi, '').trim();
-                                })()}
-                            </span>
-                            <span className="text-sm">▼</span>
-                        </button>
-
-                        {/* Full Screen Round Selection Modal */}
-                        {isRoundSelectModalOpen && (
-                            <div className="fixed inset-0 z-[100] bg-white flex flex-col animate-in slide-in-from-bottom-5 duration-200">
-                                <div className="bg-black text-white px-4 py-4 flex justify-between items-center shadow-md shrink-0">
-                                    <h2 className="text-[18pt] font-bold">Select Round</h2>
-                                    <button
-                                        onClick={() => setIsRoundSelectModalOpen(false)}
-                                        className="text-white p-2 rounded-full hover:bg-gray-800"
-                                    >
-                                        <span className="text-[20pt] leading-none">✕</span>
-                                    </button>
-                                </div>
-                                <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-gray-50">
-                                    {allLiveRounds.map(round => {
-                                        const dayOfWeek = round.date ? new Date(round.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' }) : '';
-                                        const isSelected = round.id === liveRoundId;
-                                        return (
-                                            <button
-                                                key={round.id}
-                                                onClick={() => {
-                                                    setIsRoundSelectModalOpen(false);
-                                                    if (round.id !== liveRoundId) {
-                                                        window.location.href = `/live?roundId=${round.id}`;
-                                                    }
-                                                }}
-                                                className={`w-full text-left p-1 rounded-xl shadow-sm border transaction-all active:scale-[0.98] ${isSelected
-                                                    ? 'bg-green-50 border-green-500 ring-1 ring-green-500'
-                                                    : 'bg-white border-gray-200 hover:border-gray-300'
-                                                    }`}
-                                            >
-                                                <div className="flex flex-col">
-                                                    <span className={`text-[16pt] font-bold ${isSelected ? 'text-green-700' : 'text-gray-900'}`}>
-                                                        {dayOfWeek ? `${dayOfWeek} - ` : ''}{round.name.replace(/New Orleans/gi, '').trim()}
-                                                    </span>
-                                                </div>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
+                        <div className="relative">
+                            <select
+                                id="round-selector"
+                                value={liveRoundId || ""}
+                                onChange={(e) => {
+                                    const newId = e.target.value;
+                                    if (newId && newId !== liveRoundId) {
+                                        window.location.href = `/live?roundId=${newId}`;
+                                    }
+                                }}
+                                className="w-full px-1 py-1 text-[15pt] bg-black text-white rounded-none font-bold outline-none appearance-none pr-8 cursor-pointer"
+                            >
+                                <option value="" disabled>-- Select a Round --</option>
+                                {allLiveRounds.map(round => {
+                                    const dayOfWeek = round.date ? new Date(round.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' }) : '';
+                                    const displayName = dayOfWeek ? `${dayOfWeek} - ${round.name.replace(/New Orleans/gi, '').trim()}` : round.name.replace(/New Orleans/gi, '').trim();
+                                    return (
+                                        <option key={round.id} value={round.id}>
+                                            {displayName}
+                                        </option>
+                                    );
+                                })}
+                            </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                                <span className="text-sm">▼</span>
                             </div>
-                        )}
+                        </div>
                     </div>
                 )}
 
