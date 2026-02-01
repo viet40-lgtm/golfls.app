@@ -221,6 +221,9 @@ function PlayerProfileModal({ initialData, onClose, onSave }: { initialData: any
                                 onChange={v => setFormData({ ...formData, estimateHandicap: v })}
                             />
                         </div>
+                        <div className="flex items-start gap-2 px-1 text-zinc-400 italic">
+                            <p className="text-[10pt] font-medium leading-tight">After 5 recorded rounds, your index and handicap will automatically follow official USGA rules.</p>
+                        </div>
                         <div className="space-y-1.5">
                             <label htmlFor="pref-tee-box" className="text-[10pt] font-black text-gray-400 uppercase tracking-widest ml-1">Prefer Tee Box</label>
                             <select
