@@ -2,10 +2,17 @@ import { prisma } from '@/lib/prisma';
 import LiveScoreClient from './LiveScoreClient';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
+import { getUserRounds } from '@/app/actions/get-user-rounds';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
+
+export const metadata = {
+    title: {
+        absolute: "Golf Live Scores - GolfLS.app",
+    },
+};
 
 export default async function LiveScorePage(props: { searchParams: Promise<{ roundId?: string }> }) {
     const resolvedSearchParams = await props.searchParams;
@@ -22,6 +29,9 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
 
     // Check if user is admin
     const isAdmin = (await cookieStore).get('admin_session')?.value === 'true';
+
+    // Fetch User Rounds History
+    const userRoundsHistory = sessionUserId ? await getUserRounds(sessionUserId) : [];
 
     // 1. Get default course
     let defaultCourse = await prisma.course.findFirst({
@@ -204,6 +214,7 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
             currentUserId={sessionUserId}
             lastUsedCourseId={lastUsedCourseId}
             lastUsedTeeBoxId={lastUsedTeeBoxId}
+            userRoundsHistory={userRoundsHistory}
         />
     );
 }

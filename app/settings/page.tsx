@@ -2,13 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, Navigation, Bell, Shield, Info, Smartphone, User, X, Check, Eye, EyeOff } from 'lucide-react';
+import { ChevronLeft, Navigation, Bell, Shield, Info, Smartphone, User, X, Check, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import { getCurrentPlayerProfile, updatePlayerProfile } from '@/app/actions/update-player';
+import { recalculateAllHandicaps } from '@/app/actions/recalculate-handicaps';
+import { fetchSiteConfig, saveSiteConfig } from '@/app/actions/site-config';
+import { Tag } from 'lucide-react';
 
 export default function SettingsPage() {
     const [isGPSEnabled, setIsGPSEnabled] = useState(false);
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [playerData, setPlayerData] = useState<any>(null);
+    const [isRecalculating, setIsRecalculating] = useState(false);
+    const [isMetadataModalOpen, setIsMetadataModalOpen] = useState(false);
+    const [siteConfig, setSiteConfig] = useState<any>(null);
+    const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
     useEffect(() => {
         // Hydrate GPS pref from localStorage
@@ -23,13 +30,63 @@ export default function SettingsPage() {
             if (data) setPlayerData(data);
         }
         loadProfile();
+
+        // Fetch site config
+        async function loadConfig() {
+            const config = await fetchSiteConfig();
+            setSiteConfig(config);
+        }
+        loadConfig();
+
+        // PWA Install Prompt Listener
+        const handleBeforeInstallPrompt = (e: any) => {
+            e.preventDefault();
+            setDeferredPrompt(e);
+        };
+
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+        return () => {
+            window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        };
     }, []);
+
+    const handleInstallClick = async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            setDeferredPrompt(null);
+        }
+    };
 
     const toggleGPS = () => {
         const newValue = !isGPSEnabled;
         setIsGPSEnabled(newValue);
         localStorage.setItem('gps_enabled_pref', String(newValue));
         window.dispatchEvent(new CustomEvent('gps-pref-change', { detail: newValue }));
+    };
+
+    const handleRecalculate = async () => {
+        if (!confirm('Are you sure you want to recalculate all handicaps? This will update your Index based on your full round history.')) return;
+
+        setIsRecalculating(true);
+        try {
+            const result = await recalculateAllHandicaps();
+            if (result.success) {
+                alert(result.message || 'Handicaps recalculated successfully!');
+                // Refresh local profile data too
+                const updated = await getCurrentPlayerProfile();
+                if (updated) setPlayerData(updated);
+            } else {
+                alert('Error: ' + result.message);
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Failed to recalculate handicaps.');
+        } finally {
+            setIsRecalculating(false);
+        }
     };
 
     return (
@@ -102,21 +159,105 @@ export default function SettingsPage() {
                         <SettingsItem icon={<Info className="w-5 h-5" />} label="Version 1.0.6" hideArrow />
                     </div>
                 </section>
+
+                {/* App Installation Section */}
+                <section className="space-y-3">
+                    <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Install App</h2>
+                    <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="bg-purple-50 p-3 rounded-2xl text-purple-600">
+                                <Smartphone className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-lg leading-tight">Install GolfLS</h3>
+                                <p className="text-sm text-gray-400 font-medium italic leading-tight mt-0.5">Add to Home Screen for the best experience</p>
+                            </div>
+                        </div>
+
+                        {deferredPrompt ? (
+                            <button
+                                onClick={handleInstallClick}
+                                className="w-full bg-black text-white py-3 rounded-xl font-black uppercase tracking-widest text-sm shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
+                            >
+                                Install App
+                            </button>
+                        ) : (
+                            <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 text-center">
+                                <p className="text-xs text-gray-500 font-bold">
+                                    App is already installed or check your browser's menu to "Add to Home Screen".
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </section>
+
+                {/* Metadata Section */}
+                <section className="space-y-3">
+                    <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Administration</h2>
+                    <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+                        <SettingsItem
+                            icon={<Tag className="w-5 h-5" />}
+                            label="Edit Metadata"
+                            onClick={() => setIsMetadataModalOpen(true)}
+                        />
+                    </div>
+                </section>
+
+                {/* Data Management Section */}
+                <section className="space-y-3">
+                    <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Data Management</h2>
+                    <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="bg-orange-50 p-3 rounded-2xl text-orange-600">
+                                    <RefreshCw className={`w-6 h-6 ${isRecalculating ? 'animate-spin' : ''}`} />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-lg leading-tight">Recalculate index and handicap</h3>
+                                    <p className="text-sm text-gray-400 font-medium italic leading-tight mt-0.5">Sync your Handicap Index from round history</p>
+                                </div>
+                            </div>
+                        </div>
+                        <button
+                            onClick={handleRecalculate}
+                            disabled={isRecalculating}
+                            className="w-full mt-4 bg-black text-white py-3 rounded-xl font-black uppercase tracking-widest text-sm shadow-md active:scale-95 transition-all disabled:opacity-50"
+                        >
+                            {isRecalculating ? 'Recalculating...' : 'Force Recalculation'}
+                        </button>
+                    </div>
+                </section>
             </main>
 
             {/* Profile Fullscreen Modal */}
-            {isProfileModalOpen && (
-                <PlayerProfileModal
-                    initialData={playerData}
-                    onClose={() => setIsProfileModalOpen(false)}
-                    onSave={() => {
-                        setIsProfileModalOpen(false);
-                        // Refresh data
-                        getCurrentPlayerProfile().then(setPlayerData);
-                    }}
-                />
-            )}
-        </div>
+            {
+                isProfileModalOpen && (
+                    <PlayerProfileModal
+                        initialData={playerData}
+                        onClose={() => setIsProfileModalOpen(false)}
+                        onSave={() => {
+                            setIsProfileModalOpen(false);
+                            // Refresh data
+                            getCurrentPlayerProfile().then(setPlayerData);
+                        }}
+                    />
+                )
+            }
+
+            {
+                isMetadataModalOpen && (
+                    <MetadataModal
+                        initialData={siteConfig}
+                        onClose={() => setIsMetadataModalOpen(false)}
+                        onSave={() => {
+                            setIsMetadataModalOpen(false);
+                            // Refresh config
+                            fetchSiteConfig().then(setSiteConfig);
+                        }}
+                    />
+                )
+            }
+        </div >
     );
 }
 
@@ -262,13 +403,13 @@ function PlayerProfileModal({ initialData, onClose, onSave }: { initialData: any
 
                     {/* Help text */}
                     <div className="space-y-2 px-1">
-                        <div className="flex items-center gap-2 text-zinc-400 uppercase tracking-tighter">
-                            <div className="w-1 h-1 rounded-full bg-zinc-300" />
-                            <p className="text-xs font-black">Requires at least 4 characters</p>
+                        <div className="flex items-start gap-2 text-zinc-400 italic">
+                            <div className="w-1 h-1 rounded-full bg-zinc-300 mt-2" />
+                            <p className="text-[12pt] font-medium leading-tight">Requires at least 4 characters</p>
                         </div>
-                        <div className="flex items-center gap-2 text-zinc-500 italic tracking-tight">
-                            <div className="w-1 h-1 rounded-full bg-zinc-300" />
-                            <p className="text-xs font-bold">Leave blank to maintain your current password</p>
+                        <div className="flex items-start gap-2 text-zinc-400 italic">
+                            <div className="w-1 h-1 rounded-full bg-zinc-300 mt-2" />
+                            <p className="text-[12pt] font-medium leading-tight">Leave blank to maintain your current password</p>
                         </div>
                     </div>
                 </div>
@@ -290,6 +431,96 @@ function PlayerProfileModal({ initialData, onClose, onSave }: { initialData: any
                             <>
                                 <Check className="w-5 h-5" />
                                 Save Profile
+                            </>
+                        )}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+
+function MetadataModal({ initialData, onClose, onSave }: { initialData: any, onClose: () => void, onSave: () => void }) {
+    const [isLoading, setIsLoading] = useState(false);
+    const [formData, setFormData] = useState({
+        title: initialData?.title || '',
+        description: initialData?.description || '',
+        keywords: initialData?.keywords || ''
+    });
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+
+        try {
+            await saveSiteConfig(formData);
+            onSave();
+        } catch (err) {
+            console.error(err);
+            alert('Failed to update metadata');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[100] bg-white animate-in slide-in-from-bottom duration-300 flex flex-col">
+            {/* Modal Header */}
+            <div className="px-4 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md">
+                <button onClick={onClose} className="p-2 hover:bg-gray-50 rounded-full transition-colors" title="Close">
+                    <X className="w-6 h-6" />
+                </button>
+                <h2 className="text-lg font-black italic uppercase tracking-tighter">Edit Metadata</h2>
+                <div className="w-10"></div> {/* Spacer */}
+            </div>
+
+            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 space-y-6 pb-24">
+                <div className="max-w-xl mx-auto space-y-6">
+                    <div className="space-y-4">
+                        <ProfileInput
+                            label="Site Title"
+                            value={formData.title}
+                            onChange={v => setFormData({ ...formData, title: v })}
+                            placeholder="e.g. Golf Live Scores"
+                            required
+                        />
+                        <div className="space-y-1.5 flex-1">
+                            <label className="text-[10pt] font-black text-gray-400 uppercase tracking-widest ml-1">Description</label>
+                            <textarea
+                                value={formData.description}
+                                onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                placeholder="Site description for SEO..."
+                                className="w-full px-4 py-4 bg-gray-50 border-transparent focus:bg-white focus:border-black rounded-2xl transition-all outline-none font-bold text-lg min-h-[120px]"
+                                required
+                            />
+                        </div>
+                        <ProfileInput
+                            label="Keywords"
+                            value={formData.keywords}
+                            onChange={v => setFormData({ ...formData, keywords: v })}
+                            placeholder="golf, scorecard, live..."
+                        />
+                    </div>
+                </div>
+            </form>
+
+            {/* Bottom Bar */}
+            <div className="p-4 border-t border-gray-100 sticky bottom-0 bg-white">
+                <div className="max-w-xl mx-auto">
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        onClick={handleSubmit}
+                        className="w-full bg-black text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                        title="Save Metadata"
+                    >
+                        {isLoading ? (
+                            <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                        ) : (
+                            <>
+                                <Check className="w-5 h-5" />
+                                Save Changes
                             </>
                         )}
                     </button>

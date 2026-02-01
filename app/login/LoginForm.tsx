@@ -260,6 +260,15 @@ export default function LoginForm({ initialEmail }: { initialEmail?: string }) {
                     padding: 0.75rem;
                     background: #f8fff8;
                     border-radius: 12px;
+                    word-break: break-all;
+                }
+
+                .success-message a {
+                    color: #1b4332;
+                    text-decoration: underline;
+                    display: block;
+                    margin-top: 0.5rem;
+                    font-weight: 800;
                 }
 
                 .copyright {
@@ -273,8 +282,8 @@ export default function LoginForm({ initialEmail }: { initialEmail?: string }) {
 
             <div className="auth-card">
                 <div className="logo-container">
-                    <div className="logo-icon">
-                        <Flag size={20} fill="currentColor" />
+                    <div className="logo-icon bg-transparent p-0">
+                        <img src="/icon-192.png" alt="GolfLS" className="w-12 h-12 object-contain rounded-xl" />
                     </div>
                     <span className="logo-text">GolfLS.app</span>
                 </div>
@@ -284,7 +293,20 @@ export default function LoginForm({ initialEmail }: { initialEmail?: string }) {
                 </h1>
 
                 {error && <div className="error-message">{error}</div>}
-                {successMessage && <div className="success-message">{successMessage}</div>}
+                {successMessage && (
+                    <div className="success-message">
+                        {successMessage.includes('http') ? (
+                            <>
+                                {successMessage.split('http')[0]}
+                                <a href={'http' + successMessage.split('http')[1]} target="_blank" rel="noopener noreferrer">
+                                    CLICK HERE TO RESET
+                                </a>
+                            </>
+                        ) : (
+                            successMessage
+                        )}
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit} className="auth-form">
                     {mode === 'signup' && (

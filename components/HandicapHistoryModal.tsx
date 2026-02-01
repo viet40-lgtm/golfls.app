@@ -138,7 +138,7 @@ export function HandicapHistoryModal({ playerId, isOpen, onClose }: HandicapHist
                     </tbody>
                 </table>
                 <p style="margin-top: 15px; font-size: 12px; color: #94a3b8; text-align: center;">
-                    City Park Golf Club - Handicap History Report
+                    Golf Live Scores - GolfLS.app - Handicap History Report
                 </p>
             </div>
         `;
@@ -215,7 +215,7 @@ export function HandicapHistoryModal({ playerId, isOpen, onClose }: HandicapHist
                             </div>
 
                             <div className="border-t border-gray-100 pt-4">
-                                <p className="font-bold text-gray-700 mb-2 text-[14pt]">Course Handicap (City Park North, Par {data.courseData.par}):</p>
+                                <p className="font-bold text-gray-700 mb-2 text-[14pt]">Course Handicap (Par {data.courseData.par}):</p>
                                 <div className="flex flex-col gap-2 items-center justify-center text-[14pt]">
                                     {data.courseData.tees
                                         .filter(t => ['White', 'Gold'].includes(t.name))

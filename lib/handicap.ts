@@ -129,13 +129,10 @@ export function calculateHandicap(
 
     // 6. Calculate Average
     const sum = usedDifferentials.reduce((acc, d) => acc + d.value, 0);
-    let rawIndex = sum / itemsToUse;
+    const average = sum / itemsToUse;
 
-    // Apply 0.96 multiplier (USGA Rule)
-    rawIndex = rawIndex * 0.96;
-
-    // Round to 1 decimal place (USGA rules)
-    let index = Number(rawIndex.toFixed(1));
+    // Round to 1 decimal place (USGA/WHS rules)
+    let index = Number(average.toFixed(1));
 
     // 7. Apply Caps (Soft and Hard)
     // Only applies if user has at least 20 scores? No, WHS says caps apply once 20 scores exist usually,

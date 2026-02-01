@@ -3,6 +3,10 @@
 import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
+import { sendResetPasswordEmail } from '@/lib/mail'
+import crypto from 'crypto'
+
+const isDev = process.env.NODE_ENV === 'development'
 
 export async function login(prevState: any, formData: FormData) {
     const input = formData.get('email') as string
@@ -101,18 +105,91 @@ export async function signup(prevState: any, formData: FormData) {
 }
 
 export async function forgotPassword(prevState: any, formData: FormData) {
-    const email = formData.get('email') as string
-    if (!email) return { error: 'Email is required' }
+    const emailInput = formData.get('email') as string
+    if (!emailInput) return { error: 'Email is required' }
+
+    const email = emailInput.toLowerCase().trim()
 
     try {
         const player = await prisma.player.findUnique({
-            where: { email: email.toLowerCase().trim() }
+            where: { email }
         })
 
-        // In a real app, send email here.
+        if (player) {
+            // Generate token
+            const token = crypto.randomBytes(32).toString('hex')
+            const expiry = new Date(Date.now() + 3600000) // 1 hour from now
+
+            await prisma.player.update({
+                where: { id: player.id },
+                data: {
+                    resetToken: token,
+                    resetTokenExpiry: expiry
+                }
+            })
+
+            // Send email
+            const emailResult = await sendResetPasswordEmail(email, token)
+
+            if (isDev) {
+                const baseUrl = 'http://localhost:3000'
+                const devResetUrl = `${baseUrl}/reset-password?token=${token}`
+                console.log('DEBUG: Reset Password Link:', devResetUrl)
+
+                return {
+                    success: true,
+                    message: `[DEV MODE] Reset link: ${devResetUrl}`
+                }
+            }
+
+            if (emailResult.error) {
+                console.error('Email sending failed:', emailResult.error)
+            }
+        }
+
         return { success: true, message: 'If an account exists, a reset link has been sent to your email.' }
     } catch (e) {
+        console.error('Forgot password error:', e)
         return { error: 'An error occurred. Please try again later.' }
+    }
+}
+
+export async function resetPassword(prevState: any, formData: FormData) {
+    const token = formData.get('token') as string
+    const password = formData.get('password') as string
+
+    if (!token || !password) return { error: 'Token and password are required' }
+    if (password.length < 4) return { error: 'Password must be at least 4 characters' }
+
+    try {
+        const player = await prisma.player.findFirst({
+            where: {
+                resetToken: token,
+                resetTokenExpiry: {
+                    gt: new Date()
+                }
+            }
+        })
+
+        if (!player) {
+            return { error: 'Invalid or expired reset token' }
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10)
+
+        await prisma.player.update({
+            where: { id: player.id },
+            data: {
+                password: hashedPassword,
+                resetToken: null,
+                resetTokenExpiry: null
+            }
+        })
+
+        return { success: true, message: 'Password has been reset successfully.' }
+    } catch (e) {
+        console.error('Reset password error:', e)
+        return { error: 'An error occurred during password reset.' }
     }
 }
 

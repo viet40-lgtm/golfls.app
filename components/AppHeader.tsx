@@ -64,10 +64,10 @@ export default function AppHeader({ playerId }: { playerId?: string | null }) {
                 <div className="max-w-7xl mx-auto bg-white/80 backdrop-blur-md border border-gray-100 shadow-sm rounded-none p-1 flex justify-between items-center transition-all duration-300">
                     {/* Left: Logo */}
                     <Link href={isAuthenticated ? '/live' : '/'} className="flex items-center gap-2 group transition-all">
-                        <div className="bg-black text-white p-1.5 rounded-lg group-hover:scale-110 transition-transform">
-                            <span role="img" aria-label="golf" className="text-xl">⛳</span>
+                        <div className="bg-black text-white p-1 rounded-lg group-hover:scale-110 transition-transform">
+                            <img src="/icon-192.png" alt="GolfLS" className="w-8 h-8 object-contain rounded" />
                         </div>
-                        <span className="font-extrabold text-xl tracking-tight text-black">GolfLS</span>
+                        <span className="font-extrabold text-xl tracking-tight text-black">GolfLS.app</span>
                     </Link>
 
                     {/* Center: Player ID (Visible if logged in) */}
@@ -117,7 +117,7 @@ export default function AppHeader({ playerId }: { playerId?: string | null }) {
                                                     setIsMenuOpen(false);
                                                     if (isAdmin) await adminLogout();
                                                     else await logout();
-                                                    window.location.reload();
+                                                    window.location.href = '/login';
                                                 }}
                                                 className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 text-red-600 font-bold rounded-xl transition-colors text-sm"
                                             >
@@ -141,40 +141,42 @@ export default function AppHeader({ playerId }: { playerId?: string | null }) {
                         )}
                     </div>
                 </div>
-            </header>
+            </header >
 
             {/* Admin Login Modal */}
-            {showLoginModal && (
-                <div className="fixed inset-0 z-[200] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
-                    <div className="bg-white p-8 rounded-[2rem] shadow-2xl w-full max-w-sm border border-gray-100 animate-in zoom-in-95 duration-300">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="font-extrabold text-2xl">Admin Access</h3>
-                            <button onClick={() => setShowLoginModal(false)} aria-label="Close" className="text-gray-400 hover:text-black transition-colors">
-                                <X className="w-6 h-6" />
-                            </button>
-                        </div>
-                        <form onSubmit={handleAdminSubmit} className="space-y-6">
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase tracking-wider text-gray-400 ml-1">Password</label>
-                                <input
-                                    type="password"
-                                    autoFocus
-                                    value={passwordInput}
-                                    onChange={(e) => setPasswordInput(e.target.value)}
-                                    className="w-full px-4 py-4 bg-gray-50 border-transparent focus:bg-white focus:border-black rounded-2xl transition-all outline-none text-base font-medium"
-                                    placeholder="••••••••"
-                                />
+            {
+                showLoginModal && (
+                    <div className="fixed inset-0 z-[200] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
+                        <div className="bg-white p-8 rounded-[2rem] shadow-2xl w-full max-w-sm border border-gray-100 animate-in zoom-in-95 duration-300">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="font-extrabold text-2xl">Admin Access</h3>
+                                <button onClick={() => setShowLoginModal(false)} aria-label="Close" className="text-gray-400 hover:text-black transition-colors">
+                                    <X className="w-6 h-6" />
+                                </button>
                             </div>
-                            <button
-                                type="submit"
-                                className="w-full bg-black text-white hover:bg-gray-900 py-4 rounded-2xl font-bold text-lg transition-all shadow-lg active:scale-[0.98]"
-                            >
-                                Verify Identity
-                            </button>
-                        </form>
+                            <form onSubmit={handleAdminSubmit} className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-gray-400 ml-1">Password</label>
+                                    <input
+                                        type="password"
+                                        autoFocus
+                                        value={passwordInput}
+                                        onChange={(e) => setPasswordInput(e.target.value)}
+                                        className="w-full px-4 py-4 bg-gray-50 border-transparent focus:bg-white focus:border-black rounded-2xl transition-all outline-none text-base font-medium"
+                                        placeholder="••••••••"
+                                    />
+                                </div>
+                                <button
+                                    type="submit"
+                                    className="w-full bg-black text-white hover:bg-gray-900 py-4 rounded-2xl font-bold text-lg transition-all shadow-lg active:scale-[0.98]"
+                                >
+                                    Verify Identity
+                                </button>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
         </>
     );
 }

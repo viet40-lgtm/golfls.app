@@ -423,6 +423,10 @@ export async function saveLiveScore(data: {
     playerScores: Array<{ playerId: string; strokes: number }>;
     scorerId?: string;
 }) {
+    const results: Array<{ playerId: string, success: boolean, error?: string }> = [];
+    const { getSession } = await import('@/lib/auth');
+    const session = await getSession();
+
     try {
         console.log(`SERVER ACTION: saveLiveScore - Round: ${data.liveRoundId}, Hole: ${data.holeNumber}, Scorer: ${data.scorerId}`);
         console.log(`Scores to save: ${JSON.stringify(data.playerScores)}`);
@@ -450,93 +454,146 @@ export async function saveLiveScore(data: {
 
         // Save scores for each player
         for (const ps of data.playerScores) {
-            // Find the live round player (could be by player_id OR direct LiveRoundPlayer id for guests)
-            const liveRoundPlayer = await prisma.liveRoundPlayer.findFirst({
-                where: {
-                    liveRoundId: data.liveRoundId,
-                    OR: [
-                        { playerId: ps.playerId },
-                        { id: ps.playerId }
-                    ]
-                }
-            });
+            try {
+                // Find the live round player (could be by player_id OR direct LiveRoundPlayer id for guests)
+                const liveRoundPlayer = await prisma.liveRoundPlayer.findFirst({
+                    where: {
+                        liveRoundId: data.liveRoundId,
+                        OR: [
+                            { playerId: ps.playerId },
+                            { id: ps.playerId }
+                        ]
+                    }
+                });
 
-            if (!liveRoundPlayer) {
-                console.warn(`Player ${ps.playerId} not found in live round`);
-                continue;
-            }
-
-            // ENFORCE OWNERSHIP
-            if (data.scorerId) {
-                if (liveRoundPlayer.scorerId && liveRoundPlayer.scorerId !== data.scorerId) {
-                    throw new Error(`Scoring locked by another device for ${liveRoundPlayer.guestName || 'player'}`);
+                if (!liveRoundPlayer) {
+                    console.warn(`Player ${ps.playerId} not found in live round`);
+                    results.push({ playerId: ps.playerId, success: false, error: 'Player not found' });
+                    continue;
                 }
 
-                // Implicit Claim: If no scorer set, claim it now
-                if (!liveRoundPlayer.scorerId) {
-                    await prisma.liveRoundPlayer.update({
-                        where: { id: liveRoundPlayer.id },
+                // ENFORCE OWNERSHIP
+                if (data.scorerId) {
+                    let isLocked = false;
+                    if (liveRoundPlayer.scorerId && liveRoundPlayer.scorerId !== data.scorerId) {
+                        isLocked = true;
+
+                        // OVERRIDE: If the user is authenticated and matches the player, allow takeover
+                        // We need to fetch session first - doing it lazily inside loop might be slow if many players, 
+                        // but usually it's just 1-4. Ideally fetch once at top.
+                        // For now we assume fetch at top of function.
+                        if (session && session.id && liveRoundPlayer.playerId === session.id) {
+                            console.log(`LOCK OVERRIDE: Player ${session.id} reclaiming scoring control.`);
+                            isLocked = false;
+                            // Update scorerId to the new one
+                            await prisma.liveRoundPlayer.update({
+                                where: { id: liveRoundPlayer.id },
+                                data: { scorerId: data.scorerId }
+                            });
+                        }
+                    }
+
+                    if (isLocked) {
+                        console.warn(`Scoring locked by another device for ${liveRoundPlayer.guestName || liveRoundPlayer.playerId}`);
+                        results.push({
+                            playerId: ps.playerId,
+                            success: false,
+                            error: `Locked by another device`
+                        });
+                        continue;
+                    }
+
+                    // Implicit Claim: If no scorer set, or if we just reclaimed it (implicit in the update above, but safe to repeat check logic)
+                    if (!liveRoundPlayer.scorerId || liveRoundPlayer.scorerId === data.scorerId) { // Added check to avoid redundant update if we just updated it
+                        if (!liveRoundPlayer.scorerId) {
+                            await prisma.liveRoundPlayer.update({
+                                where: { id: liveRoundPlayer.id },
+                                data: {
+                                    scorerId: data.scorerId
+                                }
+                            });
+                        }
+                    }
+                }
+
+                // Save or update the score
+                const existingScore = await prisma.liveScore.findFirst({
+                    where: {
+                        liveRoundPlayerId: liveRoundPlayer.id,
+                        holeId: hole.id
+                    }
+                });
+
+                if (existingScore) {
+                    await prisma.liveScore.update({
+                        where: { id: existingScore.id },
+                        data: { strokes: ps.strokes }
+                    });
+                } else {
+                    await prisma.liveScore.create({
                         data: {
-                            scorerId: data.scorerId
+                            liveRoundPlayerId: liveRoundPlayer.id,
+                            holeId: hole.id,
+                            strokes: ps.strokes
                         }
                     });
                 }
-            }
+                console.log(`Saved score for player ${liveRoundPlayer.guestName || liveRoundPlayer.playerId}: ${ps.strokes}`);
 
-            // Save or update the score
-            const existingScore = await prisma.liveScore.findFirst({
-                where: {
-                    liveRoundPlayerId: liveRoundPlayer.id,
-                    holeId: hole.id
-                }
-            });
-
-            if (existingScore) {
-                await prisma.liveScore.update({
-                    where: { id: existingScore.id },
-                    data: { strokes: ps.strokes }
+                // Recalculate totals
+                const allScores = await prisma.liveScore.findMany({
+                    where: { liveRoundPlayerId: liveRoundPlayer.id },
+                    include: { hole: { select: { holeNumber: true } } }
                 });
-            } else {
-                await prisma.liveScore.create({
+
+                let gross = 0;
+                let front = 0;
+                let back = 0;
+
+                allScores.forEach(s => {
+                    gross += s.strokes;
+                    if (s.hole.holeNumber <= 9) front += s.strokes;
+                    else back += s.strokes;
+                });
+
+                await prisma.liveRoundPlayer.update({
+                    where: { id: liveRoundPlayer.id },
                     data: {
-                        liveRoundPlayerId: liveRoundPlayer.id,
-                        holeId: hole.id,
-                        strokes: ps.strokes
+                        grossScore: gross,
+                        frontNine: front > 0 ? front : null,
+                        backNine: back > 0 ? back : null
                     }
                 });
+
+                results.push({ playerId: ps.playerId, success: true });
+            } catch (err) {
+                console.error(`Failed to save score for player ${ps.playerId}:`, err);
+                results.push({
+                    playerId: ps.playerId,
+                    success: false,
+                    error: err instanceof Error ? err.message : 'Unknown error'
+                });
             }
-            console.log(`Saved score for player ${liveRoundPlayer.guestName || liveRoundPlayer.playerId}: ${ps.strokes}`);
-
-            // Recalculate totals
-            const allScores = await prisma.liveScore.findMany({
-                where: { liveRoundPlayerId: liveRoundPlayer.id },
-                include: { hole: { select: { holeNumber: true } } }
-            });
-
-            let gross = 0;
-            let front = 0;
-            let back = 0;
-
-            allScores.forEach(s => {
-                gross += s.strokes;
-                if (s.hole.holeNumber <= 9) front += s.strokes;
-                else back += s.strokes;
-            });
-
-            await prisma.liveRoundPlayer.update({
-                where: { id: liveRoundPlayer.id },
-                data: {
-                    grossScore: gross,
-                    frontNine: front > 0 ? front : null,
-                    backNine: back > 0 ? back : null
-                }
-            });
         }
 
         revalidatePath('/');
+        revalidatePath('/live');
+
+        // Return overall status
+        const anyFailed = results.some(r => !r.success);
+        if (anyFailed) {
+            const failedNames = results.filter(r => !r.success).map(r => r.playerId).join(', ');
+            return {
+                success: true,
+                partialFailure: true,
+                results,
+                error: `Some scores could not be saved (locked or error).`
+            };
+        }
+
         return { success: true };
     } catch (error) {
-        console.error('Failed to save live score:', error);
+        console.error('Failed to save live score batch:', error);
         return {
             success: false,
             error: error instanceof Error ? error.message : 'Failed to save score'

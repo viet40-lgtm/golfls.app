@@ -11,9 +11,9 @@ export interface SiteConfig {
 }
 
 const DEFAULT_CONFIG: SiteConfig = {
-    title: "City Park Golf Club",
-    description: "City Park of New Orleans Teeing off every Saturday at sunrise at Bayou Oaks City Park Golf North Course.",
-    keywords: "golf, new orleans, city park"
+    title: "Golf Live Scores - GolfLS.app",
+    description: "Real-time golf scoring, handicap tracking, and live leaderboards for your golf group.",
+    keywords: "golf, live scores, handicap, leaderboard, golf app"
 };
 
 export async function getSiteConfig(): Promise<SiteConfig> {

@@ -5,15 +5,17 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Cookies from 'js-cookie';
-import { Bird, Copy, Mail, Send } from 'lucide-react';
+import { Bird, Copy, Mail, Send, History } from 'lucide-react';
 import { LivePlayerSelectionModal } from '@/components/LivePlayerSelectionModal';
 import { LiveRoundModal } from '@/components/LiveRoundModal';
 import { GuestPlayerModal } from '@/components/GuestPlayerModal';
 import ConfirmModal from '@/components/ConfirmModal';
 import AddToClubModal from '@/components/AddToClubModal';
 import { PoolModal } from '@/components/PoolModal';
-import { createLiveRound, addPlayerToLiveRound, saveLiveScore, deleteLiveRound, addGuestToLiveRound, updateGuestInLiveRound, deleteGuestFromLiveRound, createDefaultLiveRound } from '@/app/actions/create-live-round';
+import { createLiveRound, addPlayerToLiveRound, saveLiveScore, deleteLiveRound, addGuestToLiveRound, updateGuestInLiveRound, deleteGuestFromLiveRound } from '@/app/actions/create-live-round';
 import { copyLiveToClub } from '@/app/actions/copy-live-to-club';
+import { generateScorecardHtml, generateClipboardHtml } from '@/app/lib/scorecard-helper';
+import { LiveLeaderboardCard } from './LiveLeaderboardCard';
 
 import { removePlayerFromLiveRound } from '@/app/actions/remove-player-from-live-round'; // Force reload
 import { sendScorecardEmail } from '@/app/actions/send-scorecard';
@@ -89,6 +91,7 @@ interface LiveScoreClientProps {
     currentUserId?: string;
     lastUsedCourseId?: string | null;
     lastUsedTeeBoxId?: string | null;
+    userRoundsHistory?: any[];
 }
 
 export default function LiveScoreClient({
@@ -101,7 +104,8 @@ export default function LiveScoreClient({
     isAdmin: isAdminProp,
     currentUserId,
     lastUsedCourseId,
-    lastUsedTeeBoxId
+    lastUsedTeeBoxId,
+    userRoundsHistory = []
 }: LiveScoreClientProps) {
     const router = useRouter();
     // Initialize State from Server Data
@@ -121,6 +125,8 @@ export default function LiveScoreClient({
     const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
     const [isPoolModalOpen, setIsPoolModalOpen] = useState(false);
     const [isRoundSelectModalOpen, setIsRoundSelectModalOpen] = useState(false);
+    const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+    const [expandedHistoryRoundId, setExpandedHistoryRoundId] = useState<string | null>(null);
 
     const [birdiePlayers, setBirdiePlayers] = useState<Array<{ name: string; totalBirdies: number }>>([]);
     const [eaglePlayers, setEaglePlayers] = useState<Array<{ name: string; totalEagles: number }>>([]);
@@ -375,7 +381,7 @@ export default function LiveScoreClient({
                                 isGuest: true,
                                 liveRoundData: { tee_box_name: p.tee_box_name, course_hcp: p.course_handicap }
                             });
-                        } else {
+                        } else if (p.player) {
                             allRoundPlayers.push({
                                 id: p.player.id,
                                 name: p.player.name,
@@ -402,7 +408,7 @@ export default function LiveScoreClient({
                             isGuest: true,
                             liveRoundData: { tee_box_name: p.tee_box_name, course_hcp: p.course_handicap }
                         });
-                    } else {
+                    } else if (p.player) {
                         allRoundPlayers.push({
                             id: p.player.id,
                             name: p.player.name,
@@ -436,8 +442,10 @@ export default function LiveScoreClient({
                     });
                 }
                 // Use LiveRoundPlayer ID for guests, player.id for regular players
-                const playerId = p.is_guest ? p.id : p.player.id;
-                initialMap.set(playerId, playerScores);
+                const playerId = p.is_guest ? p.id : p.player?.id;
+                if (playerId) {
+                    initialMap.set(playerId, playerScores);
+                }
             });
         }
         return initialMap;
@@ -456,6 +464,8 @@ export default function LiveScoreClient({
         if (myEntry) {
             // Construct Player object
             const isGuest = myEntry.is_guest;
+            if (!isGuest && !myEntry.player) return;
+
             const playerObj: Player = {
                 id: isGuest ? myEntry.id : myEntry.player.id,
                 name: isGuest ? (myEntry.guest_name || 'Guest') : myEntry.player.name,
@@ -487,7 +497,8 @@ export default function LiveScoreClient({
             if (clientScorerId) {
                 const takenOverIds = new Set<string>();
                 initialRound.players.forEach((p: any) => {
-                    const playerId = p.is_guest ? p.id : p.player.id;
+                    const playerId = p.is_guest ? p.id : p.player?.id;
+                    if (!playerId) return;
                     if (p.scorer_id && p.scorer_id !== clientScorerId) {
                         takenOverIds.add(playerId);
                     }
@@ -508,7 +519,25 @@ export default function LiveScoreClient({
 
             setScores(prev => {
                 const next = new Map(prev);
+
+                // Load Local Backup (for reload survival)
+                let localBackup = new Map<string, Map<number, number>>();
+                if (typeof window !== 'undefined' && initialRound?.id) {
+                    try {
+                        const raw = localStorage.getItem(`live_scores_backup_${initialRound.id}`);
+                        if (raw) {
+                            const parsed = JSON.parse(raw);
+                            parsed.forEach(([pid, arr]: any) => {
+                                localBackup.set(pid, new Map(arr));
+                            });
+                        }
+                    } catch (e) { }
+                }
                 initialRound.players.forEach((p: any) => {
+                    // Use LiveRoundPlayer ID for guests, player.id for regular players
+                    const playerId = p.is_guest ? p.id : p.player?.id;
+                    if (!playerId) return;
+
                     // Reconstruct server scores for this player
                     const serverPlayerScores = new Map<number, number>();
                     if (p.scores) {
@@ -519,14 +548,17 @@ export default function LiveScoreClient({
                         });
                     }
 
-                    // Update local map with server data, but perform a MERGE to preserve pending local updates
-                    // Use LiveRoundPlayer ID for guests, player.id for regular players
-                    const playerId = p.is_guest ? p.id : p.player.id;
-
                     const existingLocalScores = next.get(playerId) || new Map();
-
+                    const backupScores = localBackup.get(playerId);
                     // Start with server scores (Source of Truth)
                     const mergedScores = new Map(serverPlayerScores);
+
+                    // Merge in Backup (if server missing)
+                    if (backupScores) {
+                        backupScores.forEach((v, k) => {
+                            if (!mergedScores.has(k)) mergedScores.set(k, v);
+                        });
+                    }
 
                     // Merge in local scores that are NOT in server scores (Pending/Optimistic)
                     // If server has a hole score, it overwrites local (correct for synchronization)
@@ -568,7 +600,8 @@ export default function LiveScoreClient({
         const newEagles: { name: string; totalEagles: number }[] = [];
 
         initialRound.players.forEach((p: any) => {
-            const playerId = p.is_guest ? p.id : p.player.id;
+            const playerId = p.is_guest ? p.id : p.player?.id;
+            if (!playerId) return;
 
             // Init Birdie Ref
             if (!knownBirdiesRef.current.has(playerId)) knownBirdiesRef.current.set(playerId, new Set());
@@ -609,13 +642,13 @@ export default function LiveScoreClient({
 
             if (playerHasNewBirdie) {
                 newBirdies.push({
-                    name: p.is_guest ? (p.guest_name || 'Guest') : p.player.name,
+                    name: p.is_guest ? (p.guest_name || 'Guest') : p.player?.name || 'Unknown',
                     totalBirdies: playerKnownSet.size
                 });
             }
             if (playerHasNewEagle) {
                 newEagles.push({
-                    name: p.is_guest ? (p.guest_name || 'Guest') : p.player.name,
+                    name: p.is_guest ? (p.guest_name || 'Guest') : p.player?.name || 'Unknown',
                     totalEagles: playerEagleSet.size
                 });
             }
@@ -727,7 +760,7 @@ export default function LiveScoreClient({
     // Use todayStr from server to avoid hydration mismatch
     const roundDateStr = initialRound?.date || todayStr;
     const isLocked = todayStr > roundDateStr;
-    const canUpdate = isAdmin || !isLocked;
+    const canUpdate = true; // isAdmin || !isLocked;
 
     // Auto-select next available hole for the specific group - DISABLED to allow manual hole selection
     // useEffect(() => {
@@ -809,8 +842,8 @@ export default function LiveScoreClient({
         const slope = teeBox.slope;
         const coursePar = initialRound?.par ?? (defaultCourse?.holes.reduce((sum, h) => sum + h.par, 0) || 72);
 
-        const ch = (player.index * slope / 113) + (rating - coursePar);
-        return Math.round(ch);
+        const ch = ((player.index || 0) * slope / 113) + (rating - coursePar);
+        return Math.round(ch) || 0;
     };
 
     const handleAddGuest = async (guest: { name: string; index: number; courseHandicap: number }) => {
@@ -1064,16 +1097,23 @@ export default function LiveScoreClient({
 
         // 2. Save to server in background
         try {
-            await saveLiveScore({
+            const result = await saveLiveScore({
                 liveRoundId,
                 holeNumber,
                 playerScores: [{ playerId, strokes: numericValue }],
                 scorerId: isAdmin ? undefined : clientScorerId
             });
-            // router.refresh() will happen periodically via polling, 
-            // but we can do a silent one here if needed.
+
+            if (!result.success || result.partialFailure) {
+                console.error("Save failed:", result.error);
+                alert(`Failed to save score: ${result.error || 'Unknown error'}`);
+                // Revert local state (optional, or just let the user see the alert)
+                // For now, valid strategy is to keep the local state (it's backed up to localStorage) 
+                // and let the user try hitting "Sync" later.
+            }
         } catch (err) {
             console.error("Admin summary save failed:", err);
+            alert("Network error saving score. Please check connection.");
         }
     };
 
@@ -1085,6 +1125,38 @@ export default function LiveScoreClient({
             localStorage.setItem(`live_scoring_my_group_${liveRoundId}`, JSON.stringify(selectedPlayers.map(p => p.id)));
         }
     }, [selectedPlayers, liveRoundId]);
+
+    // PERSIST SCORES locally to prevent data loss on refresh/network fail
+    useEffect(() => {
+        if (typeof window !== 'undefined' && liveRoundId && scores.size > 0) {
+            try {
+                // Read existing to prevent overwriting valid data with empty/partial state
+                const existingRaw = localStorage.getItem(`live_scores_backup_${liveRoundId}`);
+                let finalMap = new Map<string, Map<number, number>>();
+
+                if (existingRaw) {
+                    const parsed = JSON.parse(existingRaw);
+                    parsed.forEach(([pid, arr]: any) => {
+                        finalMap.set(pid, new Map(arr));
+                    });
+                }
+
+                // Merge CURRENT state ON TOP of existing backup
+                scores.forEach((pMap, pid) => {
+                    const existingPMap = finalMap.get(pid) || new Map();
+                    pMap.forEach((s, h) => {
+                        existingPMap.set(h, s);
+                    });
+                    finalMap.set(pid, existingPMap);
+                });
+
+                const serializable = Array.from(finalMap.entries()).map(([pid, map]) => [pid, Array.from(map.entries())]);
+                localStorage.setItem(`live_scores_backup_${liveRoundId}`, JSON.stringify(serializable));
+            } catch (e) {
+                console.error("Failed to backup scores", e);
+            }
+        }
+    }, [scores, liveRoundId]);
 
     // SELF-HEALING SYNC: Ensure locally selected players are actually ON the server
     // DISABLED: This was causing removed players to be immediately re-added because local state
@@ -1258,73 +1330,75 @@ export default function LiveScoreClient({
     });
 
     // Calculate Leaderboard Data - ALL devices see ALL players
-    const rankedPlayers = summaryPlayers.map(player => {
-        const playerScores = scores.get(player.id);
-        let totalGross = 0;
-        let front9 = 0;
-        let back9 = 0;
-        let strokesReceivedSoFar = 0;
-        let parTotal = 0;
-        let thru = 0;
-        const courseHcp = getCourseHandicap(player);
+    const rankedPlayers = useMemo(() => {
+        return summaryPlayers.map(player => {
+            const playerScores = scores.get(player.id);
+            let totalGross = 0;
+            let front9 = 0;
+            let back9 = 0;
+            let strokesReceivedSoFar = 0;
+            let parTotal = 0;
+            let thru = 0;
+            const courseHcp = getCourseHandicap(player);
 
-        const grossHoleScores: { difficulty: number; grossScore: number }[] = [];
+            const grossHoleScores: { difficulty: number; grossScore: number }[] = [];
 
-        if (playerScores) {
-            playerScores.forEach((strokes, holeNum) => {
-                totalGross += strokes;
+            if (playerScores) {
+                playerScores.forEach((strokes, holeNum) => {
+                    totalGross += strokes;
 
-                // Track front 9 and back 9
-                if (holeNum <= 9) {
-                    front9 += strokes;
-                } else {
-                    back9 += strokes;
-                }
+                    // Track front 9 and back 9
+                    if (holeNum <= 9) {
+                        front9 += strokes;
+                    } else {
+                        back9 += strokes;
+                    }
 
-                const hole = defaultCourse?.holes.find(h => h.holeNumber === holeNum);
-                const holePar = hole?.par || 4;
-                const difficulty = hole?.difficulty || holeNum;
+                    const hole = defaultCourse?.holes.find(h => h.holeNumber === holeNum);
+                    const holePar = hole?.par || 4;
+                    const difficulty = hole?.difficulty || holeNum;
 
-                // Collect for tie breaker
-                grossHoleScores.push({
-                    difficulty,
-                    grossScore: strokes
+                    // Collect for tie breaker
+                    grossHoleScores.push({
+                        difficulty,
+                        grossScore: strokes
+                    });
+
+                    let holeStrokes = 0;
+                    if (courseHcp > 0) {
+                        const base = Math.floor(courseHcp / 18);
+                        const remainder = courseHcp % 18;
+                        holeStrokes = base + (difficulty <= remainder ? 1 : 0);
+                    }
+                    strokesReceivedSoFar += holeStrokes;
+
+                    parTotal += holePar;
+                    thru++;
                 });
-
-                let holeStrokes = 0;
-                if (courseHcp > 0) {
-                    const base = Math.floor(courseHcp / 18);
-                    const remainder = courseHcp % 18;
-                    holeStrokes = base + (difficulty <= remainder ? 1 : 0);
-                }
-                strokesReceivedSoFar += holeStrokes;
-
-                parTotal += holePar;
-                thru++;
-            });
-        }
-
-        // Sort gross scores by difficulty (1 is hardest) for tie-breaker
-        grossHoleScores.sort((a, b) => a.difficulty - b.difficulty);
-
-        const totalNet = totalGross - strokesReceivedSoFar;
-        const toPar = totalGross - parTotal;
-
-        return { ...player, totalGross, front9, back9, strokesReceivedSoFar, courseHcp, totalNet, thru, toPar, parTotal, grossHoleScores };
-    }).sort((a, b) => {
-        // Primary Sort: Total Net (Ascending)
-        if (a.totalNet !== b.totalNet) return a.totalNet - b.totalNet;
-
-        // Tie Breaker: Compare Gross Score on hardest holes (Difficulty 1, 2, 3...)
-        const len = Math.min(a.grossHoleScores.length, b.grossHoleScores.length);
-        for (let i = 0; i < len; i++) {
-            if (a.grossHoleScores[i].grossScore !== b.grossHoleScores[i].grossScore) {
-                return a.grossHoleScores[i].grossScore - b.grossHoleScores[i].grossScore;
             }
-        }
 
-        return 0;
-    });
+            // Sort gross scores by difficulty (1 is hardest) for tie-breaker
+            grossHoleScores.sort((a, b) => a.difficulty - b.difficulty);
+
+            const totalNet = totalGross - (strokesReceivedSoFar || 0);
+            const toPar = totalGross - parTotal;
+
+            return { ...player, totalGross, front9, back9, strokesReceivedSoFar, courseHcp, totalNet, thru, toPar, parTotal, grossHoleScores };
+        }).sort((a, b) => {
+            // Primary Sort: Total Net (Ascending)
+            if (a.totalNet !== b.totalNet) return a.totalNet - b.totalNet;
+
+            // Tie Breaker: Compare Gross Score on hardest holes (Difficulty 1, 2, 3...)
+            const len = Math.min(a.grossHoleScores.length, b.grossHoleScores.length);
+            for (let i = 0; i < len; i++) {
+                if (a.grossHoleScores[i].grossScore !== b.grossHoleScores[i].grossScore) {
+                    return a.grossHoleScores[i].grossScore - b.grossHoleScores[i].grossScore;
+                }
+            }
+
+            return 0;
+        });
+    }, [summaryPlayers, scores, defaultCourse]);
 
     const activePlayers = rankedPlayers.filter(p => p.thru > 0);
     const allActiveFinished = activePlayers.length > 0 && activePlayers.every(p => p.thru >= 18);
@@ -1638,7 +1712,7 @@ export default function LiveScoreClient({
                     onClose={() => setIsPlayerModalOpen(false)}
                     allPlayers={[...allPlayers, ...guestPlayers]}
                     selectedIds={selectedPlayers.map(p => p.id)}
-                    playersInRound={initialRound?.players?.map((p: any) => p.player?.id).filter((id: any) => id) || []}
+                    playersInRound={initialRound?.players?.map((p: any) => p.player?.id).filter((id: any) => !!id) || []}
                     onSelectionChange={handleAddPlayers}
                     isAdmin={isAdmin}
                     currentUserId={currentUserId}
@@ -1818,7 +1892,14 @@ export default function LiveScoreClient({
                                     return (
                                         <button
                                             key={hole.holeNumber}
-                                            onClick={() => setActiveHole(hole.holeNumber)}
+                                            onClick={() => {
+                                                if (hasUnsavedChanges && pendingScores.size > 0) {
+                                                    // Simple block to prevent data loss
+                                                    alert("Unsaved Scores! Please click 'SAVE HOLE " + activeHole + "' before changing holes.");
+                                                    return;
+                                                }
+                                                setActiveHole(hole.holeNumber);
+                                            }}
                                             className={`
                                             flex flex-col items-center justify-center py-1 rounded-xl transition-all duration-300 active:scale-90
                                             ${btnClass}
@@ -1848,7 +1929,7 @@ export default function LiveScoreClient({
                                 {
                                     effectiveScoringPlayers.length > 0 && (
                                         <button
-                                            onClick={() => {
+                                            onClick={async () => {
                                                 if (!liveRoundId || isSaving) return;
                                                 // Prevent double clicks but don't block
                                                 setIsSaving(true);
@@ -1950,34 +2031,25 @@ export default function LiveScoreClient({
                                                 setPendingScores(new Map());
                                                 setHasUnsavedChanges(false);
 
-                                                // Determine next hole
-                                                let nextHoleToSet = currentHole;
-                                                if (!wasAlreadyScored) {
-                                                    if (currentHole < 18) {
-                                                        nextHoleToSet = currentHole + 1;
-                                                    } else {
-                                                        // After 18th hole, find the first hole that has missing scores
-                                                        let foundNext = 1;
-                                                        for (let h = 1; h <= 18; h++) {
-                                                            const isHoleIncomplete = effectiveScoringPlayers.some(p => {
-                                                                const pScores = newScores.get(p.id);
-                                                                return !pScores || !pScores.has(h);
-                                                            });
+                                                // Determine next hole: Find next incomplete hole cyclicly
+                                                let nextHoleToSet = (currentHole % 18) + 1; // Default to next numerical
 
-                                                            if (isHoleIncomplete) {
-                                                                foundNext = h;
-                                                                break;
-                                                            }
-                                                        }
-                                                        nextHoleToSet = foundNext;
+                                                for (let i = 1; i <= 18; i++) {
+                                                    const checkHole = ((currentHole + i - 1) % 18) + 1;
+                                                    const isIncomplete = effectiveScoringPlayers.some(p => {
+                                                        const pScores = newScores.get(p.id);
+                                                        return !pScores || !pScores.has(checkHole);
+                                                    });
+
+                                                    if (isIncomplete) {
+                                                        nextHoleToSet = checkHole;
+                                                        break;
                                                     }
-                                                    setActiveHole(nextHoleToSet);
-
-                                                    // Auto-hide details when advancing to next hole
-                                                    setShowDetails(false);
                                                 }
 
-                                                // 2. RELEASE UI LOCK IMMEDIATELY
+                                                // 2. OPTIMISTIC UI UPDATE (Instant)
+                                                setActiveHole(nextHoleToSet);
+                                                setShowDetails(false);
                                                 setIsSaving(false);
 
                                                 // 3. BACKGROUND SERVER SAVE
@@ -1990,20 +2062,13 @@ export default function LiveScoreClient({
                                                     }).then((result) => {
                                                         if (!result.success) {
                                                             console.error("Save failed:", result.error);
-                                                            if (result.error && result.error.includes('locked by another device')) {
-                                                                showAlert('Error', result.error);
-                                                                // Force sync to remove stolen players
-                                                                router.refresh();
-                                                            } else {
-                                                                showAlert('Error', "Failed to save scores: " + (result.error || "Unknown error"));
-                                                            }
-                                                            return;
+                                                            showAlert('Error', `Failed to save Hole ${currentHole}: ${result.error}. Data is saved locally.`);
+                                                        } else if (result.partialFailure) {
+                                                            console.warn("Partial warning:", result.error);
                                                         }
-                                                        // Silent refresh to keep server data in sync
-                                                        router.refresh();
                                                     }).catch((error) => {
                                                         console.error("Background save failed:", error);
-                                                        showAlert('Error', "Failed to save scores to server. Please check your connection.");
+                                                        showAlert('Error', "Network error saving scores. Data is saved locally.");
                                                     });
                                                 }
                                             }}
@@ -2204,158 +2269,27 @@ export default function LiveScoreClient({
                                                 const currentRound = allLiveRounds.find(r => r.id === liveRoundId);
                                                 const roundName = currentRound?.name || 'Live Scorecard';
 
-                                                // Build detailed scorecard data matching the summary section display
-                                                let text = `${roundName}\n\nLeaderboard\n\n`;
+                                                // Use helper to generate HTML
+                                                if (defaultCourse) {
+                                                    const { html, text } = generateClipboardHtml(roundName, rankedPlayers, defaultCourse, scores);
 
-                                                // HTML table with detailed scores
-                                                let html = `
-                                                <div style="font-family: sans-serif; background-image: linear-gradient(#ffffff, #ffffff) !important; background-color: #ffffff !important; color: #000000 !important; margin: 0; padding: 0;">
-                                                    <!-- ID: ${Date.now()} -->
-                                                    <meta name="color-scheme" content="light only">
-                                                    <meta name="supported-color-schemes" content="light only">
-                                                    <table width="100%" height="100%" bgcolor="#ffffff" cellpadding="0" cellspacing="0" border="0" style="background-image: linear-gradient(#ffffff, #ffffff) !important; background-color: #ffffff !important;">
-                                                        <tr>
-                                                            <td align="center" valign="top" style="padding: 1px; background-image: linear-gradient(#ffffff, #ffffff) !important; background-color: #ffffff !important;">
-                                                                <div style="max-width: 600px; text-align: center; margin: 0 auto; background-image: linear-gradient(#ffffff, #ffffff) !important; background-color: #ffffff !important;">
-                                                                    <h2 style="margin: 0; font-size: 11pt; font-weight: bold; color: #000000 !important;">${roundName.replace('New Orleans', '')}</h2>
-                                                                    <br>
-                                                                    <h2 style="margin: 0; font-size: 11pt; font-weight: bold; color: #000000 !important;">Leaderboard</h2>
-                                                                </div>
-                                                `;
-
-                                                rankedPlayers.forEach((p, playerIdx) => {
-                                                    let toParStr = "E";
-                                                    let toParColor = "#16a34a";
-                                                    if (p.toPar > 0) {
-                                                        toParStr = `+${p.toPar}`;
-                                                        toParColor = "#000000";
-                                                    } else if (p.toPar < 0) {
-                                                        toParStr = `${p.toPar}`;
-                                                        toParColor = "#dc2626";
+                                                    try {
+                                                        const blobHtml = new Blob([html], { type: 'text/html' });
+                                                        const blobText = new Blob([text], { type: 'text/plain' });
+                                                        await navigator.clipboard.write([
+                                                            new ClipboardItem({
+                                                                'text/html': blobHtml,
+                                                                'text/plain': blobText
+                                                            })
+                                                        ]);
+                                                        showAlert('Copied!', 'Scorecard copied to clipboard');
+                                                    } catch (err) {
+                                                        console.error('Failed to copy: ', err);
+                                                        showAlert('Error', 'Failed to copy scorecard');
                                                     }
-
-                                                    const { first: firstName, last: lastName } = splitName(p.name);
-                                                    const tee = getPlayerTee(p);
-                                                    const teeLetter = !tee ? '' :
-                                                        tee.name.toLowerCase().includes('white') ? 'W' :
-                                                            tee.name.toLowerCase().includes('gold') ? 'G' :
-                                                                tee.name.charAt(0).toUpperCase();
-
-                                                    // HTML for this player - Optimized for mobile & Dark Mode
-                                                    html += `
-                                                    <table width="100%" bgcolor="#ffffff" cellpadding="0" cellspacing="0" border="0" style="box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 8px; margin-bottom: 1px; border: 2px solid #d1d5db;">
-                                                        <tr>
-                                                            <td>
-                                                                <div style="background: #1d4ed8; padding: 1px; color: white;">
-                                                                    <table width="100%" cellpadding="1" cellspacing="0" border="0" style="color: white;">
-                                                                        <tr>
-                                                                            <td align="left" style="vertical-align: middle; padding: 1px;">
-                                                                                <table cellpadding="1" cellspacing="0" border="0" style="color: white;">
-                                                                                    <tr>
-                                                                                        <td style="font-weight: bold; font-size: 13pt; line-height: 1.1; color: white;">${firstName}</td>
-                                                                                        <td style="padding-left: 1px;">
-                                                                                            ${teeLetter ? `<span style="font-size: 11pt; font-weight: 900; padding: 1px 1px; border-radius: 2px; background: ${teeLetter === 'W' ? '#e5e7eb; color: #1f2937' : '#fef3c7; color: #92400e'}; border: 1px solid #000;">${teeLetter}</span>` : ''}
-                                                                                        </td>
-                                                                                    </tr>
-                                                                                    <tr>
-                                                                                        <td colspan="2" style="font-size: 11pt; line-height: 1.1; opacity: 0.9; color: white;">${lastName}</td>
-                                                                                    </tr>
-                                                                                </table>
-                                                                            </td>
-                                                                            <td align="right" style="vertical-align: middle; padding: 1px;">
-                                                                                <table cellpadding="1" cellspacing="0" border="0" style="color: white;">
-                                                                                    <tr>
-                                                                                        <td style="background-image: linear-gradient(#ffffff, #ffffff) !important; background-color: #ffffff !important; color: ${toParColor} !important; font-weight: bold; border-radius: 4px; padding: 1px 1px; font-size: 11pt; text-align: center; min-width: 40px; border: 1px solid #000;">
-                                                                                            ${toParStr}
-                                                                                        </td>
-                                                                                        <td style="text-align: center; padding-left: 1px;">
-                                                                                            <div style="font-size: 11pt; font-weight: bold; opacity: 0.8; color: white;">GRS</div>
-                                                                                            <div style="font-size: 11pt; font-weight: bold; color: white;">${p.totalGross}</div>
-                                                                                        </td>
-                                                                                        <td style="text-align: center; padding-left: 1px;">
-                                                                                            <div style="font-size: 11pt; font-weight: bold; opacity: 0.8; color: white;">HCP</div>
-                                                                                            <div style="font-size: 11pt; font-weight: bold; color: white;">${p.strokesReceivedSoFar}</div>
-                                                                                        </td>
-                                                                                        <td style="text-align: center; padding-left: 1px;">
-                                                                                            <div style="font-size: 11pt; font-weight: bold; opacity: 0.8; color: white;">NET</div>
-                                                                                            <div style="font-size: 11pt; font-weight: bold; color: white;">${p.totalNet}</div>
-                                                                                        </td>
-                                                                                    </tr>
-                                                                                </table>
-                                                                            </td>
-                                                                        </tr>
-                                                                    </table>
-                                                                </div>
-                                                                <div style="padding: 1px; border-top: 1px solid #000;">
-                                                                    <table width="100%" cellpadding="1" cellspacing="0" border="0" style="border-collapse: collapse;" bgcolor="#ffffff">
-                                                                        <tr style="border-bottom: 1px solid #000;">
-                                                    `;
-
-                                                    // Front 9 holes
-                                                    for (let h = 1; h <= 9; h++) {
-                                                        const score = getSavedScore(p.id, h);
-                                                        const holePar = defaultCourse?.holes.find(hole => hole.holeNumber === h)?.par || 4;
-                                                        let bgColor = "#ffffff";
-                                                        if (score !== null) {
-                                                            const diff = score - holePar;
-                                                            if (diff <= -2) bgColor = "#fde047";
-                                                            else if (diff === -1) bgColor = "#86efac";
-                                                            else if (diff === 0) bgColor = "#ffffff";
-                                                            else if (diff === 1) bgColor = "#fed7aa";
-                                                            else if (diff >= 2) bgColor = "#fca5a5";
-                                                        }
-                                                        html += `
-                                                            <td style="border-right: 1px solid #000; text-align: center; padding: 1px; background-image: linear-gradient(${bgColor}, ${bgColor}) !important; background-color: ${bgColor} !important;" bgcolor="${bgColor}">
-                                                                <div style="font-size: 11pt; color: #000000 !important; line-height: 1.1;">${h}/${holePar}</div>
-                                                                <div style="font-size: 11pt; font-weight: bold; color: #000000 !important; line-height: 1.1;">${score || '-'}</div>
-                                                            </td>
-                                                        `;
-                                                    }
-                                                    html += `</tr><tr>`;
-                                                    // Back 9 holes
-                                                    for (let h = 10; h <= 18; h++) {
-                                                        const score = getSavedScore(p.id, h);
-                                                        const holePar = defaultCourse?.holes.find(hole => hole.holeNumber === h)?.par || 4;
-                                                        let bgColor = "#ffffff";
-                                                        if (score !== null) {
-                                                            const diff = score - holePar;
-                                                            if (diff <= -2) bgColor = "#fde047";
-                                                            else if (diff === -1) bgColor = "#86efac";
-                                                            else if (diff === 0) bgColor = "#ffffff";
-                                                            else if (diff === 1) bgColor = "#fed7aa";
-                                                            else if (diff >= 2) bgColor = "#fca5a5";
-                                                        }
-                                                        html += `
-                                                            <td style="border-right: 1px solid #000; text-align: center; padding: 1px; background-image: linear-gradient(${bgColor}, ${bgColor}) !important; background-color: ${bgColor} !important;" bgcolor="${bgColor}">
-                                                                <div style="font-size: 11pt; color: #000000 !important; line-height: 1.1;">${h}/${holePar}</div>
-                                                                <div style="font-size: 11pt; font-weight: bold; color: #000000 !important; line-height: 1.1;">${score || '-'}</div>
-                                                            </td>
-                                                        `;
-                                                    }
-                                                    html += `</tr></table></div></td></tr></table>`;
-                                                });
-
-                                                html += `
-                                                            <div style="display:none; color: #ffffff !important; font-size: 1pt; overflow: hidden; height: 0; width: 0; line-height: 0;">ID: ${Date.now()}</div>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                </div>`;
-
-                                                try {
-                                                    const blobHtml = new Blob([html], { type: 'text/html' });
-                                                    const blobText = new Blob([text], { type: 'text/plain' });
-                                                    await navigator.clipboard.write([
-                                                        new ClipboardItem({
-                                                            'text/html': blobHtml,
-                                                            'text/plain': blobText
-                                                        })
-                                                    ]);
-                                                    showAlert('Copied!', 'Scorecard copied to clipboard');
-                                                } catch (err) {
-                                                    console.error('Failed to copy: ', err);
-                                                    showAlert('Error', 'Failed to copy scorecard');
                                                 }
+
+
                                             }}
                                             className="w-12 h-12 flex items-center justify-center bg-white border border-zinc-200 text-zinc-500 rounded-xl hover:bg-zinc-50 hover:text-zinc-900 transition-all shadow-md active:scale-95"
                                             title="Copy Scorecard"
@@ -2405,6 +2339,13 @@ export default function LiveScoreClient({
                                             <Mail size={20} />
                                         </button>
                                         <button
+                                            onClick={() => setIsHistoryModalOpen(true)}
+                                            className="w-12 h-12 flex items-center justify-center bg-white border border-zinc-200 text-zinc-500 rounded-xl hover:bg-zinc-50 hover:text-zinc-900 transition-all shadow-md active:scale-95"
+                                            title="History"
+                                        >
+                                            <Copy size={20} />
+                                        </button>
+                                        <button
                                             onClick={async () => {
                                                 // Get the current round name
                                                 const currentRound = allLiveRounds.find(r => r.id === liveRoundId);
@@ -2449,224 +2390,26 @@ export default function LiveScoreClient({
                                                 showConfirm("Send Scorecard?", `Send scorecard to: ${targetEmail}?`, async () => {
 
 
-                                                    // 2. Build the scorecard HTML
-                                                    let html = `
-                                                    <!DOCTYPE html>
-                                                    <html>
-                                                    <body style="margin:0;padding:0;background:#ffffff;font-family:Arial,Helvetica,sans-serif;">
-                                                    <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#ffffff">
-                                                        <tr>
-                                                            <td align="center" style="padding: 0;">
-                                                                <!-- CONTAINER -->
-                                                                <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;border-collapse:collapse;">
-                                                                    <!-- TITLE -->
-                                                                    <tr>
-                                                                        <td style="padding:1px;background:#000000;color:#ffffff;font-size:18px;font-weight:bold;text-align:center;">
-                                                                            ${roundName.replace('New Orleans', '')}<br/>
-                                                                            Leaderboard
-                                                                            <!-- ID: ${Date.now()} -->
-                                                                        </td>
-                                                                    </tr>
-                                                    `;
+                                                    // Use helper to generate HTML
+                                                    if (defaultCourse) {
+                                                        const html = generateScorecardHtml(roundName, rankedPlayers, defaultCourse, scores);
 
-                                                    rankedPlayers.forEach((p, playerIdx) => {
-                                                        const { first: firstName, last: lastName } = splitName(p.name);
+                                                        // 3. Send the email
+                                                        // 3. Send the email WITHOUT alerting "Sending..."
+                                                        // showAlert('Sending...', 'Sending emails to all players...');
 
-                                                        // Calculate Front/Back Gross
-                                                        let frontGross = 0;
-                                                        for (let h = 1; h <= 9; h++) { const s = getSavedScore(p.id, h); if (s) frontGross += s; }
-                                                        let backGross = 0;
-                                                        for (let h = 10; h <= 18; h++) { const s = getSavedScore(p.id, h); if (s) backGross += s; }
+                                                        const result = await sendScorecardEmail(
+                                                            targetEmail,
+                                                            `*** For Testing *** GolfLS Leaderboard`,
+                                                            html,
+                                                            `*** For Testing *** GolfLS Leaderboard`
+                                                        );
 
-                                                        // HCP
-                                                        const ch = p.courseHcp;
-
-                                                        // Determine colors based on Total To Par for the header badge if needed
-                                                        // But per template, we stick to Blue header.
-
-                                                        const tee = getPlayerTee(p);
-                                                        const teeLetter = !tee ? '' :
-                                                            tee.name.toLowerCase().includes('white') ? 'W' :
-                                                                tee.name.toLowerCase().includes('gold') ? 'G' :
-                                                                    tee.name.charAt(0).toUpperCase();
-
-                                                        // Calculate To Par String
-                                                        let toParStr = "E";
-                                                        if (p.toPar > 0) toParStr = `+${p.toPar}`;
-                                                        else if (p.toPar < 0) toParStr = `${p.toPar}`;
-
-                                                        html += `
-                                                        <!-- PLAYER SPACER -->
-                                                        <tr><td height="1"></td></tr>
-                                                        
-                                                        <!-- PLAYER CARD -->
-                                                        <tr>
-                                                            <td style="border:1px solid #CCCCCC;">
-                                                                <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-                                                                    <!-- PLAYER HEADER -->
-                                                                    <tr>
-                                                                        <td style="padding:1px;background:#1F4FD8;background-image:linear-gradient(#1F4FD8,#1F4FD8);color:#ffffff;">
-                                                                            <table width="100%" cellpadding="0" cellspacing="0">
-                                                                                <tr>
-                                                                                    <!-- NAME (Bottom-Left, Stacked) -->
-                                                                                    <td style="color:#ffffff;font-size:16px;font-weight:bold;line-height:1.2;">
-                                                                                        ${firstName}<br/>
-                                                                                        ${lastName}
-                                                                                        ${teeLetter ? `<span style="background:#ffffff;color:#000;padding:1px 1px;border-radius:3px;font-size:10px;margin-left:1px;vertical-align:middle;">${teeLetter}</span>` : ''}
-                                                                                    </td>
-                                                                                    
-                                                                                    <!-- STATS (Right) -->
-                                                                                    <td align="right" style="vertical-align:bottom;">
-                                                                                        <table cellpadding="0" cellspacing="0">
-                                                                                            <tr>
-                                                                                                <!-- TO PAR BADGE -->
-                                                                                                <td valign="bottom" style="padding-right:1px;padding-bottom:1px;">
-                                                                                                    <span style="background:#ffffff;color:#000000;padding:1px 1px;border-radius:4px;font-weight:bold;font-size:14px;display:inline-block;">${toParStr}</span>
-                                                                                                </td>
-                                                                                                
-                                                                                                <!-- STATS GRID -->
-                                                                                                <td>
-                                                                                                    <table cellpadding="0" cellspacing="0">
-                                                                                                        <tr>
-                                                                                                            <td align="center" style="padding:0 1px;color:#cbd5e1;font-size:9px;font-weight:bold;text-transform:uppercase;">GRS</td>
-                                                                                                            <td align="center" style="padding:0 1px;color:#cbd5e1;font-size:9px;font-weight:bold;text-transform:uppercase;">HCP</td>
-                                                                                                            <td align="center" style="padding:0 1px;color:#cbd5e1;font-size:9px;font-weight:bold;text-transform:uppercase;">NET</td>
-                                                                                                        </tr>
-                                                                                                        <tr>
-                                                                                                            <td align="center" style="padding:0 1px;color:#ffffff;font-size:14px;font-weight:bold;">${frontGross}+${backGross}=${p.totalGross}</td>
-                                                                                                            <td align="center" style="padding:0 1px;color:#ffffff;font-size:14px;font-weight:bold;">${ch}/${ch}</td>
-                                                                                                            <td align="center" style="padding:0 1px;color:#ffffff;font-size:14px;font-weight:bold;">${p.totalNet}</td>
-                                                                                                        </tr>
-                                                                                                    </table>
-                                                                                                </td>
-                                                                                            </tr>
-                                                                                        </table>
-                                                                                    </td>
-                                                                                </tr>
-                                                                            </table>
-                                                                        </td>
-                                                                    </tr>
-                                                                    
-                                                                    <!-- SCORES -->
-                                                                    <tr>
-                                                                        <td>
-                                                                            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;table-layout:fixed;">
-                                                                                <!-- Row 1: Front 9 -->
-                                                                                <tr>
-                                                        `;
-
-                                                        // Front 9
-                                                        for (let h = 1; h <= 9; h++) {
-                                                            const score = getSavedScore(p.id, h);
-                                                            const holePar = defaultCourse?.holes.find(hole => hole.holeNumber === h)?.par || 4;
-
-                                                            // Determine Color
-                                                            // Excellent: #2E7D32 (Dark Green) [Text: White]
-                                                            // Neutral: #F2F2F2 (Light Gray) [Text: Black]
-                                                            // Warning: #F9A825 (Amber) [Text: Black]
-                                                            // Poor: #C62828 (Dark Red) [Text: White]
-
-                                                            let bg = "#F2F2F2";
-                                                            let color = "#000000";
-
-                                                            if (score !== null) {
-                                                                const diff = score - holePar;
-                                                                if (diff <= -1) {
-                                                                    if (diff <= -2) { bg = "#fde047"; } // Eagle
-                                                                    else { bg = "#86efac"; } // Birdie
-                                                                    color = "#000000";
-                                                                } else if (diff === 0) {
-                                                                    bg = "#ffffff";
-                                                                    color = "#000000";
-                                                                } else if (diff === 1) {
-                                                                    bg = "#fed7aa";
-                                                                    color = "#000000";
-                                                                } else if (diff >= 2) {
-                                                                    bg = "#fca5a5";
-                                                                    color = "#000000";
-                                                                }
-                                                            }
-
-                                                            html += `
-                                                            <td style="border:1px solid #CCCCCC;background:${bg};background-image:linear-gradient(${bg},${bg});text-align:center;padding:1px 0;width:11.11%;">
-                                                                <div style="font-size:11px;color:${color};opacity:0.8;">${h}/${holePar}</div>
-                                                                <div style="font-size:14px;font-weight:bold;color:${color};">${score || '-'}</div>
-                                                            </td>
-                                                            `;
+                                                        if (!result.success) {
+                                                            showAlert('Failed', `Error: ${result.error}`);
                                                         }
-
-                                                        html += `</tr><!-- Row 2: Back 9 --><tr>`;
-
-                                                        // Back 9
-                                                        for (let h = 10; h <= 18; h++) {
-                                                            const score = getSavedScore(p.id, h);
-                                                            const holePar = defaultCourse?.holes.find(hole => hole.holeNumber === h)?.par || 4;
-
-                                                            let bg = "#F2F2F2";
-                                                            let color = "#000000";
-
-                                                            if (score !== null) {
-                                                                const diff = score - holePar;
-                                                                if (diff <= -1) {
-                                                                    if (diff <= -2) { bg = "#fde047"; } // Eagle
-                                                                    else { bg = "#86efac"; } // Birdie
-                                                                    color = "#000000";
-                                                                } else if (diff === 0) {
-                                                                    bg = "#ffffff";
-                                                                    color = "#000000";
-                                                                } else if (diff === 1) {
-                                                                    bg = "#fed7aa";
-                                                                    color = "#000000";
-                                                                } else if (diff >= 2) {
-                                                                    bg = "#fca5a5";
-                                                                    color = "#000000";
-                                                                }
-                                                            }
-
-                                                            html += `
-                                                            <td style="border:1px solid #CCCCCC;background:${bg};background-image:linear-gradient(${bg},${bg});text-align:center;padding:1px 0;width:11.11%;">
-                                                                <div style="font-size:11px;color:${color};opacity:0.8;">${h}/${holePar}</div>
-                                                                <div style="font-size:14px;font-weight:bold;color:${color};">${score || '-'}</div>
-                                                            </td>
-                                                            `;
-                                                        }
-
-                                                        html += `
-                                                                                </tr>
-                                                                            </table>
-                                                                        </td>
-                                                                    </tr>
-                                                                </table>
-                                                            </td>
-                                                        </tr>
-                                                        `;
-                                                    });
-
-                                                    html += `
-                                                                </table>
-                                                                <!-- BOTTOM ID to prevent grouping -->
-                                                                <div style="display:none;font-size:1px;color:#ffffff;">ID: ${Date.now()}</div>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                    </body>
-                                                    </html>`;
-
-                                                    // 3. Send the email
-                                                    // 3. Send the email WITHOUT alerting "Sending..."
-                                                    // showAlert('Sending...', 'Sending emails to all players...');
-
-                                                    const result = await sendScorecardEmail(
-                                                        targetEmail,
-                                                        `*** For Testing *** CPGC Leaderboard`,
-                                                        html,
-                                                        `*** For Testing *** CPGC Leaderboard`
-                                                    );
-
-                                                    if (!result.success) {
-                                                        showAlert('Failed', `Error: ${result.error}`);
+                                                        // No success alert per request
                                                     }
-                                                    // No success alert per request
                                                 });
                                             }}
                                             className="w-12 h-12 flex items-center justify-center bg-green-50 text-green-600 border border-green-200 rounded-xl hover:bg-green-100 transition-all shadow-md active:scale-95"
@@ -2676,6 +2419,13 @@ export default function LiveScoreClient({
                                         </button>
                                     </>
                                 )}
+                                <button
+                                    onClick={() => setIsHistoryModalOpen(true)}
+                                    className="w-12 h-12 bg-white border border-zinc-200 text-zinc-500 rounded-xl flex items-center justify-center hover:bg-zinc-50 hover:text-zinc-900 transition-all shadow-md active:scale-95"
+                                    title="View Round History"
+                                >
+                                    <History size={24} />
+                                </button>
                                 <button
                                     onClick={() => setIsStatsModalOpen(true)}
                                     className="w-12 h-12 bg-white border border-zinc-200 text-zinc-500 rounded-xl flex items-center justify-center hover:bg-zinc-50 hover:text-zinc-900 transition-all shadow-md active:scale-95"
@@ -2689,229 +2439,24 @@ export default function LiveScoreClient({
                                 >
                                     BFT
                                 </button>
+
+
                             </div>
 
                             <div className="space-y-1">
-                                {rankedPlayers.map((p, i) => {
-                                    let toParStr = "E";
-                                    let toParClass = "text-green-600";
-                                    if (p.toPar > 0) {
-                                        toParStr = `+${p.toPar}`;
-                                        toParClass = "text-gray-900";
-                                    } else if (p.toPar < 0) {
-                                        toParStr = `${p.toPar}`;
-                                        toParClass = "text-red-600";
-                                    }
-
-                                    let displayRankInSummary: React.ReactNode = i + 1;
-                                    let showFlagInSummary = false;
-                                    let showRankIconInSummary: React.ReactNode = null;
-
-                                    if (p.thru >= 18) {
-                                        if (allActiveFinished) {
-                                            if (i === 0) {
-                                                displayRankInSummary = "🏆";
-                                                showRankIconInSummary = "🏆";
-                                            } else if (i === 1) {
-                                                displayRankInSummary = "🥈";
-                                                showRankIconInSummary = "🥈";
-                                            } else if (i === 2) {
-                                                displayRankInSummary = "🥉";
-                                                showRankIconInSummary = "🥉";
-                                            } else {
-                                                showFlagInSummary = true;
-                                            }
-                                        } else {
-                                            showFlagInSummary = true;
-                                        }
-                                    }
-
-                                    return (
-                                        <div key={p.id} className="bg-white/80 backdrop-blur-xl rounded-[32px] overflow-hidden border border-zinc-200 shadow-xl">
-                                            {/* Player Header */}
-                                            <div className="bg-gradient-to-r from-green-600/5 to-transparent p-1 border-b border-zinc-100">
-                                                <div className="flex justify-between items-center">
-                                                    <div className="flex items-center gap-1">
-                                                        <div className="flex flex-col">
-                                                            <div className="font-black text-zinc-900 text-2xl italic uppercase tracking-tighter leading-none flex items-center gap-1">
-                                                                {splitName(p.name).first}
-                                                                {(() => {
-                                                                    const tee = getPlayerTee(p);
-                                                                    if (!tee) return null;
-                                                                    const letter = tee.name.toLowerCase().includes('white') ? 'W'
-                                                                        : tee.name.toLowerCase().includes('gold') ? 'G'
-                                                                            : tee.name.charAt(0).toUpperCase();
-                                                                    const colorClass = letter === 'W' ? 'bg-zinc-100 text-black'
-                                                                        : letter === 'G' ? 'bg-yellow-400 text-black'
-                                                                            : 'bg-zinc-500 text-white';
-
-                                                                    return (
-                                                                        <span className={`text-[10px] font-black px-1 py-0.5 rounded-md ${colorClass} uppercase tracking-widest`}>
-                                                                            {letter}
-                                                                        </span>
-                                                                    );
-                                                                })()}
-                                                            </div>
-                                                            <div className="text-zinc-500 text-xs font-black uppercase tracking-widest mt-1">{splitName(p.name).last}</div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex gap-1 items-end">
-                                                        <div className={`text-4xl font-black italic tracking-tighter ${p.toPar < 0 ? 'text-red-600' : p.toPar > 0 ? 'text-zinc-400' : 'text-green-600'}`}>
-                                                            {toParStr}
-                                                        </div>
-                                                        <div className="text-center group">
-                                                            <div className="text-[10px] text-zinc-500 font-black tracking-widest uppercase mb-1">Gross</div>
-                                                            <div className="text-xl font-black text-zinc-900 italic tracking-tighter leading-none">
-                                                                {p.front9 > 0 || p.back9 > 0 ? (
-                                                                    <>{p.front9}+{p.back9}={p.totalGross}</>
-                                                                ) : (
-                                                                    <>{p.totalGross}</>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                        <div className="text-center">
-                                                            <div className="text-[10px] text-zinc-500 font-black tracking-widest uppercase mb-1">Net</div>
-                                                            <div className="text-xl font-black text-zinc-900 italic tracking-tighter leading-none">{p.totalNet}</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Score Grid */}
-                                            <div className="border-t border-zinc-100 bg-zinc-50/30">
-                                                {/* Row 1: Holes 1-9 */}
-                                                <div className="grid grid-cols-9 border-b border-zinc-100">
-                                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => {
-                                                        const score = getSavedScore(p.id, num);
-                                                        const isActive = activeHole === num;
-                                                        const hole = defaultCourse?.holes.find(h => h.holeNumber === num);
-                                                        const holePar = hole?.par || 4;
-
-                                                        let scoreColor = "text-zinc-400";
-                                                        let bgColor = "bg-transparent";
-
-                                                        if (score !== null) {
-                                                            const diff = score - holePar;
-                                                            if (diff <= -2) { scoreColor = "text-yellow-600"; bgColor = "bg-yellow-50"; }
-                                                            else if (diff === -1) { scoreColor = "text-green-600"; bgColor = "bg-green-50"; }
-                                                            else if (diff === 0) { scoreColor = "text-zinc-900"; bgColor = "bg-white"; }
-                                                            else if (diff === 1) { scoreColor = "text-orange-600"; bgColor = "bg-orange-50"; }
-                                                            else if (diff >= 2) { scoreColor = "text-red-600"; bgColor = "bg-red-50"; }
-                                                        } else if (isActive) {
-                                                            bgColor = "bg-green-600/10";
-                                                        }
-
-                                                        return (
-                                                            <div key={num}
-                                                                onClick={() => {
-                                                                    if (isAdmin) setSummaryEditCell({ playerId: p.id, holeNumber: num });
-                                                                }}
-                                                                className={`
-                                                                flex flex-col items-center justify-center h-14 border-r border-zinc-100 last:border-r-0 relative transition-all
-                                                                ${isActive ? 'bg-green-600/10 ring-1 ring-green-600/50 inset-0 z-10' : bgColor}
-                                                                ${isAdmin ? 'cursor-pointer hover:bg-zinc-100' : ''}
-                                                            `}>
-                                                                <div className="absolute top-1 inset-x-0 flex justify-center px-1 text-[8px] font-black text-zinc-400 uppercase tracking-widest opacity-60">
-                                                                    <span>{num}</span>
-                                                                </div>
-                                                                {isAdmin && summaryEditCell?.playerId === p.id && summaryEditCell?.holeNumber === num ? (
-                                                                    <input
-                                                                        type="number"
-                                                                        inputMode="numeric"
-                                                                        autoFocus
-                                                                        className="w-full text-center bg-white text-zinc-900 font-black text-lg focus:outline-none border-none"
-                                                                        defaultValue={score || ''}
-                                                                        onFocus={(e) => e.target.select()}
-                                                                        onKeyDown={(e) => {
-                                                                            if (e.key === 'Enter') {
-                                                                                handleAdminScoreChange(p.id, num, (e.target as HTMLInputElement).value);
-                                                                                if (num < 18) setSummaryEditCell({ playerId: p.id, holeNumber: num + 1 });
-                                                                                else setSummaryEditCell(null);
-                                                                            } else if (e.key === 'Escape') setSummaryEditCell(null);
-                                                                        }}
-                                                                        onBlur={(e) => {
-                                                                            handleAdminScoreChange(p.id, num, e.target.value);
-                                                                            setTimeout(() => setSummaryEditCell(prev => (prev?.playerId === p.id && prev?.holeNumber === num) ? null : prev), 100);
-                                                                        }}
-                                                                    />
-                                                                ) : (
-                                                                    <div className={`text-sm font-black italic tracking-tighter ${scoreColor} mt-2`}>
-                                                                        {score || '-'}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                                {/* Row 2: Holes 10-18 */}
-                                                <div className="grid grid-cols-9">
-                                                    {[10, 11, 12, 13, 14, 15, 16, 17, 18].map(num => {
-                                                        const score = getSavedScore(p.id, num);
-                                                        const isActive = activeHole === num;
-                                                        const hole = defaultCourse?.holes.find(h => h.holeNumber === num);
-                                                        const holePar = hole?.par || 4;
-
-                                                        let scoreColor = "text-zinc-400";
-                                                        let bgColor = "bg-transparent";
-
-                                                        if (score !== null) {
-                                                            const diff = score - holePar;
-                                                            if (diff <= -2) { scoreColor = "text-yellow-600"; bgColor = "bg-yellow-50"; }
-                                                            else if (diff === -1) { scoreColor = "text-green-600"; bgColor = "bg-green-50"; }
-                                                            else if (diff === 0) { scoreColor = "text-zinc-900"; bgColor = "bg-white"; }
-                                                            else if (diff === 1) { scoreColor = "text-orange-600"; bgColor = "bg-orange-50"; }
-                                                            else if (diff >= 2) { scoreColor = "text-red-600"; bgColor = "bg-red-50"; }
-                                                        } else if (isActive) {
-                                                            bgColor = "bg-green-600/10";
-                                                        }
-
-                                                        return (
-                                                            <div key={num}
-                                                                onClick={() => {
-                                                                    if (isAdmin) setSummaryEditCell({ playerId: p.id, holeNumber: num });
-                                                                }}
-                                                                className={`
-                                                                flex flex-col items-center justify-center h-14 border-r border-zinc-100 last:border-r-0 relative transition-all
-                                                                ${isActive ? 'bg-green-600/10 ring-1 ring-green-600/50 inset-0 z-10' : bgColor}
-                                                                ${isAdmin ? 'cursor-pointer hover:bg-zinc-100' : ''}
-                                                            `}>
-                                                                <div className="absolute top-1 inset-x-0 flex justify-center px-1 text-[8px] font-black text-zinc-400 uppercase tracking-widest opacity-60">
-                                                                    <span>{num}</span>
-                                                                </div>
-                                                                {isAdmin && summaryEditCell?.playerId === p.id && summaryEditCell?.holeNumber === num ? (
-                                                                    <input
-                                                                        type="number"
-                                                                        inputMode="numeric"
-                                                                        autoFocus
-                                                                        className="w-full text-center bg-white text-zinc-900 font-black text-lg focus:outline-none border-none"
-                                                                        defaultValue={score || ''}
-                                                                        onFocus={(e) => e.target.select()}
-                                                                        onKeyDown={(e) => {
-                                                                            if (e.key === 'Enter') {
-                                                                                handleAdminScoreChange(p.id, num, (e.target as HTMLInputElement).value);
-                                                                                if (num < 18) setSummaryEditCell({ playerId: p.id, holeNumber: num + 1 });
-                                                                                else setSummaryEditCell(null);
-                                                                            } else if (e.key === 'Escape') setSummaryEditCell(null);
-                                                                        }}
-                                                                        onBlur={(e) => {
-                                                                            handleAdminScoreChange(p.id, num, e.target.value);
-                                                                            setTimeout(() => setSummaryEditCell(prev => (prev?.playerId === p.id && prev?.holeNumber === num) ? null : prev), 100);
-                                                                        }}
-                                                                    />
-                                                                ) : (
-                                                                    <div className={`text-sm font-black italic tracking-tighter ${scoreColor} mt-2`}>
-                                                                        {score || '-'}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                                {rankedPlayers.map((p) => (
+                                    <LiveLeaderboardCard
+                                        key={p.id}
+                                        player={p}
+                                        scores={scores.get(p.id) || new Map()}
+                                        activeHole={activeHole}
+                                        isAdmin={isAdmin}
+                                        summaryEditCell={summaryEditCell}
+                                        setSummaryEditCell={setSummaryEditCell}
+                                        handleAdminScoreChange={handleAdminScoreChange}
+                                        defaultCourse={defaultCourse}
+                                    />
+                                ))}
                             </div>
                         </div>
                     ) : (
@@ -2921,17 +2466,43 @@ export default function LiveScoreClient({
                     )
                 }
 
-                {/* Score Legend */}
-                <div className="bg-white rounded-full shadow-md p-2 m-1 flex flex-wrap gap-x-6 gap-y-2 items-center justify-center text-[15pt]">
-                    <div className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-yellow-300 shadow-sm"></div>(-2)</div>
-                    <div className="flex items-center gap-2"><div className="w-5 h-5 rounded-xl bg-green-300 shadow-sm"></div>(-1)</div>
-                    <div className="flex items-center gap-2"><div className="w-5 h-5 rounded-xl bg-white border-2 border-gray-300 shadow-sm"></div>(E)</div>
-                    <div className="flex items-center gap-2"><div className="w-5 h-5 rounded-xl bg-orange-200 shadow-sm"></div>(+1)</div>
-                    <div className="flex items-center gap-2"><div className="w-5 h-5 rounded-xl bg-red-300 shadow-sm"></div>(+2)</div>
-                </div>
 
 
 
+                {/* Score Notation Legend */}
+                {
+                    rankedPlayers.length > 0 && (
+                        <div className="bg-white rounded-2xl shadow-sm border border-zinc-100 p-4 m-1 mt-4">
+                            <div className="flex flex-wrap justify-center gap-x-6 gap-y-3">
+                                {/* Eagle */}
+                                <div className="flex items-center gap-2">
+                                    <div className="w-4 h-4 rounded-sm bg-yellow-300"></div>
+                                    <span className="text-xs font-bold text-zinc-600">(-2)</span>
+                                </div>
+                                {/* Birdie */}
+                                <div className="flex items-center gap-2">
+                                    <div className="w-4 h-4 rounded-sm bg-green-300"></div>
+                                    <span className="text-xs font-bold text-zinc-600">(-1)</span>
+                                </div>
+                                {/* Par */}
+                                <div className="flex items-center gap-2">
+                                    <div className="w-4 h-4 rounded-sm bg-white border border-zinc-200"></div>
+                                    <span className="text-xs font-bold text-zinc-600">(E)</span>
+                                </div>
+                                {/* Bogey */}
+                                <div className="flex items-center gap-2">
+                                    <div className="w-4 h-4 rounded-sm bg-orange-300"></div>
+                                    <span className="text-xs font-bold text-zinc-600">(+1)</span>
+                                </div>
+                                {/* Double Bogey */}
+                                <div className="flex items-center gap-2">
+                                    <div className="w-4 h-4 rounded-sm bg-red-300"></div>
+                                    <span className="text-xs font-bold text-zinc-600">(+2)</span>
+                                </div>
+                            </div>
+                        </div>
+                    )
+                }
 
             </main >
 
@@ -3123,6 +2694,79 @@ export default function LiveScoreClient({
                     />
                 )
             }
-        </div >
+
+            {/* History Modal */}
+            {isHistoryModalOpen && (
+                <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setIsHistoryModalOpen(false)}>
+                    <div className="bg-white text-zinc-900 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[80vh]" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between p-4 border-b border-zinc-100 bg-zinc-50">
+                            <h2 className="text-lg font-black italic uppercase tracking-tighter">Round History</h2>
+                            <button
+                                onClick={() => setIsHistoryModalOpen(false)}
+                                className="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-200 text-zinc-600 font-bold hover:bg-zinc-300 transition-colors"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                            {userRoundsHistory && userRoundsHistory.length > 0 ? (
+                                userRoundsHistory.map((round: any) => (
+                                    <div
+                                        key={round.id}
+                                        onClick={() => setExpandedHistoryRoundId(expandedHistoryRoundId === round.id ? null : round.id)}
+                                        className={`bg-zinc-50 rounded-xl border transition-all cursor-pointer overflow-hidden ${expandedHistoryRoundId === round.id ? 'border-green-500 shadow-md' : 'border-zinc-100 hover:border-zinc-300'}`}
+                                    >
+                                        <div className="p-4 flex justify-between items-center">
+                                            <div>
+                                                <div className="font-black text-lg text-zinc-800">{round.courseName}</div>
+                                                <div className="text-xs text-zinc-500 font-bold uppercase tracking-wider flex items-center gap-2">
+                                                    <span>{new Date(round.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                                    {round.teeBox && <span className="bg-zinc-200 px-1.5 py-0.5 rounded text-[10px]">{round.teeBox}</span>}
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-2xl font-black italic tracking-tighter text-zinc-900">{round.grossScore}</div>
+                                                <div className="text-[10px] items-center text-zinc-400 font-bold uppercase tracking-widest">Score</div>
+                                            </div>
+                                        </div>
+
+                                        {expandedHistoryRoundId === round.id && (
+                                            <div className="bg-white border-t border-zinc-100 p-3 animate-in slide-in-from-top-2">
+                                                {/* Front 9 */}
+                                                <div className="grid grid-cols-9 gap-1 mb-2 border-b border-zinc-50 pb-2">
+                                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(h => (
+                                                        <div key={h} className="text-center">
+                                                            <div className="text-[9px] text-zinc-400 font-bold mb-0.5">{h}</div>
+                                                            <div className={`font-black text-sm py-1 rounded ${!round.scores?.[h] ? 'text-zinc-200 bg-zinc-50' : 'bg-zinc-100 text-zinc-900'}`}>
+                                                                {round.scores?.[h] || '-'}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                {/* Back 9 */}
+                                                <div className="grid grid-cols-9 gap-1">
+                                                    {[10, 11, 12, 13, 14, 15, 16, 17, 18].map(h => (
+                                                        <div key={h} className="text-center">
+                                                            <div className="text-[9px] text-zinc-400 font-bold mb-0.5">{h}</div>
+                                                            <div className={`font-black text-sm py-1 rounded ${!round.scores?.[h] ? 'text-zinc-200 bg-zinc-50' : 'bg-zinc-100 text-zinc-900'}`}>
+                                                                {round.scores?.[h] || '-'}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-center py-10 text-zinc-400 font-bold italic">
+                                    No history found.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }

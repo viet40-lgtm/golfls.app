@@ -1,7 +1,7 @@
 {
-    "name": "GolfLS",
+    "name": "Golf Live Scores",
     "short_name": "GolfLS",
-    "description": "GolfLS.app - Track your game in real-time",
+    "description": "Golf Live Scores - GolfLS.app - Track your game in real-time",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#ffffff",

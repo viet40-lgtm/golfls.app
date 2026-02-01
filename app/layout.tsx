@@ -14,13 +14,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-    title: "GolfLS.app",
+    title: {
+        default: "Golf Live Scores - GolfLS.app",
+        template: "%s - GolfLS.app",
+        absolute: "Golf Live Scores - GolfLS.app"
+    },
     description: "Live score tracking and handicap management for real-time golf rounds.",
 };
 
 import AppHeader from "@/components/AppHeader";
 import GlobalEnterNavigation from "@/components/GlobalEnterNavigation";
-import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
+// import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import { getSession } from "@/lib/auth";
 
 export default async function RootLayout({
@@ -53,13 +57,29 @@ export default async function RootLayout({
                 <meta name="mobile-web-app-capable" content="yes" />
                 <meta name="apple-mobile-web-app-capable" content="yes" />
                 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-                <meta name="apple-mobile-web-app-title" content="GolfLS" />
+                <meta name="apple-mobile-web-app-title" content="Golf Live Scores" />
+                <link rel="icon" href="/icon-192.png" sizes="192x192" />
+                <link rel="icon" href="/icon-512.png" sizes="512x512" />
+                <link rel="shortcut icon" href="/icon-192.png" />
             </head>
             <body
                 className={`${geistSans.variable} ${geistMono.variable} antialiased`}
                 suppressHydrationWarning
             >
-                <ServiceWorkerRegistration />
+                {/* <ServiceWorkerRegistration /> */}
+                <script
+                    dangerouslySetInnerHTML={{
+                        __html: `
+                        if ('serviceWorker' in navigator) {
+                            navigator.serviceWorker.getRegistrations().then(registrations => {
+                                for (let registration of registrations) {
+                                    registration.unregister();
+                                }
+                            });
+                        }
+                    `,
+                    }}
+                />
                 {isAuthenticated && <AppHeader playerId={userPlayerId} />}
                 <GlobalEnterNavigation />
                 {children}

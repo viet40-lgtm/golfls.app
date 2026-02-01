@@ -21,19 +21,40 @@ export async function deleteUserLiveRound(liveRoundId: string) {
             };
         }
 
-        // Check if user is a participant in this round
-        const userParticipation = await prisma.liveRoundPlayer.findFirst({
-            where: {
-                liveRoundId: liveRoundId,
-                playerId: sessionUserId
-            }
-        });
+        // Check if user is admin
+        let isAdmin = cookieStore.get('admin_session')?.value === 'true';
 
-        if (!userParticipation) {
-            return {
-                success: false,
-                error: 'You can only delete rounds you participated in'
-            };
+        // Super User Bypass
+        if (!isAdmin && sessionUserId) {
+            const user = await prisma.player.findUnique({ where: { id: sessionUserId }, select: { email: true } });
+            if (user?.email === 'viet53@gmail.com') {
+                isAdmin = true;
+            }
+        }
+
+        if (isAdmin) {
+            // Admin can delete anything
+        } else {
+            // Check if user is a participant in this round
+            const userParticipation = await prisma.liveRoundPlayer.findFirst({
+                where: {
+                    liveRoundId: liveRoundId,
+                    playerId: sessionUserId
+                }
+            });
+
+            // Also check if round has ANY players - if not, allow cleanup
+            const roundPlayerCount = await prisma.liveRoundPlayer.count({
+                where: { liveRoundId: liveRoundId }
+            });
+
+            if (!userParticipation && roundPlayerCount > 0) {
+                console.error(`Delete failed: User ${sessionUserId} is not in round ${liveRoundId} and round has ${roundPlayerCount} players.`);
+                return {
+                    success: false,
+                    error: 'You can only delete rounds you participated in'
+                };
+            }
         }
 
         // Delete the round (cascade will handle related records)
