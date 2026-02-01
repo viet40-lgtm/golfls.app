@@ -62,6 +62,10 @@ small {
   font-size: 16pt !important;
 }
 
+.text-lg {
+  font-size: 18pt !important;
+}
+
 /* Base interactive styles */
 input,
 select,
