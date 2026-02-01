@@ -1822,7 +1822,7 @@ export default function LiveScoreClient({
                                             key={hole.holeNumber}
                                             onClick={() => setActiveHole(hole.holeNumber)}
                                             className={`
-                                            flex flex-col items-center justify-center py-4 rounded-none transition-all duration-300 active:scale-90
+                                            flex flex-col items-center justify-center py-1 rounded-none transition-all duration-300 active:scale-90
                                             ${btnClass}
                                         `}
                                             title={`Hole ${hole.holeNumber}`}
