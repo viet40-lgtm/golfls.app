@@ -1525,7 +1525,7 @@ export default function LiveScoreClient({
                                         className="fixed inset-0 z-40 bg-transparent"
                                         onClick={() => setIsRoundDropdownOpen(false)}
                                     />
-                                    <div className="absolute top-full left-0 right-0 mt-0.5 bg-black text-white rounded-xl border border-zinc-800 shadow-2xl z-50 overflow-hidden py-1">
+                                    <div className="absolute top-full left-0 right-0 mt-0.5 bg-black text-white rounded-xl border border-zinc-800 shadow-2xl z-50 overflow-y-auto max-h-[300px] py-1">
                                         {allLiveRounds.map((round) => {
                                             const dayOfWeek = round.date ? new Date(round.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' }) : '';
                                             const displayName = dayOfWeek ? `${dayOfWeek} - ${round.name.replace(/New Orleans/gi, '').trim()}` : round.name.replace(/New Orleans/gi, '').trim();
@@ -1538,7 +1538,7 @@ export default function LiveScoreClient({
                                                         setIsRoundDropdownOpen(false);
                                                         window.location.href = `/live?roundId=${round.id}`;
                                                     }}
-                                                    className={`w-full text-left px-2 py-2 text-[15pt] transition-colors border-b border-zinc-900 last:border-0 ${isSelected ? 'bg-zinc-800 text-white font-black' : 'text-zinc-400 hover:bg-zinc-900'
+                                                    className={`w-full text-left px-2 py-2 text-[15pt] transition-colors border-b border-zinc-900 last:border-0 ${isSelected ? 'bg-zinc-800 text-white font-black' : 'text-white/50 hover:bg-zinc-900'
                                                         }`}
                                                 >
                                                     <div className="flex justify-between items-center">
