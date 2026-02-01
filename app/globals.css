@@ -55,12 +55,36 @@ body {
   color: #000000 !important;
 }
 
-/* Enforce ALL text to be 15pt as requested */
-.text-sm,
+/* Enforce ALL text to be 15pt as strictly requested. 
+   Targeting all common text containers and specific Tailwind classes. */
+body,
+p,
+span,
+div,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+label,
+button,
+input,
+select,
+textarea,
+a,
 .text-xs,
-.text-lg,
+.text-sm,
 .text-base,
-small {
+.text-lg,
+.text-xl,
+.text-2xl,
+.text-3xl,
+small,
+strong,
+b,
+i,
+em {
   font-size: 15pt !important;
 }
 
