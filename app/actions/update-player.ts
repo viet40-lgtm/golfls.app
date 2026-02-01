@@ -4,6 +4,34 @@
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import bcrypt from 'bcryptjs';
+import { cookies } from 'next/headers';
+
+export async function getCurrentPlayerProfile() {
+    try {
+        const cookieStore = await cookies();
+        const userId = cookieStore.get('session_userId')?.value;
+
+        if (!userId) return null;
+
+        const player = await prisma.player.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+                handicapIndex: true,
+                preferredTeeBox: true,
+                playerId: true,
+            }
+        });
+
+        return player;
+    } catch (error) {
+        console.error('Failed to get current player:', error);
+        return null;
+    }
+}
 
 export async function updatePlayerProfile(formData: FormData) {
     const id = formData.get('id') as string;
