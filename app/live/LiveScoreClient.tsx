@@ -1577,7 +1577,6 @@ export default function LiveScoreClient({
                                     )}
                                 </div>
                                 <div className="flex flex-nowrap gap-x-2 text-[13pt] text-gray-500 mt-1 overflow-x-auto">
-                                    <span className="whitespace-nowrap">{initialRound?.date || todayStr}</span>
                                     <span className="whitespace-nowrap">P:{initialRound?.par ?? defaultCourse?.holes?.reduce((a, b) => a + b.par, 0)}</span>
                                     <span className="whitespace-nowrap">R:{initialRound?.rating ?? defaultCourse?.teeBoxes?.[0]?.rating}</span>
                                     <span className="whitespace-nowrap">S:{initialRound?.slope ?? defaultCourse?.teeBoxes?.[0]?.slope}</span>
@@ -1679,7 +1678,7 @@ export default function LiveScoreClient({
                         <div className="bg-white/80 backdrop-blur-xl rounded-none p-1 border border-zinc-200 shadow-xl space-y-1">
                             <div className="flex justify-between items-center border-b border-zinc-100 pb-4">
                                 <div className="flex items-center gap-3">
-                                    <h2 className="text-lg font-black text-zinc-900 italic uppercase tracking-tighter">GPS Tracker</h2>
+                                    <h2 className="text-lg font-black text-zinc-900 italic uppercase tracking-tighter">GPS</h2>
                                     {canUpdate && (
                                         <button
                                             onClick={() => setIsGPSEnabled(!isGPSEnabled)}
@@ -1696,7 +1695,7 @@ export default function LiveScoreClient({
                                     onClick={() => setShowDetails(!showDetails)}
                                     className="px-1 py-1 bg-zinc-800 text-zinc-300 rounded-none text-xs font-black transition-all hover:bg-zinc-700 uppercase tracking-widest"
                                 >
-                                    {showDetails ? 'Hide' : 'Show'} Details
+                                    Details
                                 </button>
                             </div>
 
@@ -1823,7 +1822,7 @@ export default function LiveScoreClient({
                                             key={hole.holeNumber}
                                             onClick={() => setActiveHole(hole.holeNumber)}
                                             className={`
-                                            flex flex-col items-center justify-center py-4 rounded-3xl transition-all duration-300 active:scale-90
+                                            flex flex-col items-center justify-center py-4 rounded-none transition-all duration-300 active:scale-90
                                             ${btnClass}
                                         `}
                                             title={`Hole ${hole.holeNumber}`}
@@ -2020,7 +2019,7 @@ export default function LiveScoreClient({
                                                 // Blue if: has unsaved changes OR hole is not yet scored
                                                 // Black if: hole is scored AND no unsaved changes
                                                 return (hasUnsavedChanges || !isHoleScored) ? 'bg-green-600 text-white shadow-lg' : 'bg-zinc-100 text-zinc-500';
-                                            })()} w-full italic uppercase tracking-tighter text-lg font-black py-5 rounded-[24px] shadow-xl transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3`}
+                                            })()} w-[50%] ml-auto italic uppercase tracking-tighter text-lg font-black py-5 rounded-none shadow-xl transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3`}
                                         >
                                             <div className="relative">
                                                 <span className={isSaving ? 'invisible' : 'visible'}>
@@ -2142,17 +2141,17 @@ export default function LiveScoreClient({
                                                         )}
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-4">
+                                                <div className="flex items-center gap-1">
                                                     {canUpdate && (
                                                         <button
                                                             onClick={() => updateScore(player.id, false)}
-                                                            className="w-12 h-12 rounded-2xl bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 font-black shadow-md active:scale-90 transition-all hover:bg-red-50 hover:border-red-500/30 text-2xl"
+                                                            className="w-12 h-12 rounded-none bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 font-black shadow-md active:scale-90 transition-all hover:bg-red-50 hover:border-red-500/30 text-2xl"
                                                             title="Decrease Score"
                                                         >
                                                             -
                                                         </button>
                                                     )}
-                                                    <div className="w-16 text-center font-black text-4xl italic tracking-tighter text-zinc-900">
+                                                    <div className="w-12 text-center font-black text-4xl italic tracking-tighter text-zinc-900">
                                                         {score || activeHolePar}
                                                     </div>
                                                     {canUpdate && (
