@@ -264,11 +264,11 @@ function PlayerProfileModal({ initialData, onClose, onSave }: { initialData: any
                     <div className="space-y-2 px-1">
                         <div className="flex items-center gap-2 text-zinc-400 uppercase tracking-tighter">
                             <div className="w-1 h-1 rounded-full bg-zinc-300" />
-                            <p className="text-xs font-black">Minimum 4 numbers or text</p>
+                            <p className="text-xs font-black">Requires at least 4 characters</p>
                         </div>
                         <div className="flex items-center gap-2 text-zinc-500 italic tracking-tight">
                             <div className="w-1 h-1 rounded-full bg-zinc-300" />
-                            <p className="text-xs font-bold">Leave blank to keep your current password</p>
+                            <p className="text-xs font-bold">Leave blank to maintain your current password</p>
                         </div>
                     </div>
                 </div>
