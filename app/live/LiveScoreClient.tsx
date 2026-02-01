@@ -2020,7 +2020,7 @@ export default function LiveScoreClient({
                                         >
                                             <div className="relative">
                                                 <span className={isSaving ? 'invisible' : 'visible'}>
-                                                    Record Hole {activeHole}
+                                                    Save Hole {activeHole}
                                                 </span>
                                                 {isSaving && (
                                                     <span className="absolute inset-0 flex items-center justify-center">
