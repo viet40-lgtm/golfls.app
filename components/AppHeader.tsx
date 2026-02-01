@@ -144,7 +144,7 @@ export default function AppHeader({ playerId }: { playerId?: string | null }) {
                     <div className="bg-white p-8 rounded-[2rem] shadow-2xl w-full max-w-sm border border-gray-100 animate-in zoom-in-95 duration-300">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="font-extrabold text-2xl">Admin Access</h3>
-                            <button onClick={() => setShowLoginModal(false)} className="text-gray-400 hover:text-black transition-colors">
+                            <button onClick={() => setShowLoginModal(false)} aria-label="Close" className="text-gray-400 hover:text-black transition-colors">
                                 <X className="w-6 h-6" />
                             </button>
                         </div>

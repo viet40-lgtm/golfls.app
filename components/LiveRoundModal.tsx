@@ -220,8 +220,9 @@ export function LiveRoundModal({
                 {/* Body */}
                 <div className="p-6 space-y-4">
                     <div>
-                        <label className="block text-[12pt] font-bold text-gray-700 mb-1">Date</label>
+                        <label htmlFor="round-date" className="block text-[12pt] font-bold text-gray-700 mb-1">Date</label>
                         <input
+                            id="round-date"
                             type="date"
                             value={date}
                             onChange={(e) => setDate(e.target.value)}
@@ -232,8 +233,9 @@ export function LiveRoundModal({
 
                     {/* Course Selection */}
                     <div>
-                        <label className="block text-[12pt] font-bold text-gray-700 mb-1">Course</label>
+                        <label htmlFor="round-course" className="block text-[12pt] font-bold text-gray-700 mb-1">Course</label>
                         <select
+                            id="round-course"
                             value={selectedCourseId}
                             onChange={(e) => {
                                 const newId = e.target.value;
@@ -269,8 +271,9 @@ export function LiveRoundModal({
 
                     {/* Tee Box Selection (Helper for auto-filling) */}
                     <div>
-                        <label className="block text-[12pt] font-bold text-gray-700 mb-1">Select Tee Box (Auto-fill)</label>
+                        <label htmlFor="round-teebox" className="block text-[12pt] font-bold text-gray-700 mb-1">Select Tee Box (Auto-fill)</label>
                         <select
+                            id="round-teebox"
                             value={selectedTeeId}
                             onChange={(e) => {
                                 const tId = e.target.value;
@@ -299,8 +302,9 @@ export function LiveRoundModal({
 
                     <div className="grid grid-cols-3 gap-4">
                         <div>
-                            <label className="block text-[12pt] font-bold text-gray-700 mb-1">Par</label>
+                            <label htmlFor="round-par" className="block text-[12pt] font-bold text-gray-700 mb-1">Par</label>
                             <input
+                                id="round-par"
                                 type="number"
                                 value={par}
                                 onChange={(e) => setPar(parseInt(e.target.value))}
@@ -308,8 +312,9 @@ export function LiveRoundModal({
                             />
                         </div>
                         <div>
-                            <label className="block text-[12pt] font-bold text-gray-700 mb-1">Rating</label>
+                            <label htmlFor="round-rating" className="block text-[12pt] font-bold text-gray-700 mb-1">Rating</label>
                             <input
+                                id="round-rating"
                                 type="number"
                                 step="0.1"
                                 value={rating}
@@ -318,8 +323,9 @@ export function LiveRoundModal({
                             />
                         </div>
                         <div>
-                            <label className="block text-[12pt] font-bold text-gray-700 mb-1">Slope</label>
+                            <label htmlFor="round-slope" className="block text-[12pt] font-bold text-gray-700 mb-1">Slope</label>
                             <input
+                                id="round-slope"
                                 type="number"
                                 value={slope}
                                 onChange={(e) => setSlope(parseInt(e.target.value))}

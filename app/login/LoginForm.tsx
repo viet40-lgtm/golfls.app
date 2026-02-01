@@ -128,6 +128,10 @@ export default function LoginForm({ initialEmail }: { initialEmail?: string }) {
                     margin-bottom: 1.5rem;
                 }
 
+                .auth-form {
+                    width: 100%;
+                }
+
                 .label {
                     font-size: 0.75rem;
                     font-weight: 700;
@@ -282,7 +286,7 @@ export default function LoginForm({ initialEmail }: { initialEmail?: string }) {
                 {error && <div className="error-message">{error}</div>}
                 {successMessage && <div className="success-message">{successMessage}</div>}
 
-                <form onSubmit={handleSubmit} style={{ width: '100%' }}>
+                <form onSubmit={handleSubmit} className="auth-form">
                     {mode === 'signup' && (
                         <>
                             <div className="grid grid-cols-2 gap-4">
