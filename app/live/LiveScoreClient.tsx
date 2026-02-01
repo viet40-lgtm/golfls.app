@@ -2019,7 +2019,7 @@ export default function LiveScoreClient({
                                                 // Blue if: has unsaved changes OR hole is not yet scored
                                                 // Black if: hole is scored AND no unsaved changes
                                                 return (hasUnsavedChanges || !isHoleScored) ? 'bg-green-600 text-white shadow-lg' : 'bg-zinc-100 text-zinc-500';
-                                            })()} w-[50%] ml-auto italic uppercase tracking-tighter text-lg font-black py-5 rounded-none shadow-xl transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3`}
+                                            })()} w-[50%] ml-auto italic uppercase tracking-tighter text-lg font-black py-1 rounded-none shadow-xl transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3`}
                                         >
                                             <div className="relative">
                                                 <span className={isSaving ? 'invisible' : 'visible'}>
@@ -2088,7 +2088,7 @@ export default function LiveScoreClient({
                                         }
 
                                         return (
-                                            <div key={player.id} className="bg-white border border-zinc-100 rounded-[24px] p-4 flex justify-between items-center group transition-all hover:bg-zinc-50 shadow-sm">
+                                            <div key={player.id} className="bg-white border border-zinc-100 rounded-none p-1 flex justify-between items-center group transition-all hover:bg-zinc-50 shadow-sm">
                                                 <div className="flex items-center gap-4">
                                                     <div className="flex flex-col items-start leading-tight">
                                                         <div className="flex items-center gap-2">
