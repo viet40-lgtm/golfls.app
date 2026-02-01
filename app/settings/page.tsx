@@ -25,16 +25,7 @@ export default function SettingsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-20">
-            {/* Header Area */}
-            <div className="bg-white border-b border-gray-100 p-4 pt-10 sticky top-0 z-40">
-                <div className="max-w-xl mx-auto flex items-center gap-4">
-                    <Link href="/live" className="p-2 hover:bg-gray-50 rounded-full transition-colors">
-                        <ChevronLeft className="w-6 h-6" />
-                    </Link>
-                    <h1 className="text-2xl font-black italic uppercase tracking-tighter">Settings</h1>
-                </div>
-            </div>
+        <div className="min-h-screen bg-gray-50 pb-20 pt-4">
 
             <main className="max-w-xl mx-auto p-4 space-y-6">
                 {/* 1st Section: GPS Setting */}
