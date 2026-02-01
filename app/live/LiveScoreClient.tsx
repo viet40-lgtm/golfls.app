@@ -2142,7 +2142,7 @@ export default function LiveScoreClient({
                                                     {canUpdate && (
                                                         <button
                                                             onClick={() => updateScore(player.id, false)}
-                                                            className="w-12 h-12 rounded-xl bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 font-black shadow-md active:scale-90 transition-all hover:bg-red-50 hover:border-red-500/30 text-2xl"
+                                                            className="w-12 h-12 rounded-xl bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 font-black shadow-md active:scale-90 transition-all hover:bg-red-50 hover:border-red-500/30 text-4xl"
                                                             title="Decrease Score"
                                                         >
                                                             -
@@ -2154,7 +2154,7 @@ export default function LiveScoreClient({
                                                     {canUpdate && (
                                                         <button
                                                             onClick={() => updateScore(player.id, true)}
-                                                            className="w-12 h-12 rounded-2xl bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 font-black shadow-md active:scale-90 transition-all hover:bg-green-50 hover:border-green-500/30 text-2xl"
+                                                            className="w-12 h-12 rounded-2xl bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 font-black shadow-md active:scale-90 transition-all hover:bg-green-50 hover:border-green-500/30 text-4xl"
                                                             title="Increase Score"
                                                         >
                                                             +
