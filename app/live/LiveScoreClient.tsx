@@ -1503,6 +1503,8 @@ export default function LiveScoreClient({
                         </div>
 
                         <button
+                            id="round-selector"
+                            aria-label="Select Round"
                             onClick={() => setIsRoundSelectModalOpen(true)}
                             className="flex-1 px-4 py-2 text-[15pt] bg-black text-white rounded-full font-bold hover:bg-gray-800 transition-colors flex justify-between items-center min-w-0"
                         >
