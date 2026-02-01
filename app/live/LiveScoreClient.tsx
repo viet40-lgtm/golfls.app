@@ -1419,7 +1419,7 @@ export default function LiveScoreClient({
                                 {liveRoundId && isAdmin && (
                                     <button
                                         onClick={() => setIsAddToClubModalOpen(true)}
-                                        className="bg-green-600 text-white text-[15pt] font-bold px-4 py-2 rounded-full hover:bg-green-700 transition-all shadow-md active:scale-95"
+                                        className="bg-green-600 text-white text-[15pt] font-bold px-1 py-1 rounded-none hover:bg-green-700 transition-all shadow-md active:scale-95"
                                     >
                                         Transfer
                                     </button>
@@ -1455,7 +1455,7 @@ export default function LiveScoreClient({
                                                 }
                                             });
                                         }}
-                                        className="bg-red-600 text-white text-[15pt] font-bold px-4 py-2 rounded-full hover:bg-red-700 transition-all shadow-md active:scale-95"
+                                        className="bg-red-600 text-white text-[15pt] font-bold px-1 py-1 rounded-none hover:bg-red-700 transition-all shadow-md active:scale-95"
                                     >
                                         Delete
                                     </button>
@@ -1488,14 +1488,14 @@ export default function LiveScoreClient({
                                                 }
                                             });
                                         }}
-                                        className="bg-red-600 text-white text-[15pt] font-bold px-4 py-2 rounded-full hover:bg-red-700 transition-all shadow-md active:scale-95"
+                                        className="bg-red-600 text-white text-[15pt] font-bold px-1 py-1 rounded-none hover:bg-red-700 transition-all shadow-md active:scale-95"
                                     >
                                         Delete
                                     </button>
                                 )}
                                 <button
                                     onClick={handleCreateNewRound}
-                                    className="px-4 py-2 bg-black text-white rounded-full text-[15pt] font-bold hover:bg-gray-800 transition-colors shadow-md active:scale-95"
+                                    className="px-1 py-1 bg-black text-white rounded-none text-[15pt] font-bold hover:bg-gray-800 transition-colors shadow-md active:scale-95"
                                 >
                                     New
                                 </button>
@@ -1506,7 +1506,7 @@ export default function LiveScoreClient({
                             id="round-selector"
                             aria-label="Select Round"
                             onClick={() => setIsRoundSelectModalOpen(true)}
-                            className="flex-1 px-4 py-2 text-[15pt] bg-black text-white rounded-full font-bold hover:bg-gray-800 transition-colors flex justify-between items-center min-w-0"
+                            className="flex-1 px-1 py-1 text-[15pt] bg-black text-white rounded-none font-bold hover:bg-gray-800 transition-colors flex justify-between items-center min-w-0"
                         >
                             <span className="truncate mr-2">
                                 {(() => {
@@ -1601,7 +1601,7 @@ export default function LiveScoreClient({
                                     <div className="flex flex-col gap-2">
                                         <button
                                             onClick={() => setIsPlayerModalOpen(true)}
-                                            className="bg-white border border-zinc-200 text-zinc-900 text-xs font-black px-6 py-2.5 rounded-full hover:bg-zinc-50 transition-all shadow-md active:scale-95 uppercase tracking-widest"
+                                            className="bg-white border border-zinc-200 text-zinc-900 text-xs font-black px-1 py-1 rounded-none hover:bg-zinc-50 transition-all shadow-md active:scale-95 uppercase tracking-widest"
                                         >
                                             Players
                                         </button>
@@ -1610,7 +1610,7 @@ export default function LiveScoreClient({
                                                 setRoundModalMode('edit');
                                                 setIsRoundModalOpen(true);
                                             }}
-                                            className="bg-white border border-zinc-200 text-zinc-900 text-xs font-black px-6 py-2.5 rounded-full hover:bg-zinc-50 transition-all shadow-md active:scale-95 uppercase tracking-widest"
+                                            className="bg-white border border-zinc-200 text-zinc-900 text-xs font-black px-1 py-1 rounded-none hover:bg-zinc-50 transition-all shadow-md active:scale-95 uppercase tracking-widest"
                                         >
                                             Course
                                         </button>
@@ -1683,7 +1683,7 @@ export default function LiveScoreClient({
                                     {canUpdate && (
                                         <button
                                             onClick={() => setIsGPSEnabled(!isGPSEnabled)}
-                                            className={`px-4 py-1.5 rounded-full text-xs font-black transition-all shadow-md active:scale-95 uppercase tracking-widest ${isGPSEnabled
+                                            className={`px-1 py-1 rounded-none text-xs font-black transition-all shadow-md active:scale-95 uppercase tracking-widest ${isGPSEnabled
                                                 ? 'bg-green-600 text-white animate-pulse'
                                                 : 'bg-zinc-100 text-zinc-400'
                                                 }`}
@@ -1694,7 +1694,7 @@ export default function LiveScoreClient({
                                 </div>
                                 <button
                                     onClick={() => setShowDetails(!showDetails)}
-                                    className="px-4 py-1.5 bg-zinc-800 text-zinc-300 rounded-full text-xs font-black transition-all hover:bg-zinc-700 uppercase tracking-widest"
+                                    className="px-1 py-1 bg-zinc-800 text-zinc-300 rounded-none text-xs font-black transition-all hover:bg-zinc-700 uppercase tracking-widest"
                                 >
                                     {showDetails ? 'Hide' : 'Show'} Details
                                 </button>
