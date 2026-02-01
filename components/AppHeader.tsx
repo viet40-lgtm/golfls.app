@@ -60,8 +60,8 @@ export default function AppHeader({ playerId }: { playerId?: string | null }) {
 
     return (
         <>
-            <header className="sticky top-0 z-50 px-4 py-3">
-                <div className="max-w-7xl mx-auto bg-white/80 backdrop-blur-md border border-gray-100 shadow-sm rounded-2xl px-4 py-2 flex justify-between items-center transition-all duration-300">
+            <header className="sticky top-0 z-50 px-1 py-1">
+                <div className="max-w-7xl mx-auto bg-white/80 backdrop-blur-md border border-gray-100 shadow-sm rounded-2xl px-3 py-2 flex justify-between items-center transition-all duration-300">
                     {/* Left: Logo */}
                     <Link href="/" className="flex items-center gap-2 group transition-all">
                         <div className="bg-black text-white p-1.5 rounded-lg group-hover:scale-110 transition-transform">

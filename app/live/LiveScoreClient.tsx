@@ -1408,7 +1408,7 @@ export default function LiveScoreClient({
         <div className="min-h-screen bg-gray-50 pb-20 text-zinc-900">
 
 
-            <main className="max-w-xl mx-auto px-4 pt-6 space-y-6">
+            <main className="max-w-xl mx-auto px-1 pt-1 space-y-2">
                 {/* Round Selector - Visibility Controlled by 'Details' toggle */}
                 {showDetails && (
                     <div className="bg-white rounded-[32px] p-6 border border-zinc-200 shadow-xl flex flex-col justify-center space-y-4">
