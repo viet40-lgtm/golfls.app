@@ -93,6 +93,7 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                         color: '#111',
                         textTransform: 'uppercase',
                         marginBottom: '0.5rem',
+                        padding: '0.25rem 0',
                         textAlign: 'center',
                         letterSpacing: '-0.01em'
                     }}
@@ -178,7 +179,7 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                                         <label style={labelStyle}>Index</label>
                                         <input style={inputStyle} type="number" step="0.1" name="handicapIndex" placeholder="0.0" defaultValue="0.0" />
                                     </div>
-                                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#ced4da', marginTop: '1.25rem' }}>OR</div>
+                                    <div style={{ fontSize: '15pt', fontWeight: 800, color: '#ced4da', marginTop: '1.25rem' }}>OR</div>
                                     <div style={{ flex: 1 }}>
                                         <label style={labelStyle}>Handicap</label>
                                         <input style={inputStyle} type="number" name="estimateHandicap" placeholder="0" defaultValue="0" />
