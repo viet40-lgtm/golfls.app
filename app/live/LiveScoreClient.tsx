@@ -1435,52 +1435,101 @@ export default function LiveScoreClient({
     const birdieLeaders = playerStats.filter(p => p.birdieCount > 0).sort((a, b) => b.birdieCount - a.birdieCount);
     const eagleLeaders = playerStats.filter(p => p.eagleCount > 0).sort((a, b) => b.eagleCount - a.eagleCount);
 
-    // SAFE MODE: If no active round, render a simplified dashboard to prevent crashes in complex UI
+    // SAFE MODE: If no active round, render a simplified dashboard
     if (!initialRound && !liveRoundId && !isRoundModalOpen) {
         return (
             <div className="min-h-screen bg-gray-50 pb-20">
-                <header className="bg-white shadow-sm sticky top-0 z-50 px-4 py-3 flex justify-between items-center">
-                    <h1 className="text-xl font-bold text-green-700">Live Scoring</h1>
-                </header>
-                <main className="p-4 flex flex-col items-center justify-center mt-10 space-y-6">
-                    <div className="bg-white p-6 rounded-xl shadow-lg border-2 border-dashed border-gray-300 text-center max-w-sm w-full">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-2">No Active Round</h2>
-                        <p className="text-gray-500 mb-6">There is no round currently in progress.</p>
-
-                        <button
-                            onClick={() => {
-                                setRoundModalMode('new');
-                                setIsRoundModalOpen(true);
-                            }}
-                            className="w-full bg-green-600 text-white text-lg font-bold py-3 rounded-xl shadow-md hover:bg-green-700 transition"
-                        >
-                            Start New Round
-                        </button>
-
-                        {allLiveRounds.length > 0 && (
-                            <div className="mt-6 pt-6 border-t border-gray-100">
-                                <label className="block text-sm font-bold text-gray-500 mb-2">Or Resume Existing Round:</label>
-                                <select
-                                    className="w-full p-2 border rounded-lg bg-gray-50 text-lg text-black"
-                                    aria-label="Resume Existing Round"
-                                    title="Resume Existing Round"
-                                    onChange={(e) => {
-                                        if (e.target.value) {
-                                            window.location.href = `/live?roundId=${e.target.value}`;
-                                        }
-                                    }}
-                                    defaultValue=""
-                                >
-                                    <option value="" disabled>-- Select Round --</option>
-                                    {allLiveRounds.map(r => (
-                                        <option key={r.id} value={r.id}>
-                                            {r.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
+                <main className="max-w-xl mx-auto px-4 pt-4 space-y-4">
+                    {/* SELECT ROUND Section */}
+                    <div className="bg-white rounded-xl p-4 border border-zinc-200 shadow-xl">
+                        <label htmlFor="round-landing-selector" className="block text-xs font-black text-zinc-400 uppercase tracking-widest mb-2">
+                            Select Round
+                        </label>
+                        <div className="flex gap-2">
+                            <select
+                                id="round-landing-selector"
+                                className="flex-1 p-3 border-2 border-zinc-900 bg-zinc-900 text-white rounded-xl text-lg font-bold"
+                                aria-label="Select Round"
+                                onChange={(e) => {
+                                    if (e.target.value) {
+                                        window.location.href = `/live?roundId=${e.target.value}`;
+                                    }
+                                }}
+                                defaultValue=""
+                            >
+                                <option value="" disabled>-- Select Round --</option>
+                                {allLiveRounds.map(r => (
+                                    <option key={r.id} value={r.id}>
+                                        {r.date}: {r.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <button
+                                onClick={() => {
+                                    setRoundModalMode('new');
+                                    setIsRoundModalOpen(true);
+                                }}
+                                className="bg-black text-white text-lg font-bold px-6 py-3 rounded-xl hover:bg-zinc-800 transition-all shadow-lg whitespace-nowrap"
+                            >
+                                NEW
+                            </button>
+                        </div>
                     </div>
+
+                    {/* LEADERBOARD from Last Round */}
+                    {userRoundsHistory && userRoundsHistory.length > 0 && (() => {
+                        const lastRound = userRoundsHistory[0];
+
+                        return (
+                            <div className="bg-white rounded-xl p-4 border border-zinc-200 shadow-xl">
+                                <h2 className="text-lg font-black text-zinc-900 uppercase tracking-tight mb-3">
+                                    Last Scorecard: {lastRound.course?.name?.replace(/New Orleans/gi, '').trim() || 'Unknown Course'}
+                                </h2>
+                                <p className="text-sm text-zinc-500 mb-4">{lastRound.date}</p>
+
+                                {lastRound.scores && lastRound.scores.length > 0 ? (
+                                    <div className="space-y-2">
+                                        {lastRound.scores.map((playerScore: any, idx: number) => {
+                                            const toParNum = playerScore.grossScore - (lastRound.par || 72);
+                                            let toParDisplay = 'E';
+                                            let toParColor = 'text-green-600';
+                                            if (toParNum > 0) {
+                                                toParDisplay = `+${toParNum}`;
+                                                toParColor = 'text-zinc-600';
+                                            } else if (toParNum < 0) {
+                                                toParDisplay = `${toParNum}`;
+                                                toParColor = 'text-red-600';
+                                            }
+
+                                            return (
+                                                <div key={idx} className="flex items-center justify-between p-3 bg-zinc-50 rounded-lg border border-zinc-200">
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-2xl font-black text-zinc-400">{idx + 1}</span>
+                                                        <span className="text-lg font-bold text-zinc-900">{playerScore.player?.name || 'Unknown'}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-4">
+                                                        <span className="text-sm text-zinc-500 font-bold">GRS</span>
+                                                        <span className="text-xl font-black text-zinc-900">{playerScore.grossScore}</span>
+                                                        <span className={`text-lg font-bold ${toParColor} min-w-[3rem] text-right`}>{toParDisplay}</span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <p className="text-zinc-400 text-center py-4">No scores recorded</p>
+                                )}
+                            </div>
+                        );
+                    })()}
+
+                    {/* No History Message */}
+                    {(!userRoundsHistory || userRoundsHistory.length === 0) && (
+                        <div className="bg-white p-6 rounded-xl shadow-lg border-2 border-dashed border-gray-300 text-center">
+                            <h2 className="text-2xl font-bold text-gray-800 mb-2">No Round History</h2>
+                            <p className="text-gray-500 mb-6">Click "NEW" above to start your first round!</p>
+                        </div>
+                    )}
                 </main>
             </div>
         );
