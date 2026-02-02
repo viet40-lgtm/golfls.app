@@ -56,9 +56,9 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'center',
+                justifyContent: 'flex-start',
                 backgroundColor: '#2b7a3a',
-                padding: '0.75rem',
+                padding: '2rem 0.75rem',
                 fontFamily: "'Inter', system-ui, -apple-system, sans-serif"
             }}
             suppressHydrationWarning
@@ -87,7 +87,7 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                 {/* Title */}
                 <h1
                     style={{
-                        fontSize: '1.6rem',
+                        fontSize: '18pt',
                         fontWeight: 900,
                         fontStyle: 'italic',
                         color: '#111',
@@ -184,7 +184,7 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                                         <input style={inputStyle} type="number" name="estimateHandicap" placeholder="0" defaultValue="0" />
                                     </div>
                                 </div>
-                                <p style={{ fontSize: '0.95rem', color: '#999', marginTop: '0.25rem', fontStyle: 'italic', lineHeight: '1.2' }}>
+                                <p style={{ fontSize: '15pt', color: '#999', marginTop: '0.25rem', fontStyle: 'italic', lineHeight: '1.2' }}>
                                     (Index and Handicap will be calculated according to the USGA rules, after 5 rounds.)
                                 </p>
                             </div>
@@ -256,7 +256,7 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                 </form>
 
                 {/* Footer Links */}
-                <div style={{ marginTop: '2rem', textAlign: 'center', color: '#555', fontSize: '0.95rem' }}>
+                <div style={{ marginTop: '2rem', textAlign: 'center', color: '#555', fontSize: '15pt' }}>
                     {mode === 'login' ? (
                         <>
                             Not a member yet?
@@ -304,7 +304,7 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
 // Styles as objects
 const labelStyle: React.CSSProperties = {
     display: 'block',
-    fontSize: '0.75rem',
+    fontSize: '15pt',
     fontWeight: 700,
     color: '#888',
     textTransform: 'uppercase',
@@ -318,7 +318,7 @@ const inputStyle: React.CSSProperties = {
     border: '1px solid transparent',
     borderRadius: '14px',
     padding: '0.55rem 1rem',
-    fontSize: '1rem',
+    fontSize: '15pt',
     color: '#333',
     boxSizing: 'border-box'
 }
@@ -343,6 +343,6 @@ const forgotBtnStyle: React.CSSProperties = {
     color: '#adb5bd',
     textDecoration: 'none',
     fontWeight: 500,
-    fontSize: '0.9rem',
+    fontSize: '15pt',
     cursor: 'pointer'
 }
