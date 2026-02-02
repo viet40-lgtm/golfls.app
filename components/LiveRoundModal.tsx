@@ -349,7 +349,7 @@ export function LiveRoundModal({
                         disabled={isSaving}
                         className="bg-black text-white px-4 py-2 rounded-full text-[15pt] font-bold shadow-lg hover:bg-gray-800 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                     >
-                        {isSaving ? 'Saving...' : 'Save Round'}
+                        {isSaving ? 'Saving...' : (existingRound ? 'Save Round' : 'Start Round')}
                     </button>
                 </div>
             </div>
