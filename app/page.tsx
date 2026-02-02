@@ -4,9 +4,10 @@ import LoginForm from '@/components/LoginForm';
 export default async function HomePage() {
     const cookieStore = await cookies();
     const lastEmail = cookieStore.get('last_email')?.value;
+    const lastPassword = cookieStore.get('last_password')?.value;
 
     // We intently do NOT check for existing session here to satisfy "do not auto login user".
     // The user will always see the login screen at the root.
 
-    return <LoginForm initialEmail={lastEmail} />;
+    return <LoginForm initialEmail={lastEmail} initialPassword={lastPassword} />;
 }

@@ -25,7 +25,6 @@ export const metadata: Metadata = {
 import AppHeader from "@/components/AppHeader";
 import GlobalEnterNavigation from "@/components/GlobalEnterNavigation";
 // import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
-import { getSession } from "@/lib/auth";
 
 export default async function RootLayout({
     children,
@@ -34,19 +33,6 @@ export default async function RootLayout({
 }>) {
     const cookieStore = await cookies();
     const isAuthenticated = cookieStore.get('auth_status')?.value === 'true' && !!cookieStore.get('session_userId')?.value;
-
-    let userPlayerId: string | null = null;
-
-    if (isAuthenticated) {
-        try {
-            const session = await getSession();
-            if (session?.playerId) {
-                userPlayerId = session.playerId;
-            }
-        } catch (error) {
-            console.error('Error fetching playerId in layout:', error);
-        }
-    }
 
     return (
         <html lang="en" suppressHydrationWarning>
@@ -80,7 +66,7 @@ export default async function RootLayout({
                     `,
                     }}
                 />
-                {isAuthenticated && <AppHeader playerId={userPlayerId} />}
+                {isAuthenticated && <AppHeader />}
                 <GlobalEnterNavigation />
                 {children}
             </body>

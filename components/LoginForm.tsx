@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { login, signup, forgotPassword } from '@/app/actions/auth'
-import { Mail, Lock, ChevronRight, Loader2, User, Phone } from 'lucide-react'
+import { ChevronRight, Loader2 } from 'lucide-react'
 
-export default function LoginForm({ initialEmail }: { initialEmail?: string }) {
+export default function LoginForm({ initialEmail, initialPassword }: { initialEmail?: string, initialPassword?: string }) {
     const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -36,7 +36,6 @@ export default function LoginForm({ initialEmail }: { initialEmail?: string }) {
                     setSuccessMessage(result.message || 'Check your email for reset instructions.')
                     setLoading(false)
                 } else {
-                    // Successful login or signup
                     window.location.href = '/live'
                 }
             } else {
@@ -45,252 +44,106 @@ export default function LoginForm({ initialEmail }: { initialEmail?: string }) {
             }
         } catch (err: any) {
             console.error('Auth error:', err)
-            setError('An system error occurred. Please try again.')
+            setError('A system error occurred. Please try again.')
             setLoading(false)
         }
     }
 
     return (
-        <main className="auth-container" suppressHydrationWarning>
-            <style jsx>{`
-                .auth-container {
-                    min-height: 100vh;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    background-color: #2b7a3a; /* Golf Green */
-                    padding: 1.5rem;
-                    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-                }
-
-                .auth-card {
-                    background: white;
-                    width: 100%;
-                    max-width: 440px;
-                    border-radius: 40px;
-                    padding: 3rem 2.5rem;
-                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    margin-bottom: 2rem;
-                }
-
-                .logo-container {
-                    display: flex;
-                    align-items: center;
-                    gap: 0.75rem;
-                    margin-bottom: 2rem;
-                }
-
-                .logo-icon {
-                    background: #2b7a3a;
-                    color: white;
-                    padding: 0.5rem;
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-
-                .logo-text {
-                    font-size: 1.75rem;
-                    font-weight: 700;
-                    color: #1b4332;
-                    letter-spacing: -0.02em;
-                }
-
-                .welcome-title {
-                    font-size: 2.5rem;
-                    font-weight: 900;
-                    font-style: italic;
-                    color: #111;
-                    text-transform: uppercase;
-                    margin-bottom: 2.5rem;
-                    text-align: center;
-                    letter-spacing: -0.01em;
-                }
-
-                .form-group {
-                    width: 100%;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 0.5rem;
-                    margin-bottom: 1.5rem;
-                }
-
-                .auth-form {
-                    width: 100%;
-                }
-
-                .label {
-                    font-size: 0.75rem;
-                    font-weight: 700;
-                    color: #888;
-                    text-transform: uppercase;
-                    letter-spacing: 0.05em;
-                }
-
-                .input-wrapper {
-                    position: relative;
-                    display: flex;
-                    align-items: center;
-                }
-
-                .input-icon {
-                    position: absolute;
-                    left: 1.25rem;
-                    color: #adb5bd;
-                }
-
-                .input {
-                    width: 100%;
-                    background: #f8f9fa;
-                    border: none;
-                    border-radius: 18px;
-                    padding: 1.25rem 1.25rem 1.25rem 3.5rem;
-                    font-size: 1rem;
-                    color: #333;
-                    transition: all 0.2s;
-                    border: 1px solid transparent;
-                }
-
-                .input:focus {
-                    outline: none;
-                    background: white;
-                    border-color: #2b7a3a;
-                    box-shadow: 0 0 0 4px rgba(43, 122, 58, 0.1);
-                }
-
-                .sign-in-btn {
-                    width: 100%;
-                    background: #1b4332;
-                    color: white;
-                    border: none;
-                    border-radius: 20px;
-                    padding: 1.25rem;
-                    font-size: 1.125rem;
-                    font-weight: 700;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 0.75rem;
-                    cursor: pointer;
-                    margin-top: 1rem;
-                    box-shadow: 0 10px 20px rgba(27, 67, 50, 0.2);
-                    transition: all 0.2s;
-                    text-transform: uppercase;
-                }
-
-                .sign-in-btn:hover {
-                    background: #153427;
-                    transform: translateY(-2px);
-                    box-shadow: 0 12px 24px rgba(27, 67, 50, 0.25);
-                }
-
-                .sign-in-btn:disabled {
-                    opacity: 0.7;
-                    cursor: not-allowed;
-                    transform: none;
-                }
-
-                .footer-links {
-                    margin-top: 2rem;
-                    text-align: center;
-                    color: #555;
-                    font-size: 0.95rem;
-                }
-
-                .link-btn {
-                    background: none;
-                    border: none;
-                    color: #1b4332;
-                    font-weight: 800;
-                    text-transform: uppercase;
-                    cursor: pointer;
-                    padding: 0;
-                    margin-left: 0.25rem;
-                }
-
-                .forgot-password {
-                    background: none;
-                    border: none;
-                    display: block;
-                    width: 100%;
-                    margin-top: 1.5rem;
-                    color: #adb5bd;
-                    text-decoration: none;
-                    font-weight: 500;
-                    font-size: 0.9rem;
-                    cursor: pointer;
-                }
-                
-                .forgot-password:hover {
-                    color: #1b4332;
-                }
-
-                .error-message {
-                    color: #dc3545;
-                    font-size: 0.875rem;
-                    font-weight: 600;
-                    margin-bottom: 1.5rem;
-                    text-align: center;
-                    width: 100%;
-                    padding: 0.75rem;
-                    background: #fff5f5;
-                    border-radius: 12px;
-                }
-
-                .success-message {
-                    color: #28a745;
-                    font-size: 0.875rem;
-                    font-weight: 600;
-                    margin-bottom: 1.5rem;
-                    text-align: center;
-                    width: 100%;
-                    padding: 0.75rem;
-                    background: #f8fff8;
-                    border-radius: 12px;
-                    word-break: break-all;
-                }
-
-                .success-message a {
-                    color: #1b4332;
-                    text-decoration: underline;
-                    display: block;
-                    margin-top: 0.5rem;
-                    font-weight: 800;
-                }
-
-                .copyright {
-                    color: rgba(255, 255, 255, 0.6);
-                    font-size: 0.75rem;
-                    font-weight: 700;
-                    text-transform: uppercase;
-                    letter-spacing: 0.1em;
-                }
-            `}</style>
-
-            <div className="auth-card">
-                <div className="logo-container">
-                    <div className="logo-icon bg-transparent p-0">
-                        <img src="/icon-192.png" alt="GolfLS" className="w-12 h-12 object-contain rounded-xl" />
-                    </div>
-                    <span className="logo-text">GolfLS.app</span>
+        <main
+            style={{
+                minHeight: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#2b7a3a',
+                padding: '1.5rem',
+                fontFamily: "'Inter', system-ui, -apple-system, sans-serif"
+            }}
+            suppressHydrationWarning
+        >
+            {/* Card */}
+            <div
+                style={{
+                    background: 'white',
+                    width: '100%',
+                    maxWidth: '440px',
+                    borderRadius: '40px',
+                    padding: '3rem 2.5rem',
+                    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    marginBottom: '2rem'
+                }}
+            >
+                {/* Logo */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
+                    <img src="/icon-192.png" alt="GolfLS" style={{ width: '48px', height: '48px', objectFit: 'contain', borderRadius: '12px' }} />
+                    <span style={{ fontSize: '1.75rem', fontWeight: 700, color: '#1b4332', letterSpacing: '-0.02em' }}>GolfLS.app</span>
                 </div>
 
-                <h1 className="welcome-title">
+                {/* Title */}
+                <h1
+                    style={{
+                        fontSize: '2.5rem',
+                        fontWeight: 900,
+                        fontStyle: 'italic',
+                        color: '#111',
+                        textTransform: 'uppercase',
+                        marginBottom: '2.5rem',
+                        textAlign: 'center',
+                        letterSpacing: '-0.01em'
+                    }}
+                >
                     {mode === 'login' ? 'WELCOME BACK' : mode === 'signup' ? 'CREATE ACCOUNT' : 'RESET PASSWORD'}
                 </h1>
 
-                {error && <div className="error-message">{error}</div>}
+                {/* Error Message */}
+                {error && (
+                    <div
+                        style={{
+                            color: '#dc3545',
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                            marginBottom: '1.5rem',
+                            textAlign: 'center',
+                            width: '100%',
+                            padding: '0.75rem',
+                            background: '#fff5f5',
+                            borderRadius: '12px'
+                        }}
+                    >
+                        {error}
+                    </div>
+                )}
+
+                {/* Success Message */}
                 {successMessage && (
-                    <div className="success-message">
+                    <div
+                        style={{
+                            color: '#28a745',
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                            marginBottom: '1.5rem',
+                            textAlign: 'center',
+                            width: '100%',
+                            padding: '0.75rem',
+                            background: '#f8fff8',
+                            borderRadius: '12px',
+                            wordBreak: 'break-all'
+                        }}
+                    >
                         {successMessage.includes('http') ? (
                             <>
                                 {successMessage.split('http')[0]}
-                                <a href={'http' + successMessage.split('http')[1]} target="_blank" rel="noopener noreferrer">
+                                <a
+                                    href={'http' + successMessage.split('http')[1]}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ color: '#1b4332', textDecoration: 'underline', display: 'block', marginTop: '0.5rem', fontWeight: 800 }}
+                                >
                                     CLICK HERE TO RESET
                                 </a>
                             </>
@@ -300,88 +153,81 @@ export default function LoginForm({ initialEmail }: { initialEmail?: string }) {
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="auth-form">
+                {/* Form */}
+                <form onSubmit={handleSubmit} style={{ width: '100%' }}>
+                    {/* Signup Extra Fields */}
                     {mode === 'signup' && (
                         <>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="form-group">
-                                    <label className="label">First Name</label>
-                                    <div className="input-wrapper">
-                                        <User className="input-icon" size={20} />
-                                        <input
-                                            className="input"
-                                            type="text"
-                                            name="firstName"
-                                            placeholder="John"
-                                            required
-                                        />
-                                    </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                                <div>
+                                    <label style={labelStyle}>First Name</label>
+                                    <input style={inputStyle} type="text" name="firstName" placeholder="John" required />
                                 </div>
-                                <div className="form-group">
-                                    <label className="label">Last Name</label>
-                                    <div className="input-wrapper">
-                                        <User className="input-icon" size={20} />
-                                        <input
-                                            className="input"
-                                            type="text"
-                                            name="lastName"
-                                            placeholder="Doe"
-                                            required
-                                        />
-                                    </div>
+                                <div>
+                                    <label style={labelStyle}>Last Name</label>
+                                    <input style={inputStyle} type="text" name="lastName" placeholder="Doe" required />
                                 </div>
                             </div>
-                            <div className="form-group">
-                                <label className="label">Phone Number</label>
-                                <div className="input-wrapper">
-                                    <Phone className="input-icon" size={20} />
-                                    <input
-                                        className="input"
-                                        type="tel"
-                                        name="phone"
-                                        placeholder="(555) 555-5555"
-                                        required
-                                    />
-                                </div>
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <label style={labelStyle}>Phone Number</label>
+                                <input style={inputStyle} type="tel" name="phone" placeholder="(555) 555-5555" required />
                             </div>
                         </>
                     )}
 
-                    <div className="form-group">
-                        <label className="label">
-                            {mode === 'login' ? 'Email Address or Player ID' : 'Email Address'}
-                        </label>
-                        <div className="input-wrapper">
-                            <Mail className="input-icon" size={20} />
-                            <input
-                                className="input"
-                                type={mode === 'login' ? 'text' : 'email'}
-                                name="email"
-                                placeholder={mode === 'login' ? 'Enter email or player ID' : 'name@example.com'}
-                                defaultValue={initialEmail}
-                                required
-                            />
-                        </div>
+                    {/* Email */}
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <label style={labelStyle}>Email Address</label>
+                        <input
+                            style={inputStyle}
+                            type="email"
+                            name="email"
+                            placeholder="name@example.com"
+                            defaultValue={initialEmail}
+                            required
+                        />
                     </div>
 
+                    {/* Password */}
                     {mode !== 'forgot' && (
-                        <div className="form-group">
-                            <label className="label">Password or PIN</label>
-                            <div className="input-wrapper">
-                                <Lock className="input-icon" size={20} />
-                                <input
-                                    className="input"
-                                    type="password"
-                                    name="password"
-                                    placeholder="••••"
-                                    required
-                                    minLength={4}
-                                />
-                            </div>
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <label style={labelStyle}>Password</label>
+                            <input
+                                style={inputStyle}
+                                type="password"
+                                name="password"
+                                placeholder="••••"
+                                defaultValue={initialPassword}
+                                required
+                                minLength={4}
+                            />
                         </div>
                     )}
 
-                    <button className="sign-in-btn" type="submit" disabled={loading}>
+                    {/* Submit Button */}
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        style={{
+                            width: '100%',
+                            background: '#1b4332',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '20px',
+                            padding: '1.25rem',
+                            fontSize: '1.125rem',
+                            fontWeight: 700,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.75rem',
+                            cursor: loading ? 'not-allowed' : 'pointer',
+                            marginTop: '1rem',
+                            boxShadow: '0 10px 20px rgba(27, 67, 50, 0.2)',
+                            textTransform: 'uppercase',
+                            opacity: loading ? 0.7 : 1
+                        }}
+                    >
                         {loading ? (
                             <Loader2 className="animate-spin" size={24} />
                         ) : (
@@ -393,28 +239,29 @@ export default function LoginForm({ initialEmail }: { initialEmail?: string }) {
                     </button>
                 </form>
 
-                <div className="footer-links">
+                {/* Footer Links */}
+                <div style={{ marginTop: '2rem', textAlign: 'center', color: '#555', fontSize: '0.95rem' }}>
                     {mode === 'login' ? (
                         <>
                             Not a member yet?
-                            <button className="link-btn" onClick={() => setMode('signup')}>
+                            <button onClick={() => setMode('signup')} style={linkBtnStyle}>
                                 CREATE AN ACCOUNT
                             </button>
-                            <button className="forgot-password" onClick={() => setMode('forgot')}>
+                            <button onClick={() => setMode('forgot')} style={forgotBtnStyle}>
                                 Forgot your password?
                             </button>
                         </>
                     ) : mode === 'signup' ? (
                         <>
                             Already have an account?
-                            <button className="link-btn" onClick={() => setMode('login')}>
+                            <button onClick={() => setMode('login')} style={linkBtnStyle}>
                                 Sign In
                             </button>
                         </>
                     ) : (
                         <>
                             Remember your password?
-                            <button className="link-btn" onClick={() => setMode('login')}>
+                            <button onClick={() => setMode('login')} style={linkBtnStyle}>
                                 Sign In
                             </button>
                         </>
@@ -422,9 +269,64 @@ export default function LoginForm({ initialEmail }: { initialEmail?: string }) {
                 </div>
             </div>
 
-            <div className="copyright">
+            {/* Copyright */}
+            <div
+                style={{
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em'
+                }}
+            >
                 © 2026 GOLFLS.APP • ALL RIGHTS RESERVED
             </div>
         </main>
     )
+}
+
+// Styles as objects
+const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontSize: '0.75rem',
+    fontWeight: 700,
+    color: '#888',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+    marginBottom: '0.5rem'
+}
+
+const inputStyle: React.CSSProperties = {
+    width: '100%',
+    background: '#f8f9fa',
+    border: '1px solid transparent',
+    borderRadius: '18px',
+    padding: '1.25rem',
+    fontSize: '1rem',
+    color: '#333',
+    boxSizing: 'border-box'
+}
+
+const linkBtnStyle: React.CSSProperties = {
+    background: 'none',
+    border: 'none',
+    color: '#1b4332',
+    fontWeight: 800,
+    textTransform: 'uppercase',
+    cursor: 'pointer',
+    padding: 0,
+    marginLeft: '0.25rem'
+}
+
+const forgotBtnStyle: React.CSSProperties = {
+    background: 'none',
+    border: 'none',
+    display: 'block',
+    width: '100%',
+    marginTop: '1.5rem',
+    color: '#adb5bd',
+    textDecoration: 'none',
+    fontWeight: 500,
+    fontSize: '0.9rem',
+    cursor: 'pointer'
 }

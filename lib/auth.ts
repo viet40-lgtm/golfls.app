@@ -13,8 +13,7 @@ export async function getSession() {
             select: {
                 id: true,
                 email: true,
-                name: true,
-                playerId: true
+                name: true
             }
         })
 
@@ -23,8 +22,7 @@ export async function getSession() {
         return {
             id: player.id,
             email: player.email,
-            name: player.name,
-            playerId: player.playerId
+            name: player.name
         }
     } catch (error) {
         console.error('getSession error:', error)

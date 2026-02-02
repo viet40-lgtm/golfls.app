@@ -5,15 +5,14 @@ import Cookies from 'js-cookie';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { logout, verifyAdminPassword, adminLogout } from '@/app/actions/auth';
-import { Menu, X, Shield, LogOut, Home, Settings, User } from 'lucide-react';
+import { Menu, X, Shield, LogOut, Home, Settings } from 'lucide-react';
 
-export default function AppHeader({ playerId }: { playerId?: string | null }) {
+export default function AppHeader() {
     const router = useRouter();
     const [isAdmin, setIsAdmin] = useState(false);
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [passwordInput, setPasswordInput] = useState('');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [fallbackPlayerId, setFallbackPlayerId] = useState<string | null>(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     useEffect(() => {
@@ -23,18 +22,7 @@ export default function AppHeader({ playerId }: { playerId?: string | null }) {
         const authStatus = Cookies.get('auth_status');
         const isAuth = authStatus === 'true';
         setIsAuthenticated(isAuth);
-
-        if (isAuth && !playerId) {
-            fetch('/api/user/player-id')
-                .then(res => res.json())
-                .then(data => {
-                    if (data.playerId) {
-                        setFallbackPlayerId(data.playerId);
-                    }
-                })
-                .catch(err => console.error('Failed to fetch playerId:', err));
-        }
-    }, [playerId]);
+    }, []);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -69,18 +57,6 @@ export default function AppHeader({ playerId }: { playerId?: string | null }) {
                         </div>
                         <span className="font-extrabold text-xl tracking-tight text-black">GolfLS.app</span>
                     </Link>
-
-                    {/* Center: Player ID (Visible if logged in) */}
-                    <div className="hidden sm:flex items-center">
-                        {(playerId || fallbackPlayerId) && (
-                            <div className="bg-gray-50 border border-gray-100 px-3 py-1 rounded-full flex items-center gap-2">
-                                <User className="w-3.5 h-3.5 text-gray-400" />
-                                <span className="text-sm font-bold text-gray-700">
-                                    {playerId || fallbackPlayerId}
-                                </span>
-                            </div>
-                        )}
-                    </div>
 
                     {/* Right: Actions */}
                     <div className="flex items-center gap-3">

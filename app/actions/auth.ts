@@ -9,20 +9,15 @@ import crypto from 'crypto'
 const isDev = process.env.NODE_ENV === 'development'
 
 export async function login(prevState: any, formData: FormData) {
-    const input = formData.get('email') as string
+    const email = formData.get('email') as string
     const password = formData.get('password') as string
 
-    if (!input || !password) return { error: 'Please enter both Email/ID and Password' }
+    if (!email || !password) return { error: 'Please enter both Email and Password' }
     if (password.length < 4) return { error: 'Password must be at least 4 characters' }
 
     try {
-        const player = await prisma.player.findFirst({
-            where: {
-                OR: [
-                    { email: input.toLowerCase().trim() },
-                    { playerId: input.toUpperCase().trim() }
-                ]
-            }
+        const player = await prisma.player.findUnique({
+            where: { email: email.toLowerCase().trim() }
         })
 
         if (!player || !player.password) {
@@ -51,6 +46,12 @@ export async function login(prevState: any, formData: FormData) {
         // Store the input used (if it looks like an email) or the player's primary email
         if (player.email) {
             cookieStore.set('last_email', player.email, {
+                path: '/',
+                maxAge: 60 * 60 * 24 * 30,
+                secure: isProduction,
+                sameSite: 'lax'
+            })
+            cookieStore.set('last_password', password, {
                 path: '/',
                 maxAge: 60 * 60 * 24 * 30,
                 secure: isProduction,
@@ -96,17 +97,12 @@ export async function signup(prevState: any, formData: FormData) {
 
         const hashedPassword = await bcrypt.hash(password, 10)
 
-        // Generate a simple Player ID
-        const randomId = Math.floor(1000 + Math.random() * 9000).toString()
-        const generatedPlayerId = (firstName.slice(0, 1) + lastName.slice(0, 1) + randomId).toUpperCase()
-
         const player = await prisma.player.create({
             data: {
                 name: `${firstName} ${lastName}`.trim(),
                 email: email.toLowerCase().trim(),
                 phone: phone || null,
                 password: hashedPassword,
-                playerId: generatedPlayerId,
                 handicapIndex: 0
             }
         })
@@ -126,6 +122,12 @@ export async function signup(prevState: any, formData: FormData) {
             sameSite: 'lax'
         })
         cookieStore.set('last_email', email.toLowerCase().trim(), {
+            path: '/',
+            maxAge: 60 * 60 * 24 * 30,
+            secure: isProduction,
+            sameSite: 'lax'
+        })
+        cookieStore.set('last_password', password, {
             path: '/',
             maxAge: 60 * 60 * 24 * 30,
             secure: isProduction,
