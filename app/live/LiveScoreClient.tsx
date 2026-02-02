@@ -1871,7 +1871,7 @@ export default function LiveScoreClient({
                                                 setActiveHole(hole.holeNumber);
                                             }}
                                             className={`
-                                            flex flex-col items-center justify-center py-1 rounded-xl transition-all duration-300 active:scale-90
+                                            flex flex-col items-center justify-center py-1 rounded-full aspect-square transition-all duration-300 active:scale-90
                                             ${btnClass}
                                         `}
                                             title={`Hole ${hole.holeNumber}`}
@@ -2267,7 +2267,7 @@ export default function LiveScoreClient({
                                                 <div className="flex items-center gap-1">
                                                     <button
                                                         onClick={() => updateScore(player.id, false)}
-                                                        className="w-12 h-12 rounded-xl bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 font-black shadow-md active:scale-90 transition-all hover:bg-red-50 hover:border-red-500/30 text-4xl"
+                                                        className="w-12 h-12 rounded-full bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 font-black shadow-md active:scale-90 transition-all hover:bg-red-50 hover:border-red-500/30 text-4xl"
                                                         title="Decrease Score"
                                                     >
                                                         -
@@ -2277,7 +2277,7 @@ export default function LiveScoreClient({
                                                     </div>
                                                     <button
                                                         onClick={() => updateScore(player.id, true)}
-                                                        className="w-12 h-12 rounded-2xl bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 font-black shadow-md active:scale-90 transition-all hover:bg-green-50 hover:border-green-500/30 text-4xl"
+                                                        className="w-12 h-12 rounded-full bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 font-black shadow-md active:scale-90 transition-all hover:bg-green-50 hover:border-green-500/30 text-4xl"
                                                         title="Increase Score"
                                                     >
                                                         +
