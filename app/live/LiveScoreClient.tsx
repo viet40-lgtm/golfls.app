@@ -132,6 +132,8 @@ export default function LiveScoreClient({
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     // Track pending (unsaved) scores for the current hole only
     const [pendingScores, setPendingScores] = useState<Map<string, number>>(new Map());
+    // Track holes that failed to save to database (for retry after round is complete)
+    const [unsavedToDbHoles, setUnsavedToDbHoles] = useState<Map<number, Array<{ playerId: string; strokes: number }>>>(new Map());
     const [summaryEditCell, setSummaryEditCell] = useState<{ playerId: string, holeNumber: number } | null>(null);
     const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
     const [isGPSEnabled, setIsGPSEnabled] = useState(false);
@@ -1987,27 +1989,73 @@ export default function LiveScoreClient({
                                                     setPendingScores(new Map());
                                                     setHasUnsavedChanges(false);
 
-                                                    // 2. SAVE TO SERVER (await to ensure it completes)
+                                                    // 2. SAVE TO SERVER with RETRY (try once, retry once if failed)
                                                     if (updates.length > 0) {
-                                                        const result = await saveLiveScore({
-                                                            liveRoundId,
-                                                            holeNumber: currentHole,
-                                                            playerScores: updates,
-                                                            scorerId: clientScorerId
-                                                        });
+                                                        let saveSuccess = false;
 
-                                                        if (!result.success) {
-                                                            console.error("Save failed:", result.error);
-                                                            showAlert('Error', `Failed to save Hole ${currentHole}: ${result.error}. Data is saved locally.`);
-                                                            setIsSaving(false);
-                                                            return;
-                                                        } else if (result.partialFailure) {
-                                                            console.warn("Partial warning:", result.error);
+                                                        // First attempt
+                                                        try {
+                                                            const result = await saveLiveScore({
+                                                                liveRoundId,
+                                                                holeNumber: currentHole,
+                                                                playerScores: updates,
+                                                                scorerId: clientScorerId
+                                                            });
+
+                                                            if (result.success && !result.partialFailure) {
+                                                                saveSuccess = true;
+                                                                // Remove from unsaved holes if it was there
+                                                                setUnsavedToDbHoles(prev => {
+                                                                    const next = new Map(prev);
+                                                                    next.delete(currentHole);
+                                                                    return next;
+                                                                });
+                                                            }
+                                                        } catch (err) {
+                                                            console.error("First save attempt failed:", err);
+                                                        }
+
+                                                        // Retry once if first attempt failed
+                                                        if (!saveSuccess) {
+                                                            console.log(`Retrying save for hole ${currentHole}...`);
+                                                            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+
+                                                            try {
+                                                                const retryResult = await saveLiveScore({
+                                                                    liveRoundId,
+                                                                    holeNumber: currentHole,
+                                                                    playerScores: updates,
+                                                                    scorerId: clientScorerId
+                                                                });
+
+                                                                if (retryResult.success && !retryResult.partialFailure) {
+                                                                    saveSuccess = true;
+                                                                    // Remove from unsaved holes if it was there
+                                                                    setUnsavedToDbHoles(prev => {
+                                                                        const next = new Map(prev);
+                                                                        next.delete(currentHole);
+                                                                        return next;
+                                                                    });
+                                                                }
+                                                            } catch (err) {
+                                                                console.error("Retry save attempt failed:", err);
+                                                            }
+                                                        }
+
+                                                        // If still failed, flag hole as unsaved
+                                                        if (!saveSuccess) {
+                                                            console.warn(`Hole ${currentHole} could not be saved to database. Flagging for later retry.`);
+                                                            setUnsavedToDbHoles(prev => {
+                                                                const next = new Map(prev);
+                                                                next.set(currentHole, updates);
+                                                                return next;
+                                                            });
                                                         }
                                                     }
 
                                                     // 3. Determine next hole after successful save
                                                     let nextHoleToSet = (currentHole % 18) + 1;
+                                                    let allHolesComplete = true;
 
                                                     for (let i = 1; i <= 18; i++) {
                                                         const checkHole = ((currentHole + i - 1) % 18) + 1;
@@ -2018,11 +2066,60 @@ export default function LiveScoreClient({
 
                                                         if (isIncomplete) {
                                                             nextHoleToSet = checkHole;
+                                                            allHolesComplete = false;
                                                             break;
                                                         }
                                                     }
 
-                                                    // 4. UI UPDATE after successful save
+                                                    // 4. If all 18 holes complete and there are unsaved holes, retry saving them
+                                                    if (allHolesComplete && unsavedToDbHoles.size > 0) {
+                                                        console.log(`Round complete! Retrying ${unsavedToDbHoles.size} unsaved holes...`);
+
+                                                        const stillFailedHoles: number[] = [];
+
+                                                        for (const [holeNum, playerScores] of unsavedToDbHoles.entries()) {
+                                                            try {
+                                                                const finalResult = await saveLiveScore({
+                                                                    liveRoundId,
+                                                                    holeNumber: holeNum,
+                                                                    playerScores: playerScores,
+                                                                    scorerId: clientScorerId
+                                                                });
+
+                                                                if (!finalResult.success || finalResult.partialFailure) {
+                                                                    stillFailedHoles.push(holeNum);
+                                                                }
+                                                            } catch (err) {
+                                                                console.error(`Final retry for hole ${holeNum} failed:`, err);
+                                                                stillFailedHoles.push(holeNum);
+                                                            }
+                                                        }
+
+                                                        // Clear the unsaved holes that succeeded
+                                                        setUnsavedToDbHoles(prev => {
+                                                            const next = new Map(prev);
+                                                            for (const [holeNum] of prev.entries()) {
+                                                                if (!stillFailedHoles.includes(holeNum)) {
+                                                                    next.delete(holeNum);
+                                                                }
+                                                            }
+                                                            return next;
+                                                        });
+
+                                                        // If still have failed holes, WARN user to take screenshot
+                                                        if (stillFailedHoles.length > 0) {
+                                                            showAlert(
+                                                                '⚠️ WARNING: Scores Not Saved',
+                                                                `Holes ${stillFailedHoles.join(', ')} could NOT be saved to the database after multiple attempts.\n\n` +
+                                                                `🔴 IMPORTANT: Please take a SCREENSHOT of your scorecard NOW to preserve your scores!\n\n` +
+                                                                `Your scores are saved locally on this device, but may be lost if you clear browser data.`
+                                                            );
+                                                        } else {
+                                                            console.log('All holes successfully saved to database!');
+                                                        }
+                                                    }
+
+                                                    // 5. UI UPDATE after successful save
                                                     setActiveHole(nextHoleToSet);
                                                     setShowDetails(false);
                                                 } catch (error) {
