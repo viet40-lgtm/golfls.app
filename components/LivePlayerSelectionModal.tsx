@@ -30,8 +30,7 @@ export function LivePlayerSelectionModal({
     isAdmin = false,
     frequentPlayerIds = [],
     currentUserId,
-    hasMultipleGroups = false,
-    userRole = 'scorer'
+    hasMultipleGroups = false
 }: {
     allPlayers: Player[];
     selectedIds: string[];
@@ -52,7 +51,6 @@ export function LivePlayerSelectionModal({
     frequentPlayerIds?: string[];
     currentUserId?: string;
     hasMultipleGroups?: boolean;
-    userRole?: 'scorer' | 'viewer';
 }) {
     const [localSelectedIds, setLocalSelectedIds] = useState<string[]>(selectedIds);
     const [searchQuery, setSearchQuery] = useState('');
@@ -199,7 +197,7 @@ export function LivePlayerSelectionModal({
                 <div className="px-6 py-4 bg-white flex flex-col gap-2 shadow-sm z-10">
                     <div className="flex justify-between items-center">
                         <h2 className="text-[18pt] font-bold text-left">
-                            {isCreating ? "Create New Player" : userRole === 'viewer' ? "Players in Round" : "Select Players to Score For"}
+                            {isCreating ? "Create New Player" : "Select Players to Score For"}
                         </h2>
                         {!isCreating && (
                             <button
@@ -210,13 +208,9 @@ export function LivePlayerSelectionModal({
                             </button>
                         )}
                     </div>
-                    {userRole === 'viewer' && !isCreating && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
-                            <p className="text-sm text-blue-800 font-semibold">👁️ Viewer Mode - You can view all players (read-only)</p>
-                        </div>
-                    )}
 
-                    {!isCreating && userRole === 'scorer' && (
+
+                    {!isCreating && (
                         <div className="relative flex items-stretch gap-2">
                             <div className="flex-1 relative">
                                 <input
@@ -422,26 +416,22 @@ export function LivePlayerSelectionModal({
                                 return (
                                     <button
                                         key={player.id}
-                                        onClick={() => userRole === 'scorer' && togglePlayer(player.id)}
-                                        disabled={isDisabled || userRole === 'viewer'}
+                                        onClick={() => togglePlayer(player.id)}
+                                        disabled={isDisabled}
                                         className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left ${isDisabled
                                             ? 'border-gray-200 bg-gray-100 opacity-60 cursor-not-allowed'
-                                            : userRole === 'viewer'
-                                                ? 'border-blue-200 bg-blue-50 cursor-default'
-                                                : isSelected
-                                                    ? 'border-blue-500 bg-blue-50 shadow-sm cursor-pointer'
-                                                    : 'border-gray-100 bg-white hover:border-gray-200 cursor-pointer'
+                                            : isSelected
+                                                ? 'border-blue-500 bg-blue-50 shadow-sm cursor-pointer'
+                                                : 'border-gray-100 bg-white hover:border-gray-200 cursor-pointer'
                                             }`}
                                     >
                                         <div className={`w-7 h-7 shrink-0 rounded flex items-center justify-center border-2 transition-colors ${isDisabled
                                             ? 'bg-gray-200 border-gray-300'
-                                            : userRole === 'viewer'
+                                            : isSelected
                                                 ? 'bg-blue-600 border-blue-600'
-                                                : isSelected
-                                                    ? 'bg-blue-600 border-blue-600'
-                                                    : 'bg-white border-gray-300'
+                                                : 'bg-white border-gray-300'
                                             }`}>
-                                            {(isSelected || userRole === 'viewer') && (
+                                            {isSelected && (
                                                 <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
                                             )}
                                         </div>

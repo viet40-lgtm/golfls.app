@@ -35,15 +35,35 @@ export async function login(prevState: any, formData: FormData) {
         }
 
         const cookieStore = await cookies()
-        cookieStore.set('session_userId', player.id, { httpOnly: true, path: '/' })
-        cookieStore.set('auth_status', 'true', { path: '/' })
+        const isProduction = process.env.NODE_ENV === 'production'
+
+        cookieStore.set('session_userId', player.id, {
+            httpOnly: true,
+            path: '/',
+            secure: isProduction,
+            sameSite: 'lax'
+        })
+        cookieStore.set('auth_status', 'true', {
+            path: '/',
+            secure: isProduction,
+            sameSite: 'lax'
+        })
         // Store the input used (if it looks like an email) or the player's primary email
         if (player.email) {
-            cookieStore.set('last_email', player.email, { path: '/', maxAge: 60 * 60 * 24 * 30 })
+            cookieStore.set('last_email', player.email, {
+                path: '/',
+                maxAge: 60 * 60 * 24 * 30,
+                secure: isProduction,
+                sameSite: 'lax'
+            })
         }
 
         if (player.name) {
-            cookieStore.set('player_name', player.name, { path: '/' })
+            cookieStore.set('player_name', player.name, {
+                path: '/',
+                secure: isProduction,
+                sameSite: 'lax'
+            })
         }
 
         return { success: true }
@@ -92,10 +112,30 @@ export async function signup(prevState: any, formData: FormData) {
         })
 
         const cookieStore = await cookies()
-        cookieStore.set('session_userId', player.id, { httpOnly: true, path: '/' })
-        cookieStore.set('auth_status', 'true', { path: '/' })
-        cookieStore.set('last_email', email.toLowerCase().trim(), { path: '/', maxAge: 60 * 60 * 24 * 30 })
-        cookieStore.set('player_name', player.name, { path: '/' })
+        const isProduction = process.env.NODE_ENV === 'production'
+
+        cookieStore.set('session_userId', player.id, {
+            httpOnly: true,
+            path: '/',
+            secure: isProduction,
+            sameSite: 'lax'
+        })
+        cookieStore.set('auth_status', 'true', {
+            path: '/',
+            secure: isProduction,
+            sameSite: 'lax'
+        })
+        cookieStore.set('last_email', email.toLowerCase().trim(), {
+            path: '/',
+            maxAge: 60 * 60 * 24 * 30,
+            secure: isProduction,
+            sameSite: 'lax'
+        })
+        cookieStore.set('player_name', player.name, {
+            path: '/',
+            secure: isProduction,
+            sameSite: 'lax'
+        })
 
         return { success: true }
     } catch (e) {
@@ -212,7 +252,13 @@ export async function verifyAdminPassword(password: string) {
     const adminPass = process.env.ADMIN_PASSWORD || 'admin123'
     if (password === adminPass) {
         const cookieStore = await cookies()
-        cookieStore.set('admin_session', 'true', { path: '/' })
+        const isProduction = process.env.NODE_ENV === 'production'
+
+        cookieStore.set('admin_session', 'true', {
+            path: '/',
+            secure: isProduction,
+            sameSite: 'lax'
+        })
         return { success: true }
     }
     return { error: 'Incorrect password' }

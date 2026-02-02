@@ -12,7 +12,7 @@ import { GuestPlayerModal } from '@/components/GuestPlayerModal';
 import ConfirmModal from '@/components/ConfirmModal';
 import AddToClubModal from '@/components/AddToClubModal';
 import { PoolModal } from '@/components/PoolModal';
-import RoleSelectorModal from '@/components/RoleSelectorModal';
+
 import { createLiveRound, addPlayerToLiveRound, saveLiveScore, deleteLiveRound, addGuestToLiveRound, updateGuestInLiveRound, deleteGuestFromLiveRound } from '@/app/actions/create-live-round';
 import { copyLiveToClub } from '@/app/actions/copy-live-to-club';
 import { generateScorecardHtml, generateClipboardHtml } from '@/app/lib/scorecard-helper';
@@ -148,9 +148,7 @@ export default function LiveScoreClient({
         hideCancel?: boolean;
     } | null>(null);
 
-    // Role selection state
-    const [userRole, setUserRole] = useState<'scorer' | 'viewer'>('scorer');
-    const [isRoleSelectorOpen, setIsRoleSelectorOpen] = useState(false);
+
 
     // Unique ID for this scoring device
     // Use hydration-safe initialization
@@ -186,18 +184,7 @@ export default function LiveScoreClient({
         }
     }, [liveRoundId, allPlayers, guestPlayers]);
 
-    // Restore user role from localStorage and show role selector if needed
-    useEffect(() => {
-        if (!liveRoundId) return;
 
-        const savedRole = localStorage.getItem(`live_scoring_role_${liveRoundId}`);
-        if (savedRole === 'scorer' || savedRole === 'viewer') {
-            setUserRole(savedRole);
-        } else {
-            // No saved role - show role selector for this round
-            setIsRoleSelectorOpen(true);
-        }
-    }, [liveRoundId]);
 
 
     const showAlert = (title: string, message: string) => {
@@ -224,20 +211,7 @@ export default function LiveScoreClient({
         });
     };
 
-    const handleRoleSelect = (role: 'scorer' | 'viewer') => {
-        setUserRole(role);
-        if (liveRoundId) {
-            localStorage.setItem(`live_scoring_role_${liveRoundId}`, role);
-        }
 
-        // If viewer, auto-select all players in the round
-        if (role === 'viewer' && initialRound) {
-            const allRoundPlayers = [...allPlayers, ...guestPlayers].filter(p =>
-                initialRound.players?.some((rp: any) => rp.playerId === p.id || rp.id === p.liveRoundPlayerId)
-            );
-            setSelectedPlayers(allRoundPlayers);
-        }
-    };
 
 
 
@@ -1758,7 +1732,7 @@ export default function LiveScoreClient({
                             slope: initialRound.slope
                         } : null
                     } : null}
-                    userRole={userRole}
+
                 />
 
                 <GuestPlayerModal
@@ -1961,14 +1935,10 @@ export default function LiveScoreClient({
                             <div className="flex justify-between items-center border-b border-zinc-100 pb-1">
                                 <div className="flex items-center gap-2">
                                     <h2 className="text-lg font-black text-zinc-900 italic uppercase tracking-tighter">Players ({effectiveScoringPlayers.length})</h2>
-                                    {userRole === 'viewer' && (
-                                        <span className="bg-blue-100 text-blue-800 text-xs font-black px-2 py-1 rounded-full uppercase tracking-wider border border-blue-200">
-                                            👁️ Viewer
-                                        </span>
-                                    )}
+
                                 </div>
                                 {
-                                    effectiveScoringPlayers.length > 0 && userRole === 'scorer' && (
+                                    effectiveScoringPlayers.length > 0 && (
                                         <button
                                             onClick={async () => {
                                                 if (!liveRoundId || isSaving) return;
@@ -2241,7 +2211,7 @@ export default function LiveScoreClient({
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-1">
-                                                    {canUpdate && userRole === 'scorer' && (
+                                                    {canUpdate && (
                                                         <button
                                                             onClick={() => updateScore(player.id, false)}
                                                             className="w-12 h-12 rounded-xl bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 font-black shadow-md active:scale-90 transition-all hover:bg-red-50 hover:border-red-500/30 text-4xl"
@@ -2253,7 +2223,7 @@ export default function LiveScoreClient({
                                                     <div className="w-12 text-center font-black text-4xl italic tracking-tighter text-zinc-900">
                                                         {score || activeHolePar}
                                                     </div>
-                                                    {canUpdate && userRole === 'scorer' && (
+                                                    {canUpdate && (
                                                         <button
                                                             onClick={() => updateScore(player.id, true)}
                                                             className="w-12 h-12 rounded-2xl bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 font-black shadow-md active:scale-90 transition-all hover:bg-green-50 hover:border-green-500/30 text-4xl"
@@ -2803,12 +2773,7 @@ export default function LiveScoreClient({
                 </div>
             )}
 
-            {/* Role Selector Modal */}
-            <RoleSelectorModal
-                isOpen={isRoleSelectorOpen}
-                onClose={() => setIsRoleSelectorOpen(false)}
-                onSelectRole={handleRoleSelect}
-            />
+
         </div>
     );
 }
