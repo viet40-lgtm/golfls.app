@@ -1608,7 +1608,7 @@ export default function LiveScoreClient({
                                 <div className="flex items-center gap-1">
                                     <h2 className="text-2xl font-black text-zinc-900 tracking-tighter italic uppercase">{(defaultCourse?.name || 'Round').replace(/New Orleans/gi, '').trim()}</h2>
                                 </div>
-                                <div className="flex flex-nowrap gap-x-1 mt-1 overflow-x-auto">
+                                <div className="flex items-center gap-x-2 mt-1">
                                     {(() => {
                                         // Find the tee box name based on rating and slope
                                         const teeBox = defaultCourse?.teeBoxes?.find(t =>
@@ -1619,8 +1619,17 @@ export default function LiveScoreClient({
                                         const teeIndicator = teeName.toLowerCase().includes('white') ? 'W'
                                             : teeName.toLowerCase().includes('gold') ? 'G'
                                                 : teeName.charAt(0).toUpperCase();
-                                        return teeIndicator && <span className="px-1 py-0.5 rounded text-[19pt] font-bold bg-white text-black border border-black whitespace-nowrap">{teeIndicator}</span>;
+                                        return teeIndicator && (
+                                            <span className="px-1 py-0.5 rounded text-[19pt] font-bold bg-white text-black border border-black whitespace-nowrap flex items-center justify-center min-w-[32px]">
+                                                {teeIndicator}
+                                            </span>
+                                        );
                                     })()}
+                                    <div className="flex gap-x-3 text-[14pt] font-bold text-zinc-600 uppercase tracking-tight">
+                                        <span>Par {initialRound?.par || defaultCourse?.holes.reduce((acc: number, h: any) => acc + h.par, 0) || '--'}</span>
+                                        <span>R {initialRound?.rating || '--'}</span>
+                                        <span>S {initialRound?.slope || '--'}</span>
+                                    </div>
                                 </div>
                             </div>
                             <div className="flex flex-col gap-1">
