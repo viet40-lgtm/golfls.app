@@ -1608,10 +1608,7 @@ export default function LiveScoreClient({
                                 <div className="flex items-center gap-1">
                                     <h2 className="text-2xl font-black text-zinc-900 tracking-tighter italic uppercase">{(defaultCourse?.name || 'Round').replace(/New Orleans/gi, '').trim()}</h2>
                                 </div>
-                                <div className="flex flex-nowrap gap-x-1 text-[17pt] text-gray-500 mt-1 overflow-x-auto">
-                                    <span className="whitespace-nowrap">P:{initialRound?.par ?? defaultCourse?.holes?.reduce((a, b) => a + b.par, 0)}</span>
-                                    <span className="whitespace-nowrap">R:{initialRound?.rating ?? defaultCourse?.teeBoxes?.[0]?.rating}</span>
-                                    <span className="whitespace-nowrap">S:{initialRound?.slope ?? defaultCourse?.teeBoxes?.[0]?.slope}</span>
+                                <div className="flex flex-nowrap gap-x-1 mt-1 overflow-x-auto">
                                     {(() => {
                                         // Find the tee box name based on rating and slope
                                         const teeBox = defaultCourse?.teeBoxes?.find(t =>
@@ -1622,7 +1619,7 @@ export default function LiveScoreClient({
                                         const teeIndicator = teeName.toLowerCase().includes('white') ? 'W'
                                             : teeName.toLowerCase().includes('gold') ? 'G'
                                                 : teeName.charAt(0).toUpperCase();
-                                        return teeIndicator && <span className="px-1 py-0.5 rounded text-[16pt] font-bold bg-white text-black border border-black whitespace-nowrap">{teeIndicator}</span>;
+                                        return teeIndicator && <span className="px-1 py-0.5 rounded text-[19pt] font-bold bg-white text-black border border-black whitespace-nowrap">{teeIndicator}</span>;
                                     })()}
                                 </div>
                             </div>
@@ -1833,7 +1830,7 @@ export default function LiveScoreClient({
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-9 gap-0.5">
+                            <div className="grid grid-cols-6 gap-1">
                                 {defaultCourse?.holes.map(hole => {
                                     // Use selected group if available, otherwise check all players in the round
                                     const playersForStatus = selectedPlayers.length > 0 ? selectedPlayers : rankedPlayers;
@@ -1877,8 +1874,8 @@ export default function LiveScoreClient({
                                             title={`Hole ${hole.holeNumber}`}
                                         >
                                             <div className="flex items-baseline gap-0">
-                                                <span className="text-xl font-black italic tracking-tighter leading-none">{hole.holeNumber}</span>
-                                                <span className="text-xs font-bold leading-none opacity-60">/{hole.par}</span>
+                                                <span className="text-[23pt] font-black italic tracking-tighter leading-none">{hole.holeNumber}</span>
+                                                <span className="text-[18pt] font-bold leading-none opacity-60">/{hole.par}</span>
                                             </div>
                                         </button>
                                     );
@@ -2267,18 +2264,18 @@ export default function LiveScoreClient({
                                                 <div className="flex items-center gap-1">
                                                     <button
                                                         onClick={() => updateScore(player.id, false)}
-                                                        className="w-12 h-12 rounded-full bg-white border-[4px] flex items-center justify-center font-black active:scale-90 transition-all hover:bg-green-50 text-4xl"
+                                                        className="w-12 h-12 rounded-full bg-white border-[4px] flex items-center justify-center font-black active:scale-90 transition-all hover:bg-green-50 text-[40px]"
                                                         style={{ borderColor: '#16a34a', color: '#16a34a' }}
                                                         title="Decrease Score"
                                                     >
                                                         -
                                                     </button>
-                                                    <div className="w-12 text-center font-black text-4xl italic tracking-tighter text-zinc-900">
+                                                    <div className="w-12 text-center font-black text-[40px] italic tracking-tighter text-zinc-900">
                                                         {score || activeHolePar}
                                                     </div>
                                                     <button
                                                         onClick={() => updateScore(player.id, true)}
-                                                        className="w-12 h-12 rounded-full bg-white border-[4px] flex items-center justify-center font-black active:scale-90 transition-all hover:bg-red-50 text-4xl"
+                                                        className="w-12 h-12 rounded-full bg-white border-[4px] flex items-center justify-center font-black active:scale-90 transition-all hover:bg-red-50 text-[40px]"
                                                         style={{ borderColor: '#dc2626', color: '#dc2626' }}
                                                         title="Increase Score"
                                                     >
