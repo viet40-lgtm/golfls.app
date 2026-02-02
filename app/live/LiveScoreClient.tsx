@@ -1830,7 +1830,7 @@ export default function LiveScoreClient({
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-9 gap-0 border border-zinc-200 rounded-lg overflow-hidden">
+                            <div className="grid grid-cols-6 gap-0 border border-zinc-200 rounded-lg overflow-hidden">
                                 {defaultCourse?.holes.map(hole => {
                                     // Use selected group if available, otherwise check all players in the round
                                     const playersForStatus = selectedPlayers.length > 0 ? selectedPlayers : rankedPlayers;
