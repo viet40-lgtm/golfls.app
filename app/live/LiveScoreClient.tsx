@@ -1868,7 +1868,7 @@ export default function LiveScoreClient({
                                                 setActiveHole(hole.holeNumber);
                                             }}
                                             className={`
-                                            flex items-center justify-center w-12 h-12 mx-auto rounded-full transition-all duration-300 active:scale-90
+                                            flex items-center justify-center w-16 h-16 mx-auto rounded-full transition-all duration-300 active:scale-90
                                             ${btnClass}
                                         `}
                                             title={`Hole ${hole.holeNumber}`}
