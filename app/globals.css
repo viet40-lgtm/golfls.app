@@ -41,7 +41,7 @@ body {
   font-feature-settings: "rlig" 1, "calt" 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-osx-font-smoothing: grayscale;
-  font-size: 13pt;
+  font-size: 15pt;
   font-weight: 500;
   /* Default to a solid weight, not thin */
 }
@@ -59,15 +59,15 @@ body {
 .text-sm,
 .text-xs,
 small {
-  font-size: 11pt !important;
+  font-size: 13pt !important;
 }
 
 .text-lg {
-  font-size: 15pt !important;
+  font-size: 17pt !important;
 }
 
 .text-xl {
-  font-size: 17pt !important;
+  font-size: 19pt !important;
 }
 
 /* Base interactive styles */
