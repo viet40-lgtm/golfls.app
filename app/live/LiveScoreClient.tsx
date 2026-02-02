@@ -12,6 +12,7 @@ import { GuestPlayerModal } from '@/components/GuestPlayerModal';
 import ConfirmModal from '@/components/ConfirmModal';
 import AddToClubModal from '@/components/AddToClubModal';
 import { PoolModal } from '@/components/PoolModal';
+import RoleSelectorModal from '@/components/RoleSelectorModal';
 import { createLiveRound, addPlayerToLiveRound, saveLiveScore, deleteLiveRound, addGuestToLiveRound, updateGuestInLiveRound, deleteGuestFromLiveRound } from '@/app/actions/create-live-round';
 import { copyLiveToClub } from '@/app/actions/copy-live-to-club';
 import { generateScorecardHtml, generateClipboardHtml } from '@/app/lib/scorecard-helper';
@@ -147,6 +148,10 @@ export default function LiveScoreClient({
         hideCancel?: boolean;
     } | null>(null);
 
+    // Role selection state
+    const [userRole, setUserRole] = useState<'scorer' | 'viewer'>('scorer');
+    const [isRoleSelectorOpen, setIsRoleSelectorOpen] = useState(false);
+
     // Unique ID for this scoring device
     // Use hydration-safe initialization
     const [clientScorerId, setClientScorerId] = useState('');
@@ -181,6 +186,19 @@ export default function LiveScoreClient({
         }
     }, [liveRoundId, allPlayers, guestPlayers]);
 
+    // Restore user role from localStorage and show role selector if needed
+    useEffect(() => {
+        if (!liveRoundId) return;
+
+        const savedRole = localStorage.getItem(`live_scoring_role_${liveRoundId}`);
+        if (savedRole === 'scorer' || savedRole === 'viewer') {
+            setUserRole(savedRole);
+        } else {
+            // No saved role - show role selector for this round
+            setIsRoleSelectorOpen(true);
+        }
+    }, [liveRoundId]);
+
 
     const showAlert = (title: string, message: string) => {
         setConfirmConfig({
@@ -204,6 +222,21 @@ export default function LiveScoreClient({
             },
             isDestructive
         });
+    };
+
+    const handleRoleSelect = (role: 'scorer' | 'viewer') => {
+        setUserRole(role);
+        if (liveRoundId) {
+            localStorage.setItem(`live_scoring_role_${liveRoundId}`, role);
+        }
+
+        // If viewer, auto-select all players in the round
+        if (role === 'viewer' && initialRound) {
+            const allRoundPlayers = [...allPlayers, ...guestPlayers].filter(p =>
+                initialRound.players?.some((rp: any) => rp.playerId === p.id || rp.id === p.liveRoundPlayerId)
+            );
+            setSelectedPlayers(allRoundPlayers);
+        }
     };
 
 
@@ -2761,6 +2794,13 @@ export default function LiveScoreClient({
                     </div>
                 </div>
             )}
+
+            {/* Role Selector Modal */}
+            <RoleSelectorModal
+                isOpen={isRoleSelectorOpen}
+                onClose={() => setIsRoleSelectorOpen(false)}
+                onSelectRole={handleRoleSelect}
+            />
         </div>
     );
 }
