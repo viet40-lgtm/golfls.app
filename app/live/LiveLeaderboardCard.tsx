@@ -129,7 +129,7 @@ export const LiveLeaderboardCard = ({
                     {/* Center: To Par Score */}
                     <div className="justify-self-center">
                         <div className="bg-black text-white rounded-md px-3 py-1 min-w-[3.5rem] text-center shadow-md">
-                            <div className="text-[20pt] font-black italic tracking-tighter leading-none">
+                            <div className="text-[21pt] font-black italic tracking-tighter leading-none">
                                 {toParStr}
                             </div>
                         </div>
@@ -138,7 +138,7 @@ export const LiveLeaderboardCard = ({
                     {/* Right: Stats */}
                     <div className="flex gap-2 items-end justify-self-end">
                         <div className="flex flex-col items-center gap-0">
-                            <div className="text-[10pt] text-zinc-500 font-black tracking-widest uppercase">GRS</div>
+                            <div className="text-[11pt] text-zinc-500 font-black tracking-widest uppercase">GRS</div>
                             <div className={`text-xl font-black italic tracking-tighter leading-none ${p.toPar < 0 ? 'text-red-600' : p.toPar > 0 ? 'text-zinc-900' : 'text-green-600'}`}>
                                 {p.front9 > 0 || p.back9 > 0 ? (
                                     <>{p.front9}+{p.back9}={p.totalGross}</>
@@ -148,11 +148,11 @@ export const LiveLeaderboardCard = ({
                             </div>
                         </div>
                         <div className="flex flex-col items-center gap-0">
-                            <div className="text-[10pt] text-zinc-500 font-black tracking-widest uppercase">HCP</div>
+                            <div className="text-[11pt] text-zinc-500 font-black tracking-widest uppercase">HCP</div>
                             <div className={`text-xl font-black italic tracking-tighter leading-none ${p.toPar < 0 ? 'text-red-600' : p.toPar > 0 ? 'text-zinc-900' : 'text-green-600'}`}>{isNaN(p.courseHcp) ? 0 : p.courseHcp}</div>
                         </div>
                         <div className="flex flex-col items-center gap-0">
-                            <div className="text-[10pt] text-zinc-500 font-black tracking-widest uppercase">NET</div>
+                            <div className="text-[11pt] text-zinc-500 font-black tracking-widest uppercase">NET</div>
                             <div className={`text-xl font-black italic tracking-tighter leading-none ${p.toPar < 0 ? 'text-red-600' : p.toPar > 0 ? 'text-zinc-900' : 'text-green-600'}`}>{isNaN(p.totalNet) ? 0 : p.totalNet}</div>
                         </div>
                     </div>
@@ -194,8 +194,8 @@ export const LiveLeaderboardCard = ({
                                 ${isAdmin ? 'cursor-pointer hover:bg-zinc-100' : ''}
                             `}>
                                 <div className="absolute top-0.5 inset-x-0 flex justify-center items-baseline px-1 leading-none gap-0.5">
-                                    <span className="text-[10pt] font-black text-zinc-900">{num}</span>
-                                    <span className="text-[9pt] font-medium text-zinc-500">/{holePar}</span>
+                                    <span className="text-[11pt] font-black text-zinc-900">{num}</span>
+                                    <span className="text-[10pt] font-medium text-zinc-500">/{holePar}</span>
                                 </div>
                                 {isAdmin && summaryEditCell?.playerId === p.id && summaryEditCell?.holeNumber === num ? (
                                     <input
@@ -260,8 +260,8 @@ export const LiveLeaderboardCard = ({
                                 ${isAdmin ? 'cursor-pointer hover:bg-zinc-100' : ''}
                             `}>
                                 <div className="absolute top-0.5 inset-x-0 flex justify-center items-baseline px-1 leading-none gap-0.5">
-                                    <span className="text-[10pt] font-black text-zinc-900">{num}</span>
-                                    <span className="text-[9pt] font-medium text-zinc-500">/{holePar}</span>
+                                    <span className="text-[11pt] font-black text-zinc-900">{num}</span>
+                                    <span className="text-[10pt] font-medium text-zinc-500">/{holePar}</span>
                                 </div>
                                 {isAdmin && summaryEditCell?.playerId === p.id && summaryEditCell?.holeNumber === num ? (
                                     <input
