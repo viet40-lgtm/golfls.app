@@ -86,7 +86,7 @@ export default function AppHeader({ playerId }: { playerId?: string | null }) {
                     <div className="flex items-center gap-3">
                         {!isAuthenticated ? (
                             <Link
-                                href="/login"
+                                href="/"
                                 className="bg-black text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-gray-800 transition-all active:scale-95 shadow-md"
                             >
                                 Sign In
@@ -117,7 +117,7 @@ export default function AppHeader({ playerId }: { playerId?: string | null }) {
                                                     setIsMenuOpen(false);
                                                     if (isAdmin) await adminLogout();
                                                     else await logout();
-                                                    window.location.href = '/login';
+                                                    window.location.href = '/';
                                                 }}
                                                 className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 text-red-600 font-bold rounded-xl transition-colors text-sm"
                                             >

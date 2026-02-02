@@ -24,7 +24,7 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
     const sessionUserId = (await cookieStore).get('session_userId')?.value;
 
     if (!isAuthenticated || !sessionUserId) {
-        redirect('/login');
+        redirect('/');
     }
 
     // Check if user is admin
