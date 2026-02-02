@@ -79,7 +79,7 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                 }}
             >
                 {/* Logo */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
                     <img src="/icon-192.png" alt="GolfLS" style={{ width: '36px', height: '36px', objectFit: 'contain', borderRadius: '10px' }} />
                     <span style={{ fontSize: '1.4rem', fontWeight: 700, color: '#1b4332', letterSpacing: '-0.02em' }}>GolfLS.app</span>
                 </div>
@@ -92,7 +92,7 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                         fontStyle: 'italic',
                         color: '#111',
                         textTransform: 'uppercase',
-                        marginBottom: '1.5rem',
+                        marginBottom: '0.5rem',
                         textAlign: 'center',
                         letterSpacing: '-0.01em'
                     }}
@@ -158,7 +158,7 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                     {/* Signup Extra Fields */}
                     {mode === 'signup' && (
                         <>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.5rem' }}>
                                 <div>
                                     <label style={labelStyle}>First Name</label>
                                     <input style={inputStyle} type="text" name="firstName" placeholder="John" required />
@@ -168,11 +168,11 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                                     <input style={inputStyle} type="text" name="lastName" placeholder="Doe" required />
                                 </div>
                             </div>
-                            <div style={{ marginBottom: '1rem' }}>
+                            <div style={{ marginBottom: '0.5rem' }}>
                                 <label style={labelStyle}>Phone Number</label>
                                 <input style={inputStyle} type="tel" name="phone" placeholder="(555) 555-5555" required />
                             </div>
-                            <div style={{ marginBottom: '1rem' }}>
+                            <div style={{ marginBottom: '0.5rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     <div style={{ flex: 1 }}>
                                         <label style={labelStyle}>Index</label>
@@ -185,14 +185,14 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                                     </div>
                                 </div>
                                 <p style={{ fontSize: '15pt', color: '#999', marginTop: '0.25rem', fontStyle: 'italic', lineHeight: '1.2' }}>
-                                    (Index and Handicap will be calculated according to the USGA rules, after 5 rounds.)
+                                    (Index and Handicap will be calculated base on the USGA rules, after 5 rounds.)
                                 </p>
                             </div>
                         </>
                     )}
 
                     {/* Email */}
-                    <div style={{ marginBottom: '1rem' }}>
+                    <div style={{ marginBottom: '0.5rem' }}>
                         <label style={labelStyle}>Email Address</label>
                         <input
                             style={inputStyle}
@@ -206,7 +206,7 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
 
                     {/* Password */}
                     {mode !== 'forgot' && (
-                        <div style={{ marginBottom: '1rem' }}>
+                        <div style={{ marginBottom: '0.5rem' }}>
                             <label style={labelStyle}>Password</label>
                             <input
                                 style={inputStyle}
@@ -309,7 +309,7 @@ const labelStyle: React.CSSProperties = {
     color: '#888',
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
-    marginBottom: '0.5rem'
+    marginBottom: '0.1rem'
 }
 
 const inputStyle: React.CSSProperties = {
@@ -317,7 +317,7 @@ const inputStyle: React.CSSProperties = {
     background: '#f8f9fa',
     border: '1px solid transparent',
     borderRadius: '14px',
-    padding: '0.55rem 1rem',
+    padding: '0.25rem 1rem',
     fontSize: '15pt',
     color: '#333',
     boxSizing: 'border-box'
