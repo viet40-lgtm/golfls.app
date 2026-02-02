@@ -100,7 +100,7 @@ export const LiveLeaderboardCard = ({
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl overflow-hidden border border-zinc-200 shadow-xl">
             {/* Player Header */}
             <div className="bg-gradient-to-r from-green-600/5 to-transparent p-2 border-b border-zinc-100">
-                <div className="grid grid-cols-[1fr_auto_1fr] items-center">
+                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
                     {/* Left: Name */}
                     <div className="flex items-center gap-1 justify-self-start">
                         <div className="flex flex-col">
@@ -129,7 +129,7 @@ export const LiveLeaderboardCard = ({
                     {/* Center: To Par Score */}
                     <div className="justify-self-center">
                         <div className="bg-black text-white rounded-md px-3 py-1 min-w-[3.5rem] text-center shadow-md">
-                            <div className="text-3xl font-black italic tracking-tighter leading-none">
+                            <div className="text-[20pt] font-black italic tracking-tighter leading-none">
                                 {toParStr}
                             </div>
                         </div>
