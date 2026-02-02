@@ -99,7 +99,7 @@ export const LiveLeaderboardCard = ({
     return (
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl overflow-hidden border border-zinc-200 shadow-xl">
             {/* Player Header */}
-            <div className="bg-gradient-to-r from-green-600/5 to-transparent p-2 border-b border-zinc-100">
+            <div className="bg-gradient-to-r from-green-600/5 to-transparent py-1 px-3 border-b border-zinc-100">
                 <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
                     {/* Left: Name */}
                     <div className="flex items-center gap-1 justify-self-start">

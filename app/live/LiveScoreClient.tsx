@@ -1542,7 +1542,7 @@ export default function LiveScoreClient({
                                 )}
                                 <button
                                     onClick={handleCreateNewRound}
-                                    className="p-1 bg-black text-white border border-black rounded-xl text-xs font-black hover:bg-zinc-800 transition-all shadow-md active:scale-95 uppercase tracking-widest"
+                                    className="px-2 py-1 bg-black text-white border border-black rounded-xl text-xs font-black hover:bg-zinc-800 transition-all shadow-md active:scale-95 uppercase tracking-widest"
                                 >
                                     New
                                 </button>
@@ -1717,7 +1717,7 @@ export default function LiveScoreClient({
                 {/* GPS SECTION */}
                 {
                     initialRound && isToday && (
-                        <div className="bg-white/80 backdrop-blur-xl rounded-xl p-1 border border-zinc-200 shadow-xl space-y-1">
+                        <div className="bg-white/80 backdrop-blur-xl rounded-xl px-2 py-1 border border-zinc-200 shadow-xl space-y-1">
                             <div className="flex justify-between items-center border-b border-zinc-100 pb-1">
                                 <div className="flex items-center gap-1">
                                     <button
@@ -1830,7 +1830,7 @@ export default function LiveScoreClient({
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-6 gap-0 border border-zinc-200 rounded-lg overflow-hidden">
+                            <div className="grid grid-cols-6 gap-0 py-1 border border-zinc-200 rounded-lg overflow-hidden">
                                 {defaultCourse?.holes.map(hole => {
                                     // Use selected group if available, otherwise check all players in the round
                                     const playersForStatus = selectedPlayers.length > 0 ? selectedPlayers : rankedPlayers;
@@ -1868,7 +1868,7 @@ export default function LiveScoreClient({
                                                 setActiveHole(hole.holeNumber);
                                             }}
                                             className={`
-                                            flex items-center justify-center aspect-square w-full transition-all duration-300 active:scale-90
+                                            flex items-center justify-center py-1 w-full transition-all duration-300 active:scale-90
                                             ${btnClass}
                                         `}
                                             title={`Hole ${hole.holeNumber}`}
@@ -1887,7 +1887,7 @@ export default function LiveScoreClient({
                 {/* PLAYERS SECTION (Scoring) */}
                 {
                     isToday && (
-                        <div id="scoring-section" className="bg-white/80 backdrop-blur-xl rounded-xl p-1 border border-zinc-200 shadow-xl space-y-1">
+                        <div id="scoring-section" className="bg-white/80 backdrop-blur-xl rounded-xl px-2 py-1 border border-zinc-200 shadow-xl space-y-1">
                             <div className="flex justify-between items-center border-b border-zinc-100 pb-1">
                                 <div className="flex items-center gap-2">
                                     <h2 className="text-lg font-black text-zinc-900 italic uppercase tracking-tighter">Players ({effectiveScoringPlayers.length})</h2>
@@ -2208,7 +2208,7 @@ export default function LiveScoreClient({
                                         }
 
                                         return (
-                                            <div key={player.id} className="bg-white border border-zinc-100 rounded-xl p-1 flex justify-between items-center group transition-all hover:bg-zinc-50 shadow-sm">
+                                            <div key={player.id} className="bg-white border border-zinc-100 rounded-xl px-2 py-1 flex justify-between items-center group transition-all hover:bg-zinc-50 shadow-sm">
                                                 <div className="flex items-center gap-1">
                                                     <div className="flex flex-col items-start leading-tight">
                                                         <div className="flex items-center gap-1">
