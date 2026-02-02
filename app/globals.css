@@ -40,8 +40,8 @@ body {
   color: var(--foreground);
   font-feature-settings: "rlig" 1, "calt" 1;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-size: 15pt;
+  -moz-osx-osx-font-smoothing: grayscale;
+  font-size: 13pt;
   font-weight: 500;
   /* Default to a solid weight, not thin */
 }
@@ -59,15 +59,15 @@ body {
 .text-sm,
 .text-xs,
 small {
-  font-size: 16pt !important;
+  font-size: 11pt !important;
 }
 
 .text-lg {
-  font-size: 18pt !important;
+  font-size: 15pt !important;
 }
 
 .text-xl {
-  font-size: 20pt !important;
+  font-size: 17pt !important;
 }
 
 /* Base interactive styles */

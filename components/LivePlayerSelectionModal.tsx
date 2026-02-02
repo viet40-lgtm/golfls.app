@@ -65,7 +65,7 @@ export function LivePlayerSelectionModal({
         lastName: '',
         email: '',
         phone: '',
-        handicapIndex: ''
+        handicapIndex: '0'
     });
 
     // Sync local state with prop only when modal opens
@@ -125,7 +125,7 @@ export function LivePlayerSelectionModal({
 
             setIsCreating(false);
             setSearchQuery(''); // Clear search to show context or just done
-            setNewPlayer({ firstName: '', lastName: '', email: '', phone: '', handicapIndex: '' });
+            setNewPlayer({ firstName: '', lastName: '', email: '', phone: '', handicapIndex: '0' });
         } catch (err: any) {
             setNewPlayerError(err.message || "Failed to create player.");
         } finally {
@@ -194,15 +194,15 @@ export function LivePlayerSelectionModal({
             <div className="bg-white w-full h-full flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
 
                 {/* Header */}
-                <div className="px-6 py-4 bg-white flex flex-col gap-2 shadow-sm z-10">
+                <div className="px-3 py-2 bg-white flex flex-col gap-1 shadow-sm z-10">
                     <div className="flex justify-between items-center">
-                        <h2 className="text-[18pt] font-bold text-left">
+                        <h2 className="text-[16pt] font-bold text-left ml-1">
                             {isCreating ? "Create New Player" : "Select Players to Score For"}
                         </h2>
                         {!isCreating && (
                             <button
                                 onClick={onClose}
-                                className="px-4 py-2 bg-black text-white rounded-full text-[15pt] font-bold hover:bg-gray-800 transition-colors"
+                                className="px-3 py-1 bg-black text-white rounded-full text-[13pt] font-bold hover:bg-gray-800 transition-colors"
                             >
                                 Close
                             </button>
@@ -219,7 +219,7 @@ export function LivePlayerSelectionModal({
                                     title="Search players"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full text-[15pt] h-[58px] p-4 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black bg-white shadow-sm transition-all"
+                                    className="w-full text-[14pt] h-[48px] p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black bg-white shadow-sm transition-all"
                                 />
                                 {/* Dropdown for search results */}
                                 {searchQuery && filteredPlayers.length > 0 && (
@@ -241,7 +241,7 @@ export function LivePlayerSelectionModal({
                                                         }
                                                     }}
                                                     disabled={isDisabled}
-                                                    className={`w-full flex items-center gap-4 p-4 border-b border-gray-100 transition-colors text-left ${isDisabled
+                                                    className={`w-full flex items-center gap-2 p-3 border-b border-gray-100 transition-colors text-left ${isDisabled
                                                         ? 'bg-gray-100 opacity-60 cursor-not-allowed'
                                                         : isSelected
                                                             ? 'bg-blue-50 hover:bg-blue-100'

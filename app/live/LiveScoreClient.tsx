@@ -89,6 +89,7 @@ interface LiveScoreClientProps {
     allCourses: Course[];
     isAdmin: boolean;
     currentUserId?: string;
+    currentUserName?: string;
     lastUsedCourseId?: string | null;
     lastUsedTeeBoxId?: string | null;
 }
@@ -102,6 +103,7 @@ export default function LiveScoreClient({
     allCourses,
     isAdmin: isAdminProp,
     currentUserId,
+    currentUserName,
     lastUsedCourseId,
     lastUsedTeeBoxId,
 }: LiveScoreClientProps) {
@@ -1540,7 +1542,7 @@ export default function LiveScoreClient({
                                 )}
                                 <button
                                     onClick={handleCreateNewRound}
-                                    className="p-1 bg-black text-white rounded-xl text-xs font-black hover:bg-zinc-800 transition-all shadow-md active:scale-95 uppercase tracking-widest"
+                                    className="p-1 bg-blue-600 text-white rounded-xl text-xs font-black hover:bg-blue-700 transition-all shadow-md active:scale-95 uppercase tracking-widest"
                                 >
                                     New
                                 </button>
@@ -2501,7 +2503,12 @@ export default function LiveScoreClient({
                         </div>
                     ) : (
                         <div key="no-players" className="bg-white rounded-full shadow-lg border-2 border-gray-300 p-8 text-center m-1">
-                            <p className="text-gray-500 font-bold text-[15pt]">No players have joined this round yet.</p>
+                            <p className="text-gray-500 font-bold text-[15pt]">
+                                {(() => {
+                                    const firstName = (currentUserName || 'Player').split(' ')[0];
+                                    return `Welcome ${firstName} to your 1st round!`;
+                                })()}
+                            </p>
                         </div>
                     )
                 }

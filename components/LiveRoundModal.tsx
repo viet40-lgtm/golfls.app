@@ -207,18 +207,18 @@ export function LiveRoundModal({
     };
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-            <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm px-2">
+            <div className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
                 {/* Header */}
-                <div className="px-6 py-4 bg-black text-white flex justify-between items-center">
-                    <h2 className="text-[18pt] font-bold text-left ml-3">{existingRound ? 'Edit Live Round' : 'New Live Round'}</h2>
-                    <button onClick={onClose} className="hover:opacity-70 transition-opacity bg-white text-black text-[15pt] font-bold px-4 py-2 rounded-full">
+                <div className="px-4 py-3 bg-black text-white flex justify-between items-center">
+                    <h2 className="text-[16pt] font-bold text-left ml-1">{existingRound ? 'Edit Live Round' : 'New Live Round'}</h2>
+                    <button onClick={onClose} className="hover:opacity-70 transition-opacity bg-white text-black text-[13pt] font-bold px-3 py-1 rounded-full">
                         Close
                     </button>
                 </div>
 
                 {/* Body */}
-                <div className="p-6 space-y-4">
+                <div className="p-4 space-y-3">
                     <div>
                         <label htmlFor="round-date" className="block text-[12pt] font-bold text-gray-700 mb-1">Date</label>
                         <input
@@ -336,18 +336,18 @@ export function LiveRoundModal({
                 </div>
 
                 {/* Footer */}
-                <div className="px-6 py-4 bg-gray-50 flex justify-end gap-3 mt-2">
+                <div className="px-4 py-3 bg-gray-50 flex justify-end gap-2 mt-1">
                     <button
                         onClick={onClose}
                         disabled={isSaving}
-                        className="px-4 py-2 rounded-full text-[15pt] font-bold text-gray-600 hover:bg-gray-200 transition-colors"
+                        className="px-3 py-1.5 rounded-full text-[13pt] font-bold text-gray-600 hover:bg-gray-200 transition-colors"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleSave}
                         disabled={isSaving}
-                        className="bg-black text-white px-4 py-2 rounded-full text-[15pt] font-bold shadow-lg hover:bg-gray-800 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+                        className="bg-black text-white px-3 py-1.5 rounded-full text-[13pt] font-bold shadow-lg hover:bg-gray-800 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                     >
                         {isSaving ? 'Saving...' : (existingRound ? 'Save Round' : 'Start Round')}
                     </button>

@@ -149,6 +149,12 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
             }));
     }
 
+    // Fetch current user's profile for welcome message
+    const currentPlayerProfile = await prisma.player.findUnique({
+        where: { id: sessionUserId },
+        select: { name: true }
+    });
+
     return (
         <LiveScoreClient
             allPlayers={allPlayers}
@@ -159,6 +165,7 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
             allLiveRounds={allLiveRounds}
             isAdmin={isAdmin}
             currentUserId={sessionUserId}
+            currentUserName={currentPlayerProfile?.name || 'Player'}
             lastUsedCourseId={lastUsedCourseId}
             lastUsedTeeBoxId={lastUsedTeeBoxId}
         />

@@ -58,7 +58,7 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: '#2b7a3a',
-                padding: '1.5rem',
+                padding: '0.75rem',
                 fontFamily: "'Inter', system-ui, -apple-system, sans-serif"
             }}
             suppressHydrationWarning
@@ -69,8 +69,8 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                     background: 'white',
                     width: '100%',
                     maxWidth: '440px',
-                    borderRadius: '40px',
-                    padding: '3rem 2.5rem',
+                    borderRadius: '24px',
+                    padding: '1.25rem 1rem',
                     boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
                     display: 'flex',
                     flexDirection: 'column',
@@ -79,20 +79,20 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                 }}
             >
                 {/* Logo */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
-                    <img src="/icon-192.png" alt="GolfLS" style={{ width: '48px', height: '48px', objectFit: 'contain', borderRadius: '12px' }} />
-                    <span style={{ fontSize: '1.75rem', fontWeight: 700, color: '#1b4332', letterSpacing: '-0.02em' }}>GolfLS.app</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
+                    <img src="/icon-192.png" alt="GolfLS" style={{ width: '36px', height: '36px', objectFit: 'contain', borderRadius: '10px' }} />
+                    <span style={{ fontSize: '1.4rem', fontWeight: 700, color: '#1b4332', letterSpacing: '-0.02em' }}>GolfLS.app</span>
                 </div>
 
                 {/* Title */}
                 <h1
                     style={{
-                        fontSize: '2.5rem',
+                        fontSize: '1.6rem',
                         fontWeight: 900,
                         fontStyle: 'italic',
                         color: '#111',
                         textTransform: 'uppercase',
-                        marginBottom: '2.5rem',
+                        marginBottom: '1.5rem',
                         textAlign: 'center',
                         letterSpacing: '-0.01em'
                     }}
@@ -158,7 +158,7 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                     {/* Signup Extra Fields */}
                     {mode === 'signup' && (
                         <>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                                 <div>
                                     <label style={labelStyle}>First Name</label>
                                     <input style={inputStyle} type="text" name="firstName" placeholder="John" required />
@@ -168,15 +168,31 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                                     <input style={inputStyle} type="text" name="lastName" placeholder="Doe" required />
                                 </div>
                             </div>
-                            <div style={{ marginBottom: '1.5rem' }}>
+                            <div style={{ marginBottom: '1rem' }}>
                                 <label style={labelStyle}>Phone Number</label>
                                 <input style={inputStyle} type="tel" name="phone" placeholder="(555) 555-5555" required />
+                            </div>
+                            <div style={{ marginBottom: '1rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <div style={{ flex: 1 }}>
+                                        <label style={labelStyle}>Index</label>
+                                        <input style={inputStyle} type="number" step="0.1" name="handicapIndex" placeholder="0.0" defaultValue="0.0" />
+                                    </div>
+                                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#ced4da', marginTop: '1.25rem' }}>OR</div>
+                                    <div style={{ flex: 1 }}>
+                                        <label style={labelStyle}>Handicap</label>
+                                        <input style={inputStyle} type="number" name="estimateHandicap" placeholder="0" defaultValue="0" />
+                                    </div>
+                                </div>
+                                <p style={{ fontSize: '0.95rem', color: '#999', marginTop: '0.25rem', fontStyle: 'italic', lineHeight: '1.2' }}>
+                                    (Index and Handicap will be calculated according to the USGA rules, after 5 rounds.)
+                                </p>
                             </div>
                         </>
                     )}
 
                     {/* Email */}
-                    <div style={{ marginBottom: '1.5rem' }}>
+                    <div style={{ marginBottom: '1rem' }}>
                         <label style={labelStyle}>Email Address</label>
                         <input
                             style={inputStyle}
@@ -190,7 +206,7 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
 
                     {/* Password */}
                     {mode !== 'forgot' && (
-                        <div style={{ marginBottom: '1.5rem' }}>
+                        <div style={{ marginBottom: '1rem' }}>
                             <label style={labelStyle}>Password</label>
                             <input
                                 style={inputStyle}
@@ -213,9 +229,9 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                             background: '#1b4332',
                             color: 'white',
                             border: 'none',
-                            borderRadius: '20px',
-                            padding: '1.25rem',
-                            fontSize: '1.125rem',
+                            borderRadius: '16px',
+                            padding: '1rem',
+                            fontSize: '1rem',
                             fontWeight: 700,
                             display: 'flex',
                             alignItems: 'center',
@@ -300,8 +316,8 @@ const inputStyle: React.CSSProperties = {
     width: '100%',
     background: '#f8f9fa',
     border: '1px solid transparent',
-    borderRadius: '18px',
-    padding: '1.25rem',
+    borderRadius: '14px',
+    padding: '0.55rem 1rem',
     fontSize: '1rem',
     color: '#333',
     boxSizing: 'border-box'

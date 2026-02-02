@@ -80,6 +80,8 @@ export async function signup(prevState: any, formData: FormData) {
     const email = formData.get('email') as string
     const phone = formData.get('phone') as string
     const password = formData.get('password') as string
+    const handicapIndexRaw = formData.get('handicapIndex') as string
+    const estimateHandicapRaw = formData.get('estimateHandicap') as string
 
     if (!email || !password || !firstName || !lastName) {
         return { error: 'Missing required fields' }
@@ -96,6 +98,8 @@ export async function signup(prevState: any, formData: FormData) {
         if (existing) return { error: 'An account with this email already exists' }
 
         const hashedPassword = await bcrypt.hash(password, 10)
+        const handicapIndex = parseFloat(handicapIndexRaw) || 0
+        const estimateHandicap = parseInt(estimateHandicapRaw) || 0
 
         const player = await prisma.player.create({
             data: {
@@ -103,7 +107,8 @@ export async function signup(prevState: any, formData: FormData) {
                 email: email.toLowerCase().trim(),
                 phone: phone || null,
                 password: hashedPassword,
-                handicapIndex: 0
+                handicapIndex: handicapIndex,
+                estimateHandicap: estimateHandicap
             }
         })
 

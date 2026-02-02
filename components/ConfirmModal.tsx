@@ -28,9 +28,9 @@ export default function ConfirmModal({
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[250] p-4 backdrop-blur-sm">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all scale-100">
-                <div className="p-6 text-center">
+                <div className="p-4 text-center">
                     <h3 className="text-xl font-black text-gray-900 mb-2">{title}</h3>
-                    <p className="text-[14pt] text-gray-600 mb-8 leading-relaxed">{message}</p>
+                    <p className="text-[14pt] text-gray-600 mb-4 leading-relaxed">{message}</p>
 
                     <div className="flex gap-3 justify-center">
                         {!hideCancel && (

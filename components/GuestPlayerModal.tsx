@@ -24,8 +24,8 @@ interface GuestPlayerModalProps {
 
 export function GuestPlayerModal({ isOpen, onClose, onAdd, onUpdate, onDelete, roundData, editingGuest }: GuestPlayerModalProps) {
     const [name, setName] = useState('');
-    const [index, setIndex] = useState('');
-    const [courseHandicap, setCourseHandicap] = useState('');
+    const [index, setIndex] = useState('0');
+    const [courseHandicap, setCourseHandicap] = useState('0');
     const [manuallyEditedHandicap, setManuallyEditedHandicap] = useState(false);
     const [confirmConfig, setConfirmConfig] = useState<{
         isOpen: boolean;
@@ -44,8 +44,8 @@ export function GuestPlayerModal({ isOpen, onClose, onAdd, onUpdate, onDelete, r
             setManuallyEditedHandicap(false);
         } else {
             setName('');
-            setIndex('');
-            setCourseHandicap('');
+            setIndex('0');
+            setCourseHandicap('0');
             setManuallyEditedHandicap(false);
         }
     }, [editingGuest, isOpen]);
@@ -86,15 +86,15 @@ export function GuestPlayerModal({ isOpen, onClose, onAdd, onUpdate, onDelete, r
 
         // Reset form
         setName('');
-        setIndex('');
-        setCourseHandicap('');
+        setIndex('0');
+        setCourseHandicap('0');
         onClose();
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-                <h2 className="text-2xl font-bold mb-6 text-gray-800">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2">
+            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4">
+                <h2 className="text-[16pt] font-bold mb-4 text-gray-800">
                     {editingGuest ? 'Edit Guest Player' : 'Add Guest Player'}
                 </h2>
 
