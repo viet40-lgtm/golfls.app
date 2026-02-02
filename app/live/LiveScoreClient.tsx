@@ -1871,12 +1871,12 @@ export default function LiveScoreClient({
                                                 setActiveHole(hole.holeNumber);
                                             }}
                                             className={`
-                                            flex flex-col items-center justify-center p-1 rounded-full aspect-square transition-all duration-300 active:scale-90
+                                            flex items-center justify-center w-12 h-12 mx-auto rounded-full transition-all duration-300 active:scale-90
                                             ${btnClass}
                                         `}
                                             title={`Hole ${hole.holeNumber}`}
                                         >
-                                            <div className="flex items-baseline gap-0.5">
+                                            <div className="flex items-baseline gap-0">
                                                 <span className="text-xl font-black italic tracking-tighter leading-none">{hole.holeNumber}</span>
                                                 <span className="text-xs font-bold leading-none opacity-60">/{hole.par}</span>
                                             </div>
@@ -2267,7 +2267,8 @@ export default function LiveScoreClient({
                                                 <div className="flex items-center gap-1">
                                                     <button
                                                         onClick={() => updateScore(player.id, false)}
-                                                        className="w-12 h-12 rounded-full bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 font-black shadow-md active:scale-90 transition-all hover:bg-red-50 hover:border-red-500/30 text-4xl"
+                                                        className="w-12 h-12 rounded-full bg-white border-[4px] flex items-center justify-center font-black active:scale-90 transition-all hover:bg-green-50 text-4xl"
+                                                        style={{ borderColor: '#16a34a', color: '#16a34a' }}
                                                         title="Decrease Score"
                                                     >
                                                         -
@@ -2277,7 +2278,8 @@ export default function LiveScoreClient({
                                                     </div>
                                                     <button
                                                         onClick={() => updateScore(player.id, true)}
-                                                        className="w-12 h-12 rounded-full bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 font-black shadow-md active:scale-90 transition-all hover:bg-green-50 hover:border-green-500/30 text-4xl"
+                                                        className="w-12 h-12 rounded-full bg-white border-[4px] flex items-center justify-center font-black active:scale-90 transition-all hover:bg-red-50 text-4xl"
+                                                        style={{ borderColor: '#dc2626', color: '#dc2626' }}
                                                         title="Increase Score"
                                                     >
                                                         +
