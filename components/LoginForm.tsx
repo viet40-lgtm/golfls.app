@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { login, signup, forgotPassword } from '@/app/actions/auth'
-import { Mail, Lock, ChevronRight, Flag, Loader2, User, Phone } from 'lucide-react'
+import { Mail, Lock, ChevronRight, Loader2, User, Phone } from 'lucide-react'
 
 export default function LoginForm({ initialEmail }: { initialEmail?: string }) {
     const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login')
@@ -49,14 +49,6 @@ export default function LoginForm({ initialEmail }: { initialEmail?: string }) {
             setLoading(false)
         }
     }
-
-    // Prefill email if provided
-    useEffect(() => {
-        if (initialEmail && mode === 'login') {
-            // We can optionally focus the password field here if we had a ref, 
-            // but standard behavior is fine too.
-        }
-    }, [initialEmail, mode])
 
     return (
         <main className="auth-container" suppressHydrationWarning>

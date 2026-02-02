@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import LoginForm from './login/LoginForm';
+import LoginForm from '@/components/LoginForm';
 
 export default async function HomePage() {
     const cookieStore = await cookies();
