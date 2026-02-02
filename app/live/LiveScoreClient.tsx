@@ -1758,6 +1758,7 @@ export default function LiveScoreClient({
                             slope: initialRound.slope
                         } : null
                     } : null}
+                    userRole={userRole}
                 />
 
                 <GuestPlayerModal
@@ -1958,9 +1959,16 @@ export default function LiveScoreClient({
                     true && ( // Always show scoring section, even if locked (read-only)
                         <div id="scoring-section" className="bg-white/80 backdrop-blur-xl rounded-xl p-1 border border-zinc-200 shadow-xl space-y-1">
                             <div className="flex justify-between items-center border-b border-zinc-100 pb-1">
-                                <h2 className="text-lg font-black text-zinc-900 italic uppercase tracking-tighter">Players ({effectiveScoringPlayers.length})</h2>
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-lg font-black text-zinc-900 italic uppercase tracking-tighter">Players ({effectiveScoringPlayers.length})</h2>
+                                    {userRole === 'viewer' && (
+                                        <span className="bg-blue-100 text-blue-800 text-xs font-black px-2 py-1 rounded-full uppercase tracking-wider border border-blue-200">
+                                            👁️ Viewer
+                                        </span>
+                                    )}
+                                </div>
                                 {
-                                    effectiveScoringPlayers.length > 0 && (
+                                    effectiveScoringPlayers.length > 0 && userRole === 'scorer' && (
                                         <button
                                             onClick={async () => {
                                                 if (!liveRoundId || isSaving) return;
@@ -2233,7 +2241,7 @@ export default function LiveScoreClient({
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-1">
-                                                    {canUpdate && (
+                                                    {canUpdate && userRole === 'scorer' && (
                                                         <button
                                                             onClick={() => updateScore(player.id, false)}
                                                             className="w-12 h-12 rounded-xl bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 font-black shadow-md active:scale-90 transition-all hover:bg-red-50 hover:border-red-500/30 text-4xl"
@@ -2245,7 +2253,7 @@ export default function LiveScoreClient({
                                                     <div className="w-12 text-center font-black text-4xl italic tracking-tighter text-zinc-900">
                                                         {score || activeHolePar}
                                                     </div>
-                                                    {canUpdate && (
+                                                    {canUpdate && userRole === 'scorer' && (
                                                         <button
                                                             onClick={() => updateScore(player.id, true)}
                                                             className="w-12 h-12 rounded-2xl bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 font-black shadow-md active:scale-90 transition-all hover:bg-green-50 hover:border-green-500/30 text-4xl"
