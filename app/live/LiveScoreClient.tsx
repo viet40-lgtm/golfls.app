@@ -1874,8 +1874,8 @@ export default function LiveScoreClient({
                                             title={`Hole ${hole.holeNumber}`}
                                         >
                                             <div className="flex items-baseline gap-0">
-                                                <span className="text-[17pt] font-black italic tracking-tighter leading-none">{hole.holeNumber}</span>
-                                                <span className="text-[12pt] font-bold leading-none opacity-60">/{hole.par}</span>
+                                                <span className="text-[19pt] font-black italic tracking-tighter leading-none">{hole.holeNumber}</span>
+                                                <span className="text-[15pt] font-bold leading-none opacity-60">/{hole.par}</span>
                                             </div>
                                         </button>
                                     );
