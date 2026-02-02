@@ -1839,7 +1839,7 @@ export default function LiveScoreClient({
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-6 gap-0 py-1 !border-2 !border-black rounded-lg overflow-hidden">
+                            <div className="grid grid-cols-6 gap-[1.5px] bg-black !border-2 !border-black rounded-lg overflow-hidden">
                                 {defaultCourse?.holes.map((hole, index) => {
                                     // Use selected group if available, otherwise check all players in the round
                                     const playersForStatus = selectedPlayers.length > 0 ? selectedPlayers : rankedPlayers;
@@ -1853,16 +1853,16 @@ export default function LiveScoreClient({
                                     const isMissing = playersForStatus.length > 0 && !isActive && !isSaved && hole.holeNumber < activeHole;
 
                                     // Determine styling
-                                    let btnClass = "bg-white text-zinc-400 !border-black";
+                                    let btnClass = "bg-white text-zinc-400";
                                     if (isActive) {
                                         // Active hole: vibrant green
-                                        btnClass = "bg-green-600 text-white !border-black z-10 scale-[1.02] shadow-md";
+                                        btnClass = "bg-green-600 text-white z-10 scale-[1.02] shadow-md";
                                     } else if (isMissing) {
                                         // Missing scores: muted red
-                                        btnClass = "bg-red-50 text-red-600 !border-black";
+                                        btnClass = "bg-red-50 text-red-600";
                                     } else if (isSaved) {
                                         // Completed: soft light background
-                                        btnClass = "bg-zinc-100 text-zinc-900 !border-black";
+                                        btnClass = "bg-zinc-100 text-zinc-900";
                                     }
 
                                     return (
@@ -1877,8 +1877,8 @@ export default function LiveScoreClient({
                                                 setActiveHole(hole.holeNumber);
                                             }}
                                             className={`
-                                            flex items-center justify-center py-1 w-full transition-all duration-300 active:scale-90
-                                            !border-[1.5px] ${btnClass}
+                                            flex items-center justify-center py-1 w-full transition-all duration-300 active:scale-95
+                                            ${btnClass}
                                         `}
                                             title={`Hole ${hole.holeNumber}`}
                                         >
