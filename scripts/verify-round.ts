@@ -37,7 +37,7 @@ async function verifyLastRound() {
         console.log(`\n--- Round: ${lastParticipation.liveRound.name} ---`);
         console.log(`Date: ${lastParticipation.liveRound.date}`);
         console.log(`Round ID: ${lastParticipation.liveRound.id}`);
-        console.log(`Player: ${lastParticipation.liveRoundPlayerName || user.name}`);
+        console.log(`Player: ${lastParticipation.guestName || user.name}`);
         console.log(`Total Scores Recorded: ${lastParticipation.scores.length}`);
 
         const scoresMap = new Map();
