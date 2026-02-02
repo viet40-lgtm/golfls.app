@@ -1,8 +1,14 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function sendResetPasswordEmail(email: string, token: string) {
+    // Lazy initialization - only create Resend client when actually sending email
+    // This prevents crashes when RESEND_API_KEY is missing but not needed (e.g., during login)
+    if (!process.env.RESEND_API_KEY) {
+        console.error('RESEND_API_KEY is not set');
+        return { error: 'Email service not configured. Please contact support.' };
+    }
+
+    const resend = new Resend(process.env.RESEND_API_KEY);
     let baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
     // Ensure we don't send people to production if we are testing locally
