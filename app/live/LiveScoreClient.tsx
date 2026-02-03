@@ -131,7 +131,9 @@ export default function LiveScoreClient({
 
     const [birdiePlayers, setBirdiePlayers] = useState<Array<{ name: string; totalBirdies: number }>>([]);
     const [eaglePlayers, setEaglePlayers] = useState<Array<{ name: string; totalEagles: number }>>([]);
-    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    // Track if any pending score differs from the saved score for the active hole
+    // We'll calculate this as a derived value instead of a separate state
+
     // Track pending (unsaved) scores for the current hole only
     const [pendingScores, setPendingScores] = useState<Map<string, number>>(new Map());
     // Track holes that failed to save to database (for retry after round is complete)
@@ -744,7 +746,6 @@ export default function LiveScoreClient({
 
     // Cleanup state when moving to a new hole
     useEffect(() => {
-        setHasUnsavedChanges(false);
         setPendingScores(new Map());
     }, [activeHole]);
     // Check admin status on mount and listen for changes
@@ -1095,9 +1096,6 @@ export default function LiveScoreClient({
             newPending.set(playerId, nextScore);
             return newPending;
         });
-
-        // Mark as unsaved
-        setHasUnsavedChanges(true);
     };
 
     const handleAdminScoreChange = async (playerId: string, holeNumber: number, newValue: string) => {
@@ -1126,14 +1124,14 @@ export default function LiveScoreClient({
 
             if (!result.success || result.partialFailure) {
                 console.error("Save failed:", result.error);
-                alert(`Failed to save score: ${result.error || 'Unknown error'}`);
+                showAlert('Error', `Failed to save score: ${result.error || 'Unknown error'}`);
                 // Revert local state (optional, or just let the user see the alert)
                 // For now, valid strategy is to keep the local state (it's backed up to localStorage) 
                 // and let the user try hitting "Sync" later.
             }
         } catch (err) {
             console.error("Admin summary save failed:", err);
-            alert("Network error saving score. Please check connection.");
+            showAlert('Error', "Network error saving score. Please check connection.");
         }
     };
 
@@ -1337,6 +1335,15 @@ export default function LiveScoreClient({
     const effectiveScoringPlayers = isAdmin
         ? summaryPlayers
         : (selectedPlayers.length > 0 ? selectedPlayers : []);
+
+    const isUnsavedThisHole = useMemo(() => {
+        return effectiveScoringPlayers.some(p => {
+            const pending = pendingScores.get(p.id);
+            if (pending === undefined) return false;
+            const saved = scores.get(p.id)?.get(activeHole);
+            return pending !== saved;
+        });
+    }, [pendingScores, scores, activeHole, effectiveScoringPlayers]);
 
     // Check if all scoring players have completed 18 holes
     const allScoringPlayersFinished = effectiveScoringPlayers.length > 0 && effectiveScoringPlayers.every(player => {
@@ -1839,8 +1846,8 @@ export default function LiveScoreClient({
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-6 gap-[1.5px] bg-black !border-2 !border-black rounded-lg overflow-hidden">
-                                {defaultCourse?.holes.map((hole, index) => {
+                            <div className="grid grid-cols-6 gap-1">
+                                {defaultCourse?.holes.map((hole) => {
                                     // Use selected group if available, otherwise check all players in the round
                                     const playersForStatus = selectedPlayers.length > 0 ? selectedPlayers : rankedPlayers;
 
@@ -1853,31 +1860,31 @@ export default function LiveScoreClient({
                                     const isMissing = playersForStatus.length > 0 && !isActive && !isSaved && hole.holeNumber < activeHole;
 
                                     // Determine styling
-                                    let btnClass = "bg-white text-zinc-400";
+                                    let btnClass = "bg-white text-zinc-900 border border-zinc-200 shadow-sm";
                                     if (isActive) {
-                                        // Active hole: vibrant green
-                                        btnClass = "bg-green-600 text-white z-10 scale-[1.02] shadow-md";
+                                        // Active hole: vibrant blue
+                                        btnClass = "bg-blue-600 text-white border-transparent shadow-lg scale-105 z-10";
                                     } else if (isMissing) {
                                         // Missing scores: muted red
-                                        btnClass = "bg-red-50 text-red-600";
+                                        btnClass = "bg-red-50 text-red-600 border-red-200";
                                     } else if (isSaved) {
                                         // Completed: soft light background
-                                        btnClass = "bg-zinc-100 text-zinc-900";
+                                        btnClass = "bg-zinc-100 text-zinc-900 border-transparent shadow-inner";
                                     }
 
                                     return (
                                         <button
                                             key={hole.holeNumber}
                                             onClick={() => {
-                                                if (hasUnsavedChanges && pendingScores.size > 0) {
+                                                if (isUnsavedThisHole) {
                                                     // Simple block to prevent data loss
-                                                    alert("Unsaved Scores! Please click 'SAVE HOLE " + activeHole + "' before changing holes.");
+                                                    showAlert("Unsaved Scores!", "Please click 'SAVE HOLE " + activeHole + "' before changing holes.");
                                                     return;
                                                 }
                                                 setActiveHole(hole.holeNumber);
                                             }}
                                             className={`
-                                            flex items-center justify-center py-1 w-full transition-all duration-300 active:scale-95
+                                            flex items-center justify-center py-1 w-full rounded-xl transition-all duration-300 active:scale-90
                                             ${btnClass}
                                         `}
                                             title={`Hole ${hole.holeNumber}`}
@@ -1994,8 +2001,8 @@ export default function LiveScoreClient({
                                                     }
 
                                                     // Clear pending scores and reset unsaved flag
+                                                    // Clear pending scores
                                                     setPendingScores(new Map());
-                                                    setHasUnsavedChanges(false);
 
                                                     // 2. SAVE TO SERVER with RETRY (try once, retry once if failed)
                                                     if (updates.length > 0) {
@@ -2144,18 +2151,25 @@ export default function LiveScoreClient({
                                                     const playerScores = scores.get(p.id);
                                                     return playerScores && playerScores.has(activeHole);
                                                 });
-                                                // Blue if: has unsaved changes OR hole is not yet scored
-                                                // Black if: hole is scored AND no unsaved changes
-                                                return (hasUnsavedChanges || !isHoleScored) ? 'bg-green-600 text-white shadow-lg' : 'bg-zinc-100 text-zinc-500';
+
+                                                if (isUnsavedThisHole) {
+                                                    return 'bg-blue-600 text-white shadow-lg';
+                                                }
+                                                if (isHoleScored) {
+                                                    return 'bg-zinc-100 text-zinc-500';
+                                                }
+                                                return 'bg-white text-zinc-900 border border-zinc-200 shadow-sm';
                                             })()} ml-auto italic uppercase tracking-tighter text-lg font-black p-1 rounded-xl shadow-xl transition-all active:scale-[0.98] disabled:opacity-50`}
                                             title={`Save Hole: ${activeHole}`}
                                         >
                                             <div className="relative">
-                                                <span className={isSaving ? 'invisible' : 'visible'}>
-                                                    Save Hole: {activeHole}
-                                                </span>
+                                                <div className={`${isSaving ? 'invisible' : 'flex items-baseline justify-center'}`}>
+                                                    <span className="text-[20pt] font-black uppercase italic tracking-tighter mr-2">Save Hole:</span>
+                                                    <span className="text-[20pt] font-black italic tracking-tighter leading-none">{activeHole}</span>
+                                                    <span className="text-[15pt] font-bold leading-none opacity-60">/{defaultCourse?.holes.find(h => h.holeNumber === activeHole)?.par || 4}</span>
+                                                </div>
                                                 {isSaving && (
-                                                    <span className="absolute inset-0 flex items-center justify-center">
+                                                    <span className="absolute inset-0 flex items-center justify-center font-black italic uppercase tracking-tighter">
                                                         Updating...
                                                     </span>
                                                 )}

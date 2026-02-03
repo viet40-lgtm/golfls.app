@@ -68,7 +68,12 @@ export function GuestPlayerModal({ isOpen, onClose, onAdd, onUpdate, onDelete, r
 
     const handleSubmit = () => {
         if (!name.trim()) {
-            alert('Please enter a name');
+            setConfirmConfig({
+                isOpen: true,
+                title: 'Error',
+                message: 'Please enter a name',
+                onConfirm: () => setConfirmConfig(null)
+            });
             return;
         }
 
@@ -154,7 +159,12 @@ export function GuestPlayerModal({ isOpen, onClose, onAdd, onUpdate, onDelete, r
                             onClick={() => {
                                 const password = prompt("Enter password to delete:");
                                 if (password !== 'cpgc-Delete') {
-                                    alert('Incorrect password.');
+                                    setConfirmConfig({
+                                        isOpen: true,
+                                        title: 'Error',
+                                        message: 'Incorrect password.',
+                                        onConfirm: () => setConfirmConfig(null)
+                                    });
                                     return;
                                 }
                                 setConfirmConfig({
