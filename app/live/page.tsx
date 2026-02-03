@@ -69,9 +69,9 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
         }
     } else {
         // Find user's last round
-        const lastUserRoundPlayer = await prisma.liveRoundPlayer.findFirst({
+        // Find user's last rounds to pick the most recent one
+        const userRPs = await prisma.liveRoundPlayer.findMany({
             where: { playerId: sessionUserId },
-            orderBy: { liveRound: { date: 'desc' } },
             include: {
                 liveRound: {
                     include: {
@@ -92,7 +92,14 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
             }
         });
 
-        if (lastUserRoundPlayer) {
+        const sortedRPs = userRPs.sort((a, b) => {
+            const dateA = a.liveRound?.date || '';
+            const dateB = b.liveRound?.date || '';
+            return dateB.localeCompare(dateA);
+        });
+
+        if (sortedRPs.length > 0) {
+            const lastUserRoundPlayer = sortedRPs[0];
             activeRound = lastUserRoundPlayer.liveRound;
             defaultCourse = lastUserRoundPlayer.liveRound.course;
             lastUsedCourseId = lastUserRoundPlayer.liveRound.courseId;
@@ -100,22 +107,22 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
         }
     }
 
-    // STEP 2: Get user's last 10 rounds (id + date + courseName for dropdown)
+    // STEP 2: Get user's last 10 rounds for dropdown (re-using sortedRPs if possible)
     const userRoundPlayers = await prisma.liveRoundPlayer.findMany({
         where: { playerId: sessionUserId },
-        orderBy: { liveRound: { date: 'desc' } },
-        take: 10,
-        select: {
-            liveRound: {
-                select: { id: true, date: true, courseName: true }
-            }
+        include: {
+            liveRound: true
         }
     });
 
-    // Extract unique rounds and format display name: "Sat-02/01-City Park North"
+    const sortedForDropdown = userRoundPlayers.sort((a, b) => {
+        const dateA = a.liveRound?.date || '';
+        const dateB = b.liveRound?.date || '';
+        return dateB.localeCompare(dateA);
+    }).slice(0, 10);
+
     const seenRoundIds = new Set();
-    const allLiveRounds = userRoundPlayers
-        .map(rp => rp.liveRound)
+    const allLiveRounds = sortedForDropdown.map(rp => rp.liveRound)
         .filter(r => {
             if (seenRoundIds.has(r.id)) return false;
             seenRoundIds.add(r.id);

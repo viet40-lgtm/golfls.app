@@ -4,7 +4,41 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 
 /**
- * Creates a new live round in the LiveRound table (completely isolated from main rounds)
+ * Generates a unique 4-character shortId: [Initial][3 random numbers]
+ */
+async function generateUniqueShortId(initial: string) {
+    let shortId = '';
+    let isUnique = false;
+    let attempts = 0;
+    const cleanInitial = (initial[0] || 'R').toUpperCase();
+
+    while (!isUnique && attempts < 15) {
+        const randomNums = Math.floor(100 + Math.random() * 900).toString();
+        shortId = `${cleanInitial}${randomNums}`;
+
+        const existingRound = await prisma.liveRound.findUnique({
+            where: { shortId }
+        });
+
+        if (!existingRound) {
+            isUnique = true;
+        }
+        attempts++;
+    }
+    return shortId;
+}
+
+/**
+ * Fallback to derive initial from session or creator name
+ */
+function getInitialFromName(session?: any, creatorName?: string) {
+    if (session?.name) return session.name[0];
+    if (creatorName) return creatorName[0];
+    return 'R';
+}
+
+/**
+ * Creates a new live round in the LiveRound table
  */
 export async function createLiveRound(data: {
     name: string;
@@ -17,9 +51,14 @@ export async function createLiveRound(data: {
 }) {
     console.log('SERVER ACTION: createLiveRound starting...', data.name);
     try {
+        const { getSession } = await import('@/lib/auth');
+        const session = await getSession();
+        const shortId = await generateUniqueShortId(getInitialFromName(session));
+
         const liveRound = await prisma.liveRound.create({
             data: {
                 name: data.name,
+                shortId: shortId,
                 date: data.date,
                 course: { connect: { id: data.courseId } },
                 courseName: data.courseName,
@@ -28,7 +67,7 @@ export async function createLiveRound(data: {
                 slope: data.slope
             }
         });
-        console.log('SERVER ACTION: createLiveRound SUCCESS:', liveRound.id);
+        console.log('SERVER ACTION: createLiveRound SUCCESS:', liveRound.id, 'shortId:', shortId);
         revalidatePath('/');
         return { success: true, liveRoundId: liveRound.id };
     } catch (error) {
@@ -103,9 +142,13 @@ export async function createDefaultLiveRound(date: string, creatorName?: string,
             }
         }
 
+        // Generate shortId: [First initial][3 random numbers]
+        const shortId = await generateUniqueShortId(getInitialFromName(session, creatorName));
+
         const newRound = await prisma.liveRound.create({
             data: {
                 name: roundName,
+                shortId: shortId,
                 date: date,
                 courseId: defaultCourse.id,
                 courseName: defaultCourse.name,

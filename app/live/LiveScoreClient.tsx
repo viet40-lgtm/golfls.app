@@ -2577,9 +2577,9 @@ export default function LiveScoreClient({
 
                                 <button
                                     onClick={() => setIsGroupModalOpen(true)}
-                                    className="px-1 h-12 bg-black text-white border border-black rounded-xl text-sm font-black uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-md active:scale-95"
+                                    className="px-1 h-12 bg-black text-white border border-black rounded-xl text-sm font-black uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-md active:scale-95 min-w-[60px]"
                                 >
-                                    Group
+                                    {initialRound?.shortId || 'Group'}
                                 </button>
                                 <button
                                     onClick={() => setIsStatsModalOpen(true)}
@@ -2848,7 +2848,13 @@ export default function LiveScoreClient({
                     <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/70 p-4">
                         <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 space-y-4 border-4 border-black">
                             <h2 className="text-2xl font-black italic uppercase tracking-tighter">Join Group</h2>
-                            <p className="text-zinc-600 font-bold uppercase text-xs tracking-widest">Enter the Round ID to join your group onto the leaderboard.</p>
+                            {initialRound?.shortId && (
+                                <div className="bg-green-50 border border-green-200 rounded-xl p-2 flex flex-col items-center">
+                                    <span className="text-[10pt] font-black text-green-600 uppercase tracking-widest leading-none">Your Current ID</span>
+                                    <span className="text-3xl font-black text-green-600 leading-tight">{initialRound.shortId}</span>
+                                </div>
+                            )}
+                            <p className="text-zinc-600 font-bold uppercase text-xs tracking-widest">Enter a different Round ID to join another group onto the leaderboard.</p>
 
                             <input
                                 type="text"

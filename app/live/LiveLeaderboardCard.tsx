@@ -104,7 +104,7 @@ export const LiveLeaderboardCard = ({
                     {/* Left: Name */}
                     <div className="flex items-center gap-1 justify-self-start">
                         <div className="flex flex-col">
-                            <div className="font-black text-zinc-900 text-2xl italic uppercase tracking-tighter leading-none flex items-center gap-1">
+                            <div className="font-black text-zinc-900 text-[18pt] italic uppercase leading-none flex items-center gap-1">
                                 {splitName(p.name).first}
                                 {(() => {
                                     if (!tee) return null;
@@ -116,7 +116,7 @@ export const LiveLeaderboardCard = ({
                                             : 'bg-zinc-500 text-white';
 
                                     return (
-                                        <span className={`text-[10px] font-black px-1 py-0.5 rounded-md ${colorClass} uppercase tracking-widest`}>
+                                        <span className={`text-[12pt] font-black px-1 py-0.5 rounded-md ${colorClass} uppercase tracking-widest`}>
                                             {letter}
                                         </span>
                                     );
@@ -129,7 +129,7 @@ export const LiveLeaderboardCard = ({
                     {/* Center: To Par Score */}
                     <div className="justify-self-center">
                         <div className="bg-black text-white rounded-md px-3 py-1 min-w-[3.5rem] text-center shadow-md">
-                            <div className="text-[23pt] font-black italic tracking-tighter leading-none">
+                            <div className="text-[18pt] font-black italic leading-none">
                                 {toParStr}
                             </div>
                         </div>
@@ -139,7 +139,7 @@ export const LiveLeaderboardCard = ({
                     <div className="flex gap-2 items-end justify-self-end">
                         <div className="flex flex-col items-center gap-0">
                             <div className="text-[12pt] text-zinc-500 font-black tracking-widest uppercase">GRS</div>
-                            <div className="text-xl font-black italic tracking-tighter leading-none text-zinc-900">
+                            <div className="text-[18pt] font-black italic leading-none text-zinc-900">
                                 {p.front9 > 0 || p.back9 > 0 ? (
                                     <>{p.front9}+{p.back9}={p.totalGross}</>
                                 ) : (
@@ -149,11 +149,11 @@ export const LiveLeaderboardCard = ({
                         </div>
                         <div className="flex flex-col items-center gap-0">
                             <div className="text-[12pt] text-zinc-500 font-black tracking-widest uppercase">HCP</div>
-                            <div className="text-xl font-black italic tracking-tighter leading-none text-zinc-900">{isNaN(p.courseHcp) ? 0 : p.courseHcp}</div>
+                            <div className="text-[18pt] font-black italic leading-none text-zinc-900">{isNaN(p.courseHcp) ? 0 : p.courseHcp}</div>
                         </div>
                         <div className="flex flex-col items-center gap-0">
                             <div className="text-[12pt] text-zinc-500 font-black tracking-widest uppercase">NET</div>
-                            <div className="text-xl font-black text-green-600 italic tracking-tighter leading-none">{isNaN(p.totalNet) ? 0 : p.totalNet}</div>
+                            <div className="text-[20pt] font-black text-green-600 italic leading-none">{isNaN(p.totalNet) ? 0 : p.totalNet}</div>
                         </div>
                     </div>
                 </div>
