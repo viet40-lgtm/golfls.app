@@ -141,6 +141,8 @@ export default function LiveScoreClient({
     const [summaryEditCell, setSummaryEditCell] = useState<{ playerId: string, holeNumber: number } | null>(null);
     const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
     const [isGPSEnabled, setIsGPSEnabled] = useState(false);
+    const [gpsTimeout, setGpsTimeout] = useState(false);
+    const [gpsPermissionStatus, setGpsPermissionStatus] = useState<'prompt' | 'granted' | 'denied' | 'unsupported'>('prompt');
     const [confirmConfig, setConfirmConfig] = useState<{
         isOpen: boolean;
         title: string;
@@ -215,9 +217,18 @@ export default function LiveScoreClient({
         });
     };
 
-
-
-
+    // GPS Timeout Logic
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (isGPSEnabled && !userLocation) {
+            timer = setTimeout(() => {
+                setGpsTimeout(true);
+            }, 20000); // 20 seconds
+        } else {
+            setGpsTimeout(false);
+        }
+        return () => clearTimeout(timer);
+    }, [isGPSEnabled, userLocation]);
 
     // GPS Logic with fallback for desktop
     useEffect(() => {
@@ -227,6 +238,18 @@ export default function LiveScoreClient({
                 setUserLocation(null);
             }
             return;
+        }
+
+        // Check permission status if API is available
+        if (navigator.permissions && navigator.permissions.query) {
+            navigator.permissions.query({ name: 'geolocation' as any }).then((result) => {
+                setGpsPermissionStatus(result.state as any);
+                result.onchange = () => {
+                    setGpsPermissionStatus(result.state as any);
+                };
+            }).catch(() => {
+                // Ignore fallback
+            });
         }
 
         let watchId: number | null = null;
@@ -297,11 +320,15 @@ export default function LiveScoreClient({
                                 { enableHighAccuracy: false, timeout: 60000, maximumAge: 30000 }
                             );
                         },
-                        () => { /* Silent error - handled by UI status */ },
+                        (error) => {
+                            if (error.code === error.PERMISSION_DENIED) {
+                                setGpsPermissionStatus('denied');
+                            }
+                        },
                         { enableHighAccuracy: false, timeout: 60000, maximumAge: 30000 }
                     );
                 },
-                { enableHighAccuracy: false, timeout: 20000, maximumAge: 10000 }
+                { enableHighAccuracy: true, timeout: 20000, maximumAge: 10000 }
             );
         };
 
@@ -1737,13 +1764,21 @@ export default function LiveScoreClient({
                             <div className="flex justify-between items-center border-b border-zinc-100 pb-1">
                                 <div className="flex items-center gap-1">
                                     <button
-                                        onClick={() => setIsGPSEnabled(!isGPSEnabled)}
+                                        onClick={() => {
+                                            if (isGPSEnabled) {
+                                                // If already on, treat as a "Refresh"
+                                                setIsGPSEnabled(false);
+                                                setTimeout(() => setIsGPSEnabled(true), 100);
+                                            } else {
+                                                setIsGPSEnabled(true);
+                                            }
+                                        }}
                                         className={`px-1 py-1 rounded-xl text-xs font-black transition-all shadow-md active:scale-95 uppercase tracking-widest ${isGPSEnabled
                                             ? 'bg-green-600 text-white animate-pulse'
                                             : 'bg-blue-600 text-white'
                                             }`}
                                     >
-                                        GPS {isGPSEnabled ? 'ON' : 'OFF'}
+                                        GPS {isGPSEnabled ? 'ON (Tap to Refresh)' : 'OFF'}
                                     </button>
                                 </div>
                                 <button
@@ -1762,8 +1797,42 @@ export default function LiveScoreClient({
 
                                         if (!userLocation) {
                                             return (
-                                                <div className="bg-gray-100 text-gray-500 p-1 rounded-full border-2 border-dashed border-gray-300 text-center mb-1 shadow-inner">
-                                                    <p className="font-medium text-[19pt] animate-pulse py-1">🛰️ Waiting for GPS...</p>
+                                                <div className="bg-gray-100 text-gray-500 p-2 rounded-xl border-2 border-dashed border-gray-300 text-center mb-1 shadow-inner min-h-[140px] flex flex-col items-center justify-center">
+                                                    {!window.isSecureContext && window.location.hostname !== 'localhost' ? (
+                                                        <div className="space-y-2 p-2">
+                                                            <p className="font-black text-[18pt] leading-tight text-amber-600 italic uppercase tracking-tighter">🔒 Secure Connection Required</p>
+                                                            <div className="text-xs font-bold text-zinc-900 uppercase space-y-1 bg-white/50 p-2 rounded-lg border border-zinc-200">
+                                                                <p className="text-zinc-600 italic leading-relaxed">Browsers only allow GPS on secure (HTTPS) websites like <span className="text-blue-600">golfls.app</span>.</p>
+                                                                <p className="pt-1 text-zinc-900">Push to Vercel to activate GPS!</p>
+                                                            </div>
+                                                        </div>
+                                                    ) : gpsPermissionStatus === 'denied' ? (
+                                                        <div className="space-y-2 p-2">
+                                                            <p className="font-black text-[18pt] leading-tight text-red-600 italic uppercase tracking-tighter">🚫 Location Access Blocked</p>
+                                                            <div className="text-xs font-bold text-zinc-900 uppercase space-y-1 bg-white/50 p-2 rounded-lg border border-zinc-200">
+                                                                <p className="text-zinc-600">How to Fix:</p>
+                                                                <p>1. Tap the <span className="bg-zinc-200 px-1 rounded">lock 🔒</span> or <span className="bg-zinc-200 px-1 rounded">triangle ⚠️</span> icon in the URL bar</p>
+                                                                <p>2. Set Location to <span className="text-green-600">"Allow"</span></p>
+                                                                <p>3. Refresh this page</p>
+                                                            </div>
+                                                        </div>
+                                                    ) : gpsTimeout ? (
+                                                        <div className="space-y-2">
+                                                            <p className="font-black text-[20pt] leading-tight text-zinc-900 italic uppercase tracking-tighter">🛰️ GPS Signal weak...</p>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setIsGPSEnabled(false);
+                                                                    setTimeout(() => setIsGPSEnabled(true), 100);
+                                                                }}
+                                                                className="bg-blue-600 text-white px-6 py-2 rounded-xl font-black uppercase tracking-widest text-sm shadow-lg active:scale-95 transition-all"
+                                                            >
+                                                                Restart GPS
+                                                            </button>
+                                                            <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Make sure you are outdoors & location is allowed</p>
+                                                        </div>
+                                                    ) : (
+                                                        <p className="font-black text-[20pt] animate-pulse py-1 italic uppercase tracking-tighter">🛰️ Waiting for GPS...</p>
+                                                    )}
                                                 </div>
                                             );
                                         }
@@ -2164,8 +2233,8 @@ export default function LiveScoreClient({
                                         >
                                             <div className="relative">
                                                 <div className={`${isSaving ? 'invisible' : 'flex items-baseline justify-center'}`}>
-                                                    <span className="text-[20pt] font-black uppercase italic tracking-tighter mr-2">Save Hole:</span>
-                                                    <span className="text-[20pt] font-black italic tracking-tighter leading-none">{activeHole}</span>
+                                                    <span className="text-[25pt] font-black uppercase italic tracking-tighter mr-2">Save Hole:</span>
+                                                    <span className="text-[25pt] font-black italic tracking-tighter leading-none">{activeHole}</span>
                                                 </div>
                                                 {isSaving && (
                                                     <span className="absolute inset-0 flex items-center justify-center font-black italic uppercase tracking-tighter">
@@ -2230,7 +2299,7 @@ export default function LiveScoreClient({
                                         }
 
                                         return (
-                                            <div key={player.id} className="bg-white border border-zinc-100 rounded-xl px-2 py-1 flex justify-between items-center group transition-all hover:bg-zinc-50 shadow-sm">
+                                            <div key={player.id} className="bg-white border border-zinc-100 rounded-xl px-2 py-0 flex justify-between items-center group transition-all hover:bg-zinc-50 shadow-sm">
                                                 <div className="flex items-center gap-1">
                                                     <div className="flex flex-col items-start leading-tight">
                                                         <div className="flex items-center gap-1">
@@ -2283,21 +2352,21 @@ export default function LiveScoreClient({
                                                         )}
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-1">
+                                                <div className="flex items-center gap-4">
                                                     <button
                                                         onClick={() => updateScore(player.id, false)}
-                                                        className="w-12 h-12 rounded-full bg-white border-[4px] flex items-center justify-center font-black active:scale-90 transition-all hover:bg-green-50 text-[40px]"
+                                                        className="w-[50px] h-[50px] rounded-full bg-white border-[4px] flex items-center justify-center font-black active:scale-90 transition-all hover:bg-green-50 text-[50pt] leading-none"
                                                         style={{ borderColor: '#16a34a', color: '#16a34a' }}
                                                         title="Decrease Score"
                                                     >
                                                         -
                                                     </button>
-                                                    <div className="w-12 text-center font-black text-[40px] italic tracking-tighter text-zinc-900">
+                                                    <div className="w-[50px] text-center font-black text-[50pt] italic tracking-tighter text-zinc-900 leading-none">
                                                         {score || activeHolePar}
                                                     </div>
                                                     <button
                                                         onClick={() => updateScore(player.id, true)}
-                                                        className="w-12 h-12 rounded-full bg-white border-[4px] flex items-center justify-center font-black active:scale-90 transition-all hover:bg-red-50 text-[40px]"
+                                                        className="w-[50px] h-[50px] rounded-full bg-white border-[4px] flex items-center justify-center font-black active:scale-90 transition-all hover:bg-red-50 text-[50pt] leading-none"
                                                         style={{ borderColor: '#dc2626', color: '#dc2626' }}
                                                         title="Increase Score"
                                                     >
