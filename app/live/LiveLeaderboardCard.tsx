@@ -169,17 +169,17 @@ export const LiveLeaderboardCard = ({
                         const hole = defaultCourse?.holes.find((h: any) => h.holeNumber === num);
                         const holePar = hole?.par || 4;
 
-                        let shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black italic tracking-tighter text-black";
+                        let shapeClass = "w-7 h-7 flex items-center justify-center text-[18pt] font-black italic tracking-tighter text-black";
                         // Active hole still gets a subtle green background if no score
                         let bgColor = isActive ? "bg-green-600/10" : "bg-transparent";
 
                         if (score !== null) {
                             const diff = score - holePar;
-                            if (diff <= -2) shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black text-black bg-yellow-300 rounded"; // Eagle
-                            else if (diff === -1) shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black text-black bg-green-300 rounded"; // Birdie
-                            else if (diff === 0) { shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black text-black"; } // Par
-                            else if (diff === 1) shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black text-black bg-orange-300 rounded"; // Bogey
-                            else if (diff >= 2) shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black text-black bg-red-300 rounded"; // Double Bogey
+                            if (diff <= -2) shapeClass = "w-7 h-7 flex items-center justify-center text-[18pt] font-black text-black bg-yellow-300 rounded"; // Eagle
+                            else if (diff === -1) shapeClass = "w-7 h-7 flex items-center justify-center text-[18pt] font-black text-black bg-green-300 rounded"; // Birdie
+                            else if (diff === 0) { shapeClass = "w-7 h-7 flex items-center justify-center text-[18pt] font-black text-black"; } // Par
+                            else if (diff === 1) shapeClass = "w-7 h-7 flex items-center justify-center text-[18pt] font-black text-black bg-orange-300 rounded"; // Bogey
+                            else if (diff >= 2) shapeClass = "w-7 h-7 flex items-center justify-center text-[18pt] font-black text-black bg-red-300 rounded"; // Double Bogey
                         }
 
                         return (
@@ -193,9 +193,8 @@ export const LiveLeaderboardCard = ({
                                 ${isActive ? 'ring-1 ring-green-600/50 inset-0 z-10' : ''}
                                 ${isAdmin ? 'cursor-pointer hover:bg-zinc-100' : ''}
                             `}>
-                                <div className="absolute top-0.5 inset-x-0 flex justify-center items-baseline px-1 leading-none gap-0.5">
-                                    <span className="text-[12pt] font-black text-zinc-900">{num}</span>
-                                    <span className="text-[10pt] font-medium text-zinc-500">/{holePar}</span>
+                                <div className="absolute top-0.5 left-1 leading-none">
+                                    <span className="text-[14pt] font-black text-zinc-300 italic">{num}</span>
                                 </div>
                                 {isAdmin && summaryEditCell?.playerId === p.id && summaryEditCell?.holeNumber === num ? (
                                     <input
@@ -219,7 +218,7 @@ export const LiveLeaderboardCard = ({
                                         }}
                                     />
                                 ) : (
-                                    <div className={`${shapeClass} mt-4`}>
+                                    <div className={`${shapeClass} absolute bottom-0.5 right-0.5`}>
                                         {score || '-'}
                                     </div>
                                 )}
@@ -235,17 +234,17 @@ export const LiveLeaderboardCard = ({
                         const hole = defaultCourse?.holes.find((h: any) => h.holeNumber === num);
                         const holePar = hole?.par || 4;
 
-                        let shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black italic tracking-tighter text-black";
+                        let shapeClass = "w-7 h-7 flex items-center justify-center text-[18pt] font-black italic tracking-tighter text-black";
                         // Active hole still gets a subtle green background if no score
                         let bgColor = isActive ? "bg-green-600/10" : "bg-transparent";
 
                         if (score !== null) {
                             const diff = score - holePar;
-                            if (diff <= -2) shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black text-black bg-yellow-300 rounded"; // Eagle
-                            else if (diff === -1) shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black text-black bg-green-300 rounded"; // Birdie
-                            else if (diff === 0) { shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black text-black"; } // Par
-                            else if (diff === 1) shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black text-black bg-orange-300 rounded"; // Bogey
-                            else if (diff >= 2) shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black text-black bg-red-300 rounded"; // Double Bogey
+                            if (diff <= -2) shapeClass = "w-7 h-7 flex items-center justify-center text-[18pt] font-black text-black bg-yellow-300 rounded"; // Eagle
+                            else if (diff === -1) shapeClass = "w-7 h-7 flex items-center justify-center text-[18pt] font-black text-black bg-green-300 rounded"; // Birdie
+                            else if (diff === 0) { shapeClass = "w-7 h-7 flex items-center justify-center text-[18pt] font-black text-black"; } // Par
+                            else if (diff === 1) shapeClass = "w-7 h-7 flex items-center justify-center text-[18pt] font-black text-black bg-orange-300 rounded"; // Bogey
+                            else if (diff >= 2) shapeClass = "w-7 h-7 flex items-center justify-center text-[18pt] font-black text-black bg-red-300 rounded"; // Double Bogey
                         }
 
                         return (
@@ -259,9 +258,8 @@ export const LiveLeaderboardCard = ({
                                 ${isActive ? 'ring-1 ring-green-600/50 inset-0 z-10' : ''}
                                 ${isAdmin ? 'cursor-pointer hover:bg-zinc-100' : ''}
                             `}>
-                                <div className="absolute top-0.5 inset-x-0 flex justify-center items-baseline px-1 leading-none gap-0.5">
-                                    <span className="text-[12pt] font-black text-zinc-900">{num}</span>
-                                    <span className="text-[10pt] font-medium text-zinc-500">/{holePar}</span>
+                                <div className="absolute top-0.5 left-1 leading-none">
+                                    <span className="text-[14pt] font-black text-zinc-300 italic">{num}</span>
                                 </div>
                                 {isAdmin && summaryEditCell?.playerId === p.id && summaryEditCell?.holeNumber === num ? (
                                     <input
@@ -285,7 +283,7 @@ export const LiveLeaderboardCard = ({
                                         }}
                                     />
                                 ) : (
-                                    <div className={`${shapeClass} mt-4`}>
+                                    <div className={`${shapeClass} absolute bottom-0.5 right-0.5`}>
                                         {score || '-'}
                                     </div>
                                 )}
