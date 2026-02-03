@@ -153,7 +153,7 @@ export const LiveLeaderboardCard = ({
                         </div>
                         <div className="flex flex-col items-center gap-0">
                             <div className="text-[12pt] text-zinc-500 font-black tracking-widest uppercase">NET</div>
-                            <div className={`text-xl font-black italic tracking-tighter leading-none ${p.toPar < 0 ? 'text-red-600' : p.toPar > 0 ? 'text-zinc-900' : 'text-green-600'}`}>{isNaN(p.totalNet) ? 0 : p.totalNet}</div>
+                            <div className="text-xl font-black text-green-600 italic tracking-tighter leading-none">{isNaN(p.totalNet) ? 0 : p.totalNet}</div>
                         </div>
                     </div>
                 </div>

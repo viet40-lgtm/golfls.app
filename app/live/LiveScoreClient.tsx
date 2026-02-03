@@ -1865,15 +1865,15 @@ export default function LiveScoreClient({
                                             if (!distFront && !distBack && !el.water && !el.bunker && !el.tree) return null;
 
                                             const Icons = (
-                                                <div className="flex gap-0.5">
-                                                    {el.water && <span>💧</span>}
-                                                    {el.bunker && <div className="w-7 h-7 bg-[#d2b48c] border border-black/20 rounded-full" />}
-                                                    {el.tree && <span>🌳</span>}
+                                                <div className={`flex gap-1 items-center ${side === 'LEFT' ? 'justify-start w-[40px]' : 'justify-end w-[40px]'}`}>
+                                                    {el.water && <div className="w-9 h-9 flex items-center justify-center text-[25pt]">💧</div>}
+                                                    {el.bunker && <div className="w-9 h-9 flex items-center justify-center"><div className="w-8 h-8 bg-[#d2b48c] border border-black/20 rounded-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]" /></div>}
+                                                    {el.tree && <div className="w-9 h-9 flex items-center justify-center text-[25pt]">🌳</div>}
                                                 </div>
                                             );
 
                                             const Numbers = (
-                                                <div className={`flex flex-col ${side === 'LEFT' ? 'items-end' : 'items-start'} leading-none`}>
+                                                <div className={`flex flex-col ${side === 'LEFT' ? 'items-end' : 'items-start'} leading-none tabular-nums w-[65px]`}>
                                                     <span className={distBack === null ? 'invisible' : ''}>{distBack ?? '--'}</span>
                                                     <span className={distFront === null ? 'invisible' : ''}>{distFront ?? '--'}</span>
                                                 </div>
