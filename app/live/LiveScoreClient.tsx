@@ -1884,7 +1884,7 @@ export default function LiveScoreClient({
                                                 setActiveHole(hole.holeNumber);
                                             }}
                                             className={`
-                                            flex items-center justify-center py-1 w-full rounded-xl transition-all duration-300 active:scale-90
+                                            flex items-center justify-center py-2 w-full rounded-xl transition-all duration-300 active:scale-90
                                             ${btnClass}
                                         `}
                                             title={`Hole ${hole.holeNumber}`}
@@ -2166,7 +2166,6 @@ export default function LiveScoreClient({
                                                 <div className={`${isSaving ? 'invisible' : 'flex items-baseline justify-center'}`}>
                                                     <span className="text-[20pt] font-black uppercase italic tracking-tighter mr-2">Save Hole:</span>
                                                     <span className="text-[20pt] font-black italic tracking-tighter leading-none">{activeHole}</span>
-                                                    <span className="text-[15pt] font-bold leading-none opacity-60">/{defaultCourse?.holes.find(h => h.holeNumber === activeHole)?.par || 4}</span>
                                                 </div>
                                                 {isSaving && (
                                                     <span className="absolute inset-0 flex items-center justify-center font-black italic uppercase tracking-tighter">
