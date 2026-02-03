@@ -6,7 +6,10 @@ import { ChevronLeft, Navigation, Bell, Shield, Info, Smartphone, User, X, Check
 import { getCurrentPlayerProfile, updatePlayerProfile } from '@/app/actions/update-player';
 import { recalculateAllHandicaps } from '@/app/actions/recalculate-handicaps';
 import { fetchSiteConfig, saveSiteConfig } from '@/app/actions/site-config';
-import { Tag } from 'lucide-react';
+import { Tag, MapPin, Plus, Trash2, LogOut } from 'lucide-react';
+import { getAllCourses } from '@/app/actions/get-all-courses';
+import { deleteCourse } from '@/app/actions/update-course';
+import ConfirmModal from '@/components/ConfirmModal';
 
 export default function SettingsPage() {
     const [isGPSEnabled, setIsGPSEnabled] = useState(false);
@@ -16,12 +19,59 @@ export default function SettingsPage() {
     const [isMetadataModalOpen, setIsMetadataModalOpen] = useState(false);
     const [siteConfig, setSiteConfig] = useState<any>(null);
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [adminPassword, setAdminPassword] = useState('');
+    const [courses, setCourses] = useState<any[]>([]);
+    const [isDeletingCourse, setIsDeletingCourse] = useState<string | null>(null);
+
+    // Custom Modal State
+    const [confirmConfig, setConfirmConfig] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        isDestructive?: boolean;
+        confirmText?: string;
+        cancelText?: string;
+        hideCancel?: boolean;
+    } | null>(null);
+
+    const showAlert = (title: string, message: string) => {
+        setConfirmConfig({
+            isOpen: true,
+            title,
+            message,
+            onConfirm: () => setConfirmConfig(null),
+            hideCancel: true,
+            confirmText: 'OK'
+        });
+    };
+
+    const showConfirm = (title: string, message: string, onConfirmAction: () => void, isDestructive = false) => {
+        setConfirmConfig({
+            isOpen: true,
+            title,
+            message,
+            onConfirm: () => {
+                onConfirmAction();
+                setConfirmConfig(null);
+            },
+            isDestructive,
+            confirmText: 'Confirm',
+            cancelText: 'Cancel'
+        });
+    };
 
     useEffect(() => {
         // Hydrate GPS pref from localStorage
         const saved = localStorage.getItem('gps_enabled_pref');
         if (saved !== null) {
             setIsGPSEnabled(saved === 'true');
+        }
+
+        const adminAccess = localStorage.getItem('admin_access');
+        if (adminAccess === 'true') {
+            setIsAdmin(true);
         }
 
         // Fetch user data
@@ -37,6 +87,7 @@ export default function SettingsPage() {
             setSiteConfig(config);
         }
         loadConfig();
+        loadCourses();
 
         // PWA Install Prompt Listener
         const handleBeforeInstallPrompt = (e: any) => {
@@ -50,6 +101,11 @@ export default function SettingsPage() {
             window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
         };
     }, []);
+
+    async function loadCourses() {
+        const data = await getAllCourses();
+        setCourses(data);
+    }
 
     const handleInstallClick = async () => {
         if (!deferredPrompt) return;
@@ -68,31 +124,70 @@ export default function SettingsPage() {
     };
 
     const handleRecalculate = async () => {
-        if (!confirm('Are you sure you want to recalculate all handicaps? This will update your Index based on your full round history.')) return;
-
-        setIsRecalculating(true);
-        try {
-            const result = await recalculateAllHandicaps();
-            if (result.success) {
-                alert(result.message || 'Handicaps recalculated successfully!');
-                // Refresh local profile data too
-                const updated = await getCurrentPlayerProfile();
-                if (updated) setPlayerData(updated);
-            } else {
-                alert('Error: ' + result.message);
+        showConfirm(
+            'Recalculate Handicaps',
+            'Are you sure you want to recalculate all handicaps? This will update your Index based on your full round history.',
+            async () => {
+                setIsRecalculating(true);
+                try {
+                    const result = await recalculateAllHandicaps();
+                    if (result.success) {
+                        showAlert('Success', result.message || 'Handicaps recalculated successfully!');
+                        // Refresh local profile data too
+                        const updated = await getCurrentPlayerProfile();
+                        if (updated) setPlayerData(updated);
+                    } else {
+                        showAlert('Error', result.message || 'An error occurred.');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showAlert('Error', 'Failed to recalculate handicaps.');
+                } finally {
+                    setIsRecalculating(false);
+                }
             }
-        } catch (err) {
-            console.error(err);
-            alert('Failed to recalculate handicaps.');
-        } finally {
-            setIsRecalculating(false);
+        );
+    };
+
+    const handleAdminLogin = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (adminPassword === 'Viet65+$') {
+            setIsAdmin(true);
+            localStorage.setItem('admin_access', 'true');
+        } else {
+            showAlert('Login Failed', 'Incorrect admin password');
         }
     };
+
+    const handleDeleteCourse = async (courseId: string) => {
+        showConfirm(
+            'Delete Course',
+            'Are you sure you want to delete this course? This action cannot be undone.',
+            async () => {
+                setIsDeletingCourse(courseId);
+                try {
+                    const result = await deleteCourse(courseId);
+                    if (result.success) {
+                        await loadCourses();
+                    } else {
+                        showAlert('Error', result.error || 'Failed to delete course');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showAlert('Error', 'An error occurred while deleting the course');
+                } finally {
+                    setIsDeletingCourse(null);
+                }
+            },
+            true // destructive
+        );
+    };
+
 
     return (
         <div className="min-h-screen bg-gray-50 pb-20 pt-4">
             <main className="max-w-xl mx-auto p-4 space-y-6">
-                {/* Account Section */}
+                {/* 1. Account Section */}
                 <section className="space-y-3">
                     <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Account</h2>
                     <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
@@ -104,7 +199,7 @@ export default function SettingsPage() {
                     </div>
                 </section>
 
-                {/* 1st Section: GPS Setting */}
+                {/* 2. Location Services */}
                 <section className="space-y-3">
                     <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Location Services</h2>
                     <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-4">
@@ -150,17 +245,7 @@ export default function SettingsPage() {
                     </div>
                 </section>
 
-                {/* Other Sections */}
-                <section className="space-y-3">
-                    <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">App Preferences</h2>
-                    <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
-                        <SettingsItem icon={<Bell className="w-5 h-5" />} label="Notifications" />
-                        <SettingsItem icon={<Shield className="w-5 h-5" />} label="Privacy & Security" />
-                        <SettingsItem icon={<Info className="w-5 h-5" />} label="Version 1.0.6" hideArrow />
-                    </div>
-                </section>
-
-                {/* App Installation Section */}
+                {/* 3. Install App Section */}
                 <section className="space-y-3">
                     <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Install App</h2>
                     <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
@@ -191,40 +276,145 @@ export default function SettingsPage() {
                     </div>
                 </section>
 
-                {/* Metadata Section */}
+                {/* 4. Administration Section */}
                 <section className="space-y-3">
-                    <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Administration</h2>
-                    <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
-                        <SettingsItem
-                            icon={<Tag className="w-5 h-5" />}
-                            label="Edit Metadata"
-                            onClick={() => setIsMetadataModalOpen(true)}
-                        />
+                    <div className="flex items-center justify-between px-1">
+                        <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Administration</h2>
+                        {isAdmin && (
+                            <button
+                                onClick={() => {
+                                    setIsAdmin(false);
+                                    setAdminPassword('');
+                                    localStorage.removeItem('admin_access');
+                                }}
+                                className="text-xs font-black text-red-500 uppercase tracking-widest flex items-center gap-1.5 active:scale-95 transition-all"
+                            >
+                                <LogOut className="w-3.5 h-3.5" />
+                                Logout
+                            </button>
+                        )}
                     </div>
-                </section>
-
-                {/* Data Management Section */}
-                <section className="space-y-3">
-                    <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Data Management</h2>
-                    <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="bg-orange-50 p-3 rounded-2xl text-orange-600">
-                                    <RefreshCw className={`w-6 h-6 ${isRecalculating ? 'animate-spin' : ''}`} />
+                    {!isAdmin ? (
+                        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                            <form onSubmit={handleAdminLogin} className="space-y-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10pt] font-black text-gray-400 uppercase tracking-widest ml-1">Admin Password</label>
+                                    <input
+                                        type="password"
+                                        value={adminPassword}
+                                        onChange={(e) => setAdminPassword(e.target.value)}
+                                        placeholder="••••••••"
+                                        className="w-full px-4 py-4 bg-gray-50 border-transparent focus:bg-white focus:border-black rounded-2xl transition-all outline-none font-bold text-lg"
+                                    />
                                 </div>
-                                <div>
-                                    <h3 className="font-bold text-lg leading-tight">Recalculate index and handicap</h3>
-                                    <p className="text-sm text-gray-400 font-medium italic leading-tight mt-0.5">Sync your Handicap Index from round history</p>
+                                <button
+                                    type="submit"
+                                    className="w-full bg-black text-white py-3 rounded-xl font-black uppercase tracking-widest text-sm shadow-md active:scale-95 transition-all"
+                                >
+                                    Login to Admin
+                                </button>
+                            </form>
+                        </div>
+                    ) : (
+                        <div className="space-y-6">
+                            <div className="space-y-4">
+                                {/* Recalculation inside Admin */}
+                                <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <div className="bg-orange-50 p-3 rounded-2xl text-orange-600">
+                                                <RefreshCw className={`w-6 h-6 ${isRecalculating ? 'animate-spin' : ''}`} />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-lg leading-tight">Recalculate index and handicap</h3>
+                                                <p className="text-sm text-gray-400 font-medium italic leading-tight mt-0.5">Sync your Handicap Index from round history</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={handleRecalculate}
+                                        disabled={isRecalculating}
+                                        className="w-full mt-4 bg-black text-white py-3 rounded-xl font-black uppercase tracking-widest text-sm shadow-md active:scale-95 transition-all disabled:opacity-50"
+                                    >
+                                        {isRecalculating ? 'Recalculating...' : 'Force Recalculation'}
+                                    </button>
+                                </div>
+
+                                {/* Metadata inside Admin */}
+                                <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+                                    <SettingsItem
+                                        icon={<Tag className="w-5 h-5" />}
+                                        label="Edit Metadata"
+                                        onClick={() => setIsMetadataModalOpen(true)}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* 5. Courses Section (Now inside Admin) */}
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between px-1">
+                                    <div className="flex items-center gap-2">
+                                        <MapPin className="w-4 h-4 text-gray-400" />
+                                        <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest">Courses</h2>
+                                    </div>
+                                    <Link
+                                        href="/settings/course/new"
+                                        className="bg-black text-white px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-tight flex items-center gap-1.5 shadow-sm active:scale-95 transition-all"
+                                    >
+                                        <Plus className="w-3.5 h-3.5" />
+                                        Add Course
+                                    </Link>
+                                </div>
+                                <div className="space-y-2">
+                                    {courses.map((course) => (
+                                        <div key={course.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-between group">
+                                            <div className="flex-1 min-w-0 pr-4">
+                                                <h3 className="font-bold text-lg leading-tight truncate">{course.name}</h3>
+                                                <p className="text-xs text-gray-400 font-medium mt-0.5">
+                                                    {course._count?.rounds || 0} Rounds • {course._count?.liveRounds || 0} Live
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Link
+                                                    href={`/course/${course.id}`}
+                                                    className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-black active:scale-95 transition-all"
+                                                >
+                                                    View
+                                                </Link>
+                                                <Link
+                                                    href={`/settings/course/${course.id}/edit`}
+                                                    className="bg-black text-white px-4 py-1.5 rounded-lg text-sm font-black active:scale-95 transition-all"
+                                                >
+                                                    Edit
+                                                </Link>
+                                                <button
+                                                    onClick={() => handleDeleteCourse(course.id)}
+                                                    disabled={isDeletingCourse === course.id}
+                                                    className="bg-red-50 text-red-600 px-4 py-1.5 rounded-lg text-sm font-black hover:bg-red-100 active:scale-95 transition-all disabled:opacity-50"
+                                                >
+                                                    {isDeletingCourse === course.id ? '...' : 'Delete'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {courses.length === 0 && (
+                                        <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center">
+                                            <p className="text-gray-400 font-medium">No courses found</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
-                        <button
-                            onClick={handleRecalculate}
-                            disabled={isRecalculating}
-                            className="w-full mt-4 bg-black text-white py-3 rounded-xl font-black uppercase tracking-widest text-sm shadow-md active:scale-95 transition-all disabled:opacity-50"
-                        >
-                            {isRecalculating ? 'Recalculating...' : 'Force Recalculation'}
-                        </button>
+                    )}
+                </section>
+
+                {/* 7. App Preferences Section */}
+                <section className="space-y-3">
+                    <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">App Preferences</h2>
+                    <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+                        <SettingsItem icon={<Bell className="w-5 h-5" />} label="Notifications" />
+                        <SettingsItem icon={<Shield className="w-5 h-5" />} label="Privacy & Security" />
+                        <SettingsItem icon={<Info className="w-5 h-5" />} label="Version 1.0.6" hideArrow />
                     </div>
                 </section>
             </main>
@@ -235,6 +425,7 @@ export default function SettingsPage() {
                     <PlayerProfileModal
                         initialData={playerData}
                         onClose={() => setIsProfileModalOpen(false)}
+                        showAlert={showAlert}
                         onSave={() => {
                             setIsProfileModalOpen(false);
                             // Refresh data
@@ -249,6 +440,7 @@ export default function SettingsPage() {
                     <MetadataModal
                         initialData={siteConfig}
                         onClose={() => setIsMetadataModalOpen(false)}
+                        showAlert={showAlert}
                         onSave={() => {
                             setIsMetadataModalOpen(false);
                             // Refresh config
@@ -257,11 +449,26 @@ export default function SettingsPage() {
                     />
                 )
             }
+
+            {/* Custom Confirm Modal */}
+            {confirmConfig && (
+                <ConfirmModal
+                    isOpen={confirmConfig.isOpen}
+                    title={confirmConfig.title}
+                    message={confirmConfig.message}
+                    onConfirm={confirmConfig.onConfirm}
+                    onCancel={() => setConfirmConfig(null)}
+                    isDestructive={confirmConfig.isDestructive}
+                    confirmText={confirmConfig.confirmText}
+                    cancelText={confirmConfig.cancelText}
+                    hideCancel={confirmConfig.hideCancel}
+                />
+            )}
         </div >
     );
 }
 
-function PlayerProfileModal({ initialData, onClose, onSave }: { initialData: any, onClose: () => void, onSave: () => void }) {
+function PlayerProfileModal({ initialData, onClose, onSave, showAlert }: { initialData: any, onClose: () => void, onSave: () => void, showAlert: (t: string, m: string) => void }) {
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
@@ -296,7 +503,7 @@ function PlayerProfileModal({ initialData, onClose, onSave }: { initialData: any
         if (result.success) {
             onSave();
         } else {
-            alert('Failed to update profile');
+            showAlert('Update Failed', 'Failed to update profile');
         }
     };
 
@@ -441,7 +648,7 @@ function PlayerProfileModal({ initialData, onClose, onSave }: { initialData: any
 }
 
 
-function MetadataModal({ initialData, onClose, onSave }: { initialData: any, onClose: () => void, onSave: () => void }) {
+function MetadataModal({ initialData, onClose, onSave, showAlert }: { initialData: any, onClose: () => void, onSave: () => void, showAlert: (t: string, m: string) => void }) {
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
         title: initialData?.title || '',
@@ -458,7 +665,7 @@ function MetadataModal({ initialData, onClose, onSave }: { initialData: any, onC
             onSave();
         } catch (err) {
             console.error(err);
-            alert('Failed to update metadata');
+            showAlert('Update Failed', 'Failed to update metadata');
         } finally {
             setIsLoading(false);
         }
