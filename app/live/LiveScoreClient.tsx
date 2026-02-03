@@ -13,16 +13,16 @@ import ConfirmModal from '@/components/ConfirmModal';
 import AddToClubModal from '@/components/AddToClubModal';
 import { PoolModal } from '@/components/PoolModal';
 
-import { createLiveRound, addPlayerToLiveRound, saveLiveScore, deleteLiveRound, addGuestToLiveRound, updateGuestInLiveRound, deleteGuestFromLiveRound } from '@/app/actions/create-live-round';
-import { joinLiveRoundByShortId } from '@/app/actions/join-live-round';
-import { copyLiveToClub } from '@/app/actions/copy-live-to-club';
+import { createLiveRound, addPlayerToLiveRound, saveLiveScore, deleteLiveRound, addGuestToLiveRound, updateGuestInLiveRound, deleteGuestFromLiveRound } from '../actions/create-live-round';
+import { joinLiveRoundByShortId } from '../actions/join-live-round';
+import { copyLiveToClub } from '../actions/copy-live-to-club';
 import { generateScorecardHtml, generateClipboardHtml } from '@/app/lib/scorecard-helper';
 import { LiveLeaderboardCard } from './LiveLeaderboardCard';
 
-import { removePlayerFromLiveRound } from '@/app/actions/remove-player-from-live-round'; // Force reload
-import { sendScorecardEmail } from '@/app/actions/send-scorecard';
-import { deleteUserLiveRound } from '@/app/actions/delete-user-round';
-import { logout } from '@/app/actions/auth';
+import { removePlayerFromLiveRound } from '../actions/remove-player-from-live-round'; // Force reload
+import { sendScorecardEmail } from '../actions/send-scorecard';
+import { deleteUserLiveRound } from '../actions/delete-user-round';
+import { logout } from '../actions/auth';
 import { getAllCourses } from '@/app/actions/get-all-courses';
 
 
