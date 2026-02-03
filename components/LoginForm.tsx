@@ -49,93 +49,38 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
         }
     }
 
+    const labelClass = "block text-[15pt] font-bold text-[#888] uppercase tracking-[0.05em] mb-1"
+    const inputClass = "w-full bg-[#f8f9fa] border border-transparent rounded-[14px] px-4 py-1 text-[15pt] text-[#333]"
+    const linkBtnClass = "bg-transparent border-none text-[#1b4332] font-extrabold uppercase cursor-pointer p-0 ml-1"
+
     return (
         <main
-            style={{
-                minHeight: '100vh',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'flex-start',
-                backgroundColor: '#2b7a3a',
-                padding: '2rem 0.75rem',
-                fontFamily: "'Inter', system-ui, -apple-system, sans-serif"
-            }}
+            className="min-h-screen flex flex-col items-center justify-start bg-[#2b7a3a] py-8 px-3 font-sans"
             suppressHydrationWarning
         >
             {/* Card */}
-            <div
-                style={{
-                    background: 'white',
-                    width: '100%',
-                    maxWidth: '440px',
-                    borderRadius: '24px',
-                    padding: '1.25rem 1rem',
-                    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    marginBottom: '2rem'
-                }}
-            >
+            <div className="bg-white w-full max-w-[440px] rounded-[24px] px-4 py-5 shadow-[0_20px_40px_rgba(0,0,0,0.15)] flex flex-col items-center mb-8">
                 {/* Logo */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                    <img src="/icon-192.png" alt="GolfLS" style={{ width: '36px', height: '36px', objectFit: 'contain', borderRadius: '10px' }} />
-                    <span style={{ fontSize: '1.4rem', fontWeight: 700, color: '#1b4332', letterSpacing: '-0.02em' }}>GolfLS.app</span>
+                <div className="flex items-center gap-2 mb-3">
+                    <img src="/icon-192.png" alt="GolfLS" className="w-9 h-9 object-contain rounded-[10px]" />
+                    <span className="text-[1.4rem] font-bold text-[#1b4332] tracking-normal">GolfLS.app</span>
                 </div>
 
                 {/* Title */}
-                <h1
-                    style={{
-                        fontSize: '18pt',
-                        fontWeight: 900,
-                        fontStyle: 'italic',
-                        color: '#111',
-                        textTransform: 'uppercase',
-                        marginBottom: '0.5rem',
-                        padding: '0.25rem 0',
-                        textAlign: 'center',
-                        letterSpacing: '-0.01em'
-                    }}
-                >
+                <h1 className="text-[18pt] font-black italic text-[#111] uppercase mb-2 py-1 text-center tracking-[-0.01em]">
                     {mode === 'login' ? 'WELCOME BACK' : mode === 'signup' ? 'CREATE ACCOUNT' : 'RESET PASSWORD'}
                 </h1>
 
                 {/* Error Message */}
                 {error && (
-                    <div
-                        style={{
-                            color: '#dc3545',
-                            fontSize: '0.875rem',
-                            fontWeight: 600,
-                            marginBottom: '1.5rem',
-                            textAlign: 'center',
-                            width: '100%',
-                            padding: '0.75rem',
-                            background: '#fff5f5',
-                            borderRadius: '12px'
-                        }}
-                    >
+                    <div className="text-[#dc3545] text-sm font-semibold mb-6 text-center w-full p-3 bg-[#fff5f5] rounded-xl">
                         {error}
                     </div>
                 )}
 
                 {/* Success Message */}
                 {successMessage && (
-                    <div
-                        style={{
-                            color: '#28a745',
-                            fontSize: '0.875rem',
-                            fontWeight: 600,
-                            marginBottom: '1.5rem',
-                            textAlign: 'center',
-                            width: '100%',
-                            padding: '0.75rem',
-                            background: '#f8fff8',
-                            borderRadius: '12px',
-                            wordBreak: 'break-all'
-                        }}
-                    >
+                    <div className="text-[#28a745] text-sm font-semibold mb-6 text-center w-full p-3 bg-[#f8fff8] rounded-xl break-all">
                         {successMessage.includes('http') ? (
                             <>
                                 {successMessage.split('http')[0]}
@@ -143,7 +88,7 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                                     href={'http' + successMessage.split('http')[1]}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    style={{ color: '#1b4332', textDecoration: 'underline', display: 'block', marginTop: '0.5rem', fontWeight: 800 }}
+                                    className="text-[#1b4332] underline block mt-2 font-extrabold"
                                 >
                                     CLICK HERE TO RESET
                                 </a>
@@ -155,37 +100,37 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                 )}
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} style={{ width: '100%' }}>
+                <form onSubmit={handleSubmit} className="w-full">
                     {/* Signup Extra Fields */}
                     {mode === 'signup' && (
                         <>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                            <div className="grid grid-cols-2 gap-3 mb-2">
                                 <div>
-                                    <label style={labelStyle}>First Name</label>
-                                    <input style={inputStyle} type="text" name="firstName" placeholder="John" required />
+                                    <label className={labelClass}>First Name</label>
+                                    <input className={inputClass} type="text" name="firstName" placeholder="John" required />
                                 </div>
                                 <div>
-                                    <label style={labelStyle}>Last Name</label>
-                                    <input style={inputStyle} type="text" name="lastName" placeholder="Doe" required />
+                                    <label className={labelClass}>Last Name</label>
+                                    <input className={inputClass} type="text" name="lastName" placeholder="Doe" required />
                                 </div>
                             </div>
-                            <div style={{ marginBottom: '0.5rem' }}>
-                                <label style={labelStyle}>Phone Number</label>
-                                <input style={inputStyle} type="tel" name="phone" placeholder="(555) 555-5555" required />
+                            <div className="mb-2">
+                                <label className={labelClass}>Phone Number</label>
+                                <input className={inputClass} type="tel" name="phone" placeholder="(555) 555-5555" required />
                             </div>
-                            <div style={{ marginBottom: '0.5rem' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <div style={{ flex: 1 }}>
-                                        <label style={labelStyle}>Index</label>
-                                        <input style={inputStyle} type="number" step="0.1" name="handicapIndex" placeholder="0.0" defaultValue="0.0" />
+                            <div className="mb-2">
+                                <div className="flex items-center gap-2">
+                                    <div className="flex-1">
+                                        <label className={labelClass}>Index</label>
+                                        <input className={inputClass} type="number" step="0.1" name="handicapIndex" placeholder="0.0" defaultValue="0.0" />
                                     </div>
-                                    <div style={{ fontSize: '15pt', fontWeight: 800, color: '#ced4da', marginTop: '1.25rem' }}>OR</div>
-                                    <div style={{ flex: 1 }}>
-                                        <label style={labelStyle}>Handicap</label>
-                                        <input style={inputStyle} type="number" name="estimateHandicap" placeholder="0" defaultValue="0" />
+                                    <div className="text-[15pt] font-extrabold text-[#ced4da] mt-5">OR</div>
+                                    <div className="flex-1">
+                                        <label className={labelClass}>Handicap</label>
+                                        <input className={inputClass} type="number" name="estimateHandicap" placeholder="0" defaultValue="0" />
                                     </div>
                                 </div>
-                                <p style={{ fontSize: '15pt', color: '#999', marginTop: '0.25rem', fontStyle: 'italic', lineHeight: '1.2' }}>
+                                <p className="text-[15pt] text-[#999] mt-1 italic leading-tight">
                                     (Index and Handicap will be calculated base on the USGA rules, after 5 rounds.)
                                 </p>
                             </div>
@@ -193,10 +138,10 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                     )}
 
                     {/* Email */}
-                    <div style={{ marginBottom: '0.5rem' }}>
-                        <label style={labelStyle}>Email Address</label>
+                    <div className="mb-2">
+                        <label className={labelClass}>Email Address</label>
                         <input
-                            style={inputStyle}
+                            className={inputClass}
                             type="email"
                             name="email"
                             placeholder="name@example.com"
@@ -207,10 +152,10 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
 
                     {/* Password */}
                     {mode !== 'forgot' && (
-                        <div style={{ marginBottom: '0.5rem' }}>
-                            <label style={labelStyle}>Password</label>
+                        <div className="mb-2">
+                            <label className={labelClass}>Password</label>
                             <input
-                                style={inputStyle}
+                                className={inputClass}
                                 type="password"
                                 name="password"
                                 placeholder="••••"
@@ -225,25 +170,7 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                     <button
                         type="submit"
                         disabled={loading}
-                        style={{
-                            width: '100%',
-                            background: '#1b4332',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '16px',
-                            padding: '1rem',
-                            fontSize: '1rem',
-                            fontWeight: 700,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '0.75rem',
-                            cursor: loading ? 'not-allowed' : 'pointer',
-                            marginTop: '1rem',
-                            boxShadow: '0 10px 20px rgba(27, 67, 50, 0.2)',
-                            textTransform: 'uppercase',
-                            opacity: loading ? 0.7 : 1
-                        }}
+                        className={`w-full bg-[#1b4332] text-white border-none rounded-2xl p-4 text-base font-bold flex items-center justify-center gap-3 mt-4 shadow-[0_10px_20px_rgba(27,67,50,0.2)] uppercase ${loading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
                     >
                         {loading ? (
                             <Loader2 className="animate-spin" size={24} />
@@ -257,28 +184,28 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                 </form>
 
                 {/* Footer Links */}
-                <div style={{ marginTop: '2rem', textAlign: 'center', color: '#555', fontSize: '15pt' }}>
+                <div className="mt-8 text-center text-[#555] text-[15pt]">
                     {mode === 'login' ? (
                         <>
                             Not a member yet?
-                            <button onClick={() => setMode('signup')} style={linkBtnStyle}>
+                            <button onClick={() => setMode('signup')} className={linkBtnClass}>
                                 CREATE AN ACCOUNT
                             </button>
-                            <button onClick={() => setMode('forgot')} style={forgotBtnStyle}>
+                            <button onClick={() => setMode('forgot')} className="bg-transparent border-none block w-full mt-6 text-[#adb5bd] no-underline font-medium text-[15pt] cursor-pointer">
                                 Forgot your password?
                             </button>
                         </>
                     ) : mode === 'signup' ? (
                         <>
                             Already have an account?
-                            <button onClick={() => setMode('login')} style={linkBtnStyle}>
+                            <button onClick={() => setMode('login')} className={linkBtnClass}>
                                 LOG IN
                             </button>
                         </>
                     ) : (
                         <>
                             Remember your password?
-                            <button onClick={() => setMode('login')} style={linkBtnStyle}>
+                            <button onClick={() => setMode('login')} className={linkBtnClass}>
                                 LOG IN
                             </button>
                         </>
@@ -287,63 +214,9 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
             </div>
 
             {/* Copyright */}
-            <div
-                style={{
-                    color: 'rgba(255, 255, 255, 0.6)',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.1em'
-                }}
-            >
+            <div className="text-white/60 text-xs font-bold uppercase tracking-widest">
                 © 2026 GOLFLS.APP • ALL RIGHTS RESERVED
             </div>
         </main>
     )
-}
-
-// Styles as objects
-const labelStyle: React.CSSProperties = {
-    display: 'block',
-    fontSize: '15pt',
-    fontWeight: 700,
-    color: '#888',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-    marginBottom: '0.1rem'
-}
-
-const inputStyle: React.CSSProperties = {
-    width: '100%',
-    background: '#f8f9fa',
-    border: '1px solid transparent',
-    borderRadius: '14px',
-    padding: '0.25rem 1rem',
-    fontSize: '15pt',
-    color: '#333',
-    boxSizing: 'border-box'
-}
-
-const linkBtnStyle: React.CSSProperties = {
-    background: 'none',
-    border: 'none',
-    color: '#1b4332',
-    fontWeight: 800,
-    textTransform: 'uppercase',
-    cursor: 'pointer',
-    padding: 0,
-    marginLeft: '0.25rem'
-}
-
-const forgotBtnStyle: React.CSSProperties = {
-    background: 'none',
-    border: 'none',
-    display: 'block',
-    width: '100%',
-    marginTop: '1.5rem',
-    color: '#adb5bd',
-    textDecoration: 'none',
-    fontWeight: 500,
-    fontSize: '15pt',
-    cursor: 'pointer'
 }
