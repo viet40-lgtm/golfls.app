@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 
 import AppHeader from "@/components/AppHeader";
 import GlobalEnterNavigation from "@/components/GlobalEnterNavigation";
-// import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
+import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 
 export default async function RootLayout({
     children,
@@ -52,20 +52,7 @@ export default async function RootLayout({
                 className={`${geistSans.variable} ${geistMono.variable} antialiased`}
                 suppressHydrationWarning
             >
-                {/* <ServiceWorkerRegistration /> */}
-                <script
-                    dangerouslySetInnerHTML={{
-                        __html: `
-                        if ('serviceWorker' in navigator) {
-                            navigator.serviceWorker.getRegistrations().then(registrations => {
-                                for (let registration of registrations) {
-                                    registration.unregister();
-                                }
-                            });
-                        }
-                    `,
-                    }}
-                />
+                <ServiceWorkerRegistration />
                 {isAuthenticated && <AppHeader />}
                 <GlobalEnterNavigation />
                 {children}

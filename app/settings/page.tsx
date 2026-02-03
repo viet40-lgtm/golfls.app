@@ -23,6 +23,7 @@ export default function SettingsPage() {
     const [adminPassword, setAdminPassword] = useState('');
     const [courses, setCourses] = useState<any[]>([]);
     const [isDeletingCourse, setIsDeletingCourse] = useState<string | null>(null);
+    const [isStandalone, setIsStandalone] = useState(false);
 
     // Custom Modal State
     const [confirmConfig, setConfirmConfig] = useState<{
@@ -96,6 +97,11 @@ export default function SettingsPage() {
         };
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+        // Check if already installed
+        if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone) {
+            setIsStandalone(true);
+        }
 
         return () => {
             window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -259,7 +265,14 @@ export default function SettingsPage() {
                             </div>
                         </div>
 
-                        {deferredPrompt ? (
+                        {isStandalone ? (
+                            <div className="bg-green-50 p-3 rounded-xl border border-green-100 text-center flex items-center justify-center gap-2">
+                                <Check className="w-4 h-4 text-green-600" />
+                                <p className="text-xs text-green-700 font-bold uppercase tracking-widest">
+                                    App is Installed
+                                </p>
+                            </div>
+                        ) : deferredPrompt ? (
                             <button
                                 onClick={handleInstallClick}
                                 className="w-full bg-black text-white py-3 rounded-xl font-black uppercase tracking-widest text-sm shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
@@ -269,7 +282,7 @@ export default function SettingsPage() {
                         ) : (
                             <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 text-center">
                                 <p className="text-xs text-gray-500 font-bold">
-                                    App is already installed or check your browser's menu to "Add to Home Screen".
+                                    To Install: Open your browser menu and select <span className="text-black inline-block px-1.5 py-0.5 bg-gray-200 rounded mx-0.5">Add to Home Screen</span>
                                 </p>
                             </div>
                         )}
