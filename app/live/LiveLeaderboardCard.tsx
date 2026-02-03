@@ -139,7 +139,7 @@ export const LiveLeaderboardCard = ({
                     <div className="flex gap-2 items-end justify-self-end">
                         <div className="flex flex-col items-center gap-0">
                             <div className="text-[12pt] text-zinc-500 font-black tracking-widest uppercase">GRS</div>
-                            <div className={`text-xl font-black italic tracking-tighter leading-none ${p.toPar < 0 ? 'text-red-600' : p.toPar > 0 ? 'text-zinc-900' : 'text-green-600'}`}>
+                            <div className="text-xl font-black italic tracking-tighter leading-none text-zinc-900">
                                 {p.front9 > 0 || p.back9 > 0 ? (
                                     <>{p.front9}+{p.back9}={p.totalGross}</>
                                 ) : (
@@ -149,7 +149,7 @@ export const LiveLeaderboardCard = ({
                         </div>
                         <div className="flex flex-col items-center gap-0">
                             <div className="text-[12pt] text-zinc-500 font-black tracking-widest uppercase">HCP</div>
-                            <div className={`text-xl font-black italic tracking-tighter leading-none ${p.toPar < 0 ? 'text-red-600' : p.toPar > 0 ? 'text-zinc-900' : 'text-green-600'}`}>{isNaN(p.courseHcp) ? 0 : p.courseHcp}</div>
+                            <div className="text-xl font-black italic tracking-tighter leading-none text-zinc-900">{isNaN(p.courseHcp) ? 0 : p.courseHcp}</div>
                         </div>
                         <div className="flex flex-col items-center gap-0">
                             <div className="text-[12pt] text-zinc-500 font-black tracking-widest uppercase">NET</div>
