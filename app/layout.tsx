@@ -20,6 +20,16 @@ export const metadata: Metadata = {
         absolute: "Golf Live Scores - GolfLS.app"
     },
     description: "Live score tracking and handicap management for real-time golf rounds.",
+    manifest: "/manifest.json",
+    appleWebApp: {
+        capable: true,
+        statusBarStyle: "default",
+        title: "Golf Live Scores",
+    },
+    themeColor: "#ffffff",
+    icons: {
+        apple: "/icon-512.png",
+    },
 };
 
 import AppHeader from "@/components/AppHeader";
@@ -37,13 +47,6 @@ export default async function RootLayout({
     return (
         <html lang="en" suppressHydrationWarning>
             <head>
-                <link rel="manifest" href="/manifest.json" />
-                <link rel="apple-touch-icon" href="/icon-512.png" />
-                <meta name="theme-color" content="#ffffff" />
-                <meta name="mobile-web-app-capable" content="yes" />
-                <meta name="apple-mobile-web-app-capable" content="yes" />
-                <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-                <meta name="apple-mobile-web-app-title" content="Golf Live Scores" />
                 <link rel="icon" href="/icon-192.png" sizes="192x192" />
                 <link rel="icon" href="/icon-512.png" sizes="512x512" />
                 <link rel="shortcut icon" href="/icon-192.png" />

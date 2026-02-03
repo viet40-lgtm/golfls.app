@@ -14,6 +14,7 @@ import AddToClubModal from '@/components/AddToClubModal';
 import { PoolModal } from '@/components/PoolModal';
 
 import { createLiveRound, addPlayerToLiveRound, saveLiveScore, deleteLiveRound, addGuestToLiveRound, updateGuestInLiveRound, deleteGuestFromLiveRound } from '@/app/actions/create-live-round';
+import { joinLiveRoundByShortId } from '@/app/actions/join-live-round';
 import { copyLiveToClub } from '@/app/actions/copy-live-to-club';
 import { generateScorecardHtml, generateClipboardHtml } from '@/app/lib/scorecard-helper';
 import { LiveLeaderboardCard } from './LiveLeaderboardCard';
@@ -127,6 +128,8 @@ export default function LiveScoreClient({
     const [isRoundSelectModalOpen, setIsRoundSelectModalOpen] = useState(false);
     const [lazyLoadedCourses, setLazyLoadedCourses] = useState<Course[]>([]);
     const [isLoadingCourses, setIsLoadingCourses] = useState(false);
+    const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
+    const [joinRoundId, setJoinRoundId] = useState('');
 
 
     const [birdiePlayers, setBirdiePlayers] = useState<Array<{ name: string; totalBirdies: number }>>([]);
@@ -167,6 +170,17 @@ export default function LiveScoreClient({
         }
         setClientScorerId(id);
     }, []);
+
+    // Sync Round ID to global header via cookie and event
+    useEffect(() => {
+        if (initialRound?.shortId) {
+            Cookies.set('current_round_short_id', initialRound.shortId, { expires: 1 });
+            window.dispatchEvent(new CustomEvent('round_id_updated', { detail: initialRound.shortId }));
+        } else {
+            Cookies.remove('current_round_short_id');
+            window.dispatchEvent(new CustomEvent('round_id_updated', { detail: null }));
+        }
+    }, [initialRound?.shortId]);
 
     // Restore selected players from localStorage on mount
     useEffect(() => {
@@ -1596,6 +1610,11 @@ export default function LiveScoreClient({
                                         return r.name;
                                     })()}
                                 </span>
+                                {initialRound?.shortId && (
+                                    <span className="text-zinc-500 font-black text-sm uppercase tracking-widest pointer-events-none">
+                                        ID: {initialRound.shortId}
+                                    </span>
+                                )}
                                 <span className="text-xs ml-1">▼</span>
                             </button>
 
@@ -2355,8 +2374,7 @@ export default function LiveScoreClient({
                                                 <div className="flex items-center gap-4">
                                                     <button
                                                         onClick={() => updateScore(player.id, false)}
-                                                        className="w-[50px] h-[50px] rounded-full bg-white border-[4px] flex items-center justify-center font-black active:scale-90 transition-all hover:bg-green-50 text-[50pt] leading-none"
-                                                        style={{ borderColor: '#16a34a', color: '#16a34a' }}
+                                                        className="w-[50px] h-[50px] rounded-full bg-white border-[4px] border-green-600 text-green-600 flex items-center justify-center font-black active:scale-90 transition-all hover:bg-green-50 text-[50pt] leading-none"
                                                         title="Decrease Score"
                                                     >
                                                         -
@@ -2366,8 +2384,7 @@ export default function LiveScoreClient({
                                                     </div>
                                                     <button
                                                         onClick={() => updateScore(player.id, true)}
-                                                        className="w-[50px] h-[50px] rounded-full bg-white border-[4px] flex items-center justify-center font-black active:scale-90 transition-all hover:bg-red-50 text-[50pt] leading-none"
-                                                        style={{ borderColor: '#dc2626', color: '#dc2626' }}
+                                                        className="w-[50px] h-[50px] rounded-full bg-white border-[4px] border-red-600 text-red-600 flex items-center justify-center font-black active:scale-90 transition-all hover:bg-red-50 text-[50pt] leading-none"
                                                         title="Increase Score"
                                                     >
                                                         +
@@ -2558,6 +2575,12 @@ export default function LiveScoreClient({
                                     </>
                                 )}
 
+                                <button
+                                    onClick={() => setIsGroupModalOpen(true)}
+                                    className="px-1 h-12 bg-black text-white border border-black rounded-xl text-sm font-black uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-md active:scale-95"
+                                >
+                                    Group
+                                </button>
                                 <button
                                     onClick={() => setIsStatsModalOpen(true)}
                                     className="w-12 h-12 bg-black border border-black text-white rounded-xl flex items-center justify-center hover:bg-zinc-800 transition-all shadow-md active:scale-95"
@@ -2817,6 +2840,59 @@ export default function LiveScoreClient({
                         isOpen={isPoolModalOpen}
                         onClose={() => setIsPoolModalOpen(false)}
                     />
+                )
+            }
+
+            {
+                isGroupModalOpen && (
+                    <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/70 p-4">
+                        <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 space-y-4 border-4 border-black">
+                            <h2 className="text-2xl font-black italic uppercase tracking-tighter">Join Group</h2>
+                            <p className="text-zinc-600 font-bold uppercase text-xs tracking-widest">Enter the Round ID to join your group onto the leaderboard.</p>
+
+                            <input
+                                type="text"
+                                value={joinRoundId}
+                                onChange={(e) => setJoinRoundId(e.target.value.toUpperCase())}
+                                placeholder="E.G. V123"
+                                className="w-full bg-zinc-100 border-2 border-zinc-200 rounded-xl px-4 py-3 text-2xl font-black text-center focus:border-black outline-none transition-all placeholder:text-zinc-300"
+                                maxLength={4}
+                                autoFocus
+                            />
+
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setIsGroupModalOpen(false)}
+                                    className="flex-1 bg-zinc-100 text-zinc-500 rounded-xl py-3 font-black uppercase tracking-widest active:scale-95 transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        if (!joinRoundId || !currentUserId) return;
+
+                                        try {
+                                            const result = await joinLiveRoundByShortId(joinRoundId, currentUserId);
+                                            if (result.success) {
+                                                setIsGroupModalOpen(false);
+                                                setJoinRoundId('');
+                                                // Hard reload to load the new round context
+                                                window.location.href = `/live?roundId=${result.liveRoundId}`;
+                                            } else {
+                                                showAlert('Error', result.error || 'Failed to join round');
+                                            }
+                                        } catch (err) {
+                                            console.error('Join error:', err);
+                                            showAlert('Error', 'Connection error joining round');
+                                        }
+                                    }}
+                                    className="flex-1 bg-black text-white rounded-xl py-3 font-black uppercase tracking-widest active:scale-95 transition-all shadow-lg"
+                                >
+                                    Join
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 )
             }
 
