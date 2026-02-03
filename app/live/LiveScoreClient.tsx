@@ -2240,11 +2240,8 @@ export default function LiveScoreClient({
                                                     return playerScores && playerScores.has(activeHole);
                                                 });
 
-                                                if (isUnsavedThisHole) {
+                                                if (isUnsavedThisHole || !isHoleScored) {
                                                     return 'bg-blue-600 text-white shadow-lg';
-                                                }
-                                                if (isHoleScored) {
-                                                    return 'bg-zinc-100 text-zinc-500';
                                                 }
                                                 return 'bg-white text-zinc-900 border border-zinc-200 shadow-sm';
                                             })()} ml-auto italic uppercase tracking-tighter text-lg font-black p-1 rounded-xl shadow-xl transition-all active:scale-[0.98] disabled:opacity-50`}
