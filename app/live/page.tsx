@@ -13,6 +13,8 @@ export const metadata = {
     },
 };
 
+import { ensureRoundHasShortId } from '@/app/actions/ensure-short-id';
+
 export default async function LiveScorePage(props: { searchParams: Promise<{ roundId?: string }> }) {
     const resolvedSearchParams = await props.searchParams;
     const roundIdFromUrl = resolvedSearchParams.roundId;
@@ -68,7 +70,6 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
             lastUsedCourseId = activeRound.courseId;
         }
     } else {
-        // Find user's last round
         // Find user's last rounds to pick the most recent one
         const userRPs = await prisma.liveRoundPlayer.findMany({
             where: { playerId: sessionUserId },
@@ -104,6 +105,14 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
             defaultCourse = lastUserRoundPlayer.liveRound.course;
             lastUsedCourseId = lastUserRoundPlayer.liveRound.courseId;
             lastUsedTeeBoxId = lastUserRoundPlayer.teeBoxId;
+        }
+    }
+
+    // AUTO-HEAL: Ensure active round has a shortId
+    if (activeRound && !activeRound.shortId) {
+        const newShortId = await ensureRoundHasShortId(activeRound.id);
+        if (newShortId) {
+            activeRound.shortId = newShortId;
         }
     }
 
