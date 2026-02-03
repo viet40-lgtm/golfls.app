@@ -249,7 +249,7 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                             <Loader2 className="animate-spin" size={24} />
                         ) : (
                             <>
-                                {mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Sign Up' : 'Send Reset Link'}
+                                {mode === 'login' ? 'LOG IN' : mode === 'signup' ? 'Sign Up' : 'Send Reset Link'}
                                 <ChevronRight size={24} />
                             </>
                         )}
@@ -272,14 +272,14 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                         <>
                             Already have an account?
                             <button onClick={() => setMode('login')} style={linkBtnStyle}>
-                                Sign In
+                                LOG IN
                             </button>
                         </>
                     ) : (
                         <>
                             Remember your password?
                             <button onClick={() => setMode('login')} style={linkBtnStyle}>
-                                Sign In
+                                LOG IN
                             </button>
                         </>
                     )}

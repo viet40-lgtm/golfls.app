@@ -33,6 +33,7 @@ The leaderboard has been redesigned for maximum legibility on-course:
     - **Doubles/Worse**: Highlighted in red.
 - **Legibility Tweak**: Gross (GRS) and Handicap (HCP) numbers are set to solid black (`text-zinc-900`) for maximum contrast, while Net scores retain their colored indicators.
 - **Micro-Layout**: Hole numbers are pinned to the top-left in silver (`zinc-300`), while scores are pinned to the bottom-right for a clean, professional aesthetic.
+- **Header ID**: The active Round ID is displayed as a green badge directly next to the Menu button for quick reference, with the "ID:" prefix removed for a cleaner look.
 
 ### Streamlined Login Flow
 - Removed redundant routes to ensure a single, fast entry point at the root path (`/`).

@@ -14,6 +14,7 @@ export default function AppHeader() {
     const [passwordInput, setPasswordInput] = useState('');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [roundShortId, setRoundShortId] = useState<string | null>(null);
 
     useEffect(() => {
         const session = Cookies.get('admin_session');
@@ -22,6 +23,19 @@ export default function AppHeader() {
         const authStatus = Cookies.get('auth_status');
         const isAuth = authStatus === 'true';
         setIsAuthenticated(isAuth);
+
+        // Load initial round ID
+        const initialRoundId = Cookies.get('current_round_short_id');
+        if (initialRoundId) setRoundShortId(initialRoundId);
+    }, []);
+
+    // Listen for round ID updates from LiveScoreClient
+    useEffect(() => {
+        const handleUpdate = (event: any) => {
+            setRoundShortId(event.detail);
+        };
+        window.addEventListener('round_id_updated' as any, handleUpdate);
+        return () => window.removeEventListener('round_id_updated' as any, handleUpdate);
     }, []);
 
     useEffect(() => {
@@ -60,14 +74,12 @@ export default function AppHeader() {
 
                     {/* Right: Actions */}
                     <div className="flex items-center gap-3">
-                        {!isAuthenticated ? (
-                            <Link
-                                href="/"
-                                className="bg-black text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-gray-800 transition-all active:scale-95 shadow-md"
-                            >
-                                Sign In
-                            </Link>
-                        ) : (
+                        {roundShortId && (
+                            <div className="bg-green-600 text-white px-3 py-1.5 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl border border-black italic leading-none transform -rotate-1 active:scale-95 transition-all">
+                                {roundShortId}
+                            </div>
+                        )}
+                        {isAuthenticated && (
                             <div className="relative menu-container">
                                 <button
                                     onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -83,7 +95,7 @@ export default function AppHeader() {
                                             <MenuLink
                                                 href={isAuthenticated ? "/live" : "/"}
                                                 icon={<Home className="w-4 h-4" />}
-                                                label={isAuthenticated ? "Live Round" : "Home"}
+                                                label={isAuthenticated ? "Live Scores" : "Home"}
                                                 onClick={() => setIsMenuOpen(false)}
                                             />
                                             <MenuLink href="/settings" icon={<Settings className="w-4 h-4" />} label="Settings" onClick={() => setIsMenuOpen(false)} />

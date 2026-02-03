@@ -14,6 +14,7 @@
 - [x] Consolidate Login flow to a single root route.
 - [x] Fix high-contrast input styles for sunlight visibility.
 - [x] Change GRS and HCP number colors to black for better legibility.
+- [x] Move Round ID next to Menu button and remove "ID:" prefix.
 
 #### Bug Fixes & Optimization
 - [x] Fix "Save Hole" race condition (async/await implementation).
