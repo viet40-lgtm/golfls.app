@@ -1778,7 +1778,7 @@ export default function LiveScoreClient({
                                             : 'bg-blue-600 text-white'
                                             }`}
                                     >
-                                        GPS {isGPSEnabled ? 'ON (Tap to Refresh)' : 'OFF'}
+                                        GPS {isGPSEnabled ? 'ON' : 'OFF'}
                                     </button>
                                 </div>
                                 <button
@@ -1818,7 +1818,7 @@ export default function LiveScoreClient({
                                                         </div>
                                                     ) : gpsTimeout ? (
                                                         <div className="space-y-2">
-                                                            <p className="font-black text-[20pt] leading-tight text-zinc-900 italic uppercase tracking-tighter">🛰️ GPS Signal weak...</p>
+                                                            <p className="font-black text-[20pt] leading-tight text-zinc-900 italic uppercase tracking-tighter">🛰️ Waiting for GPS...</p>
                                                             <button
                                                                 onClick={() => {
                                                                     setIsGPSEnabled(false);
