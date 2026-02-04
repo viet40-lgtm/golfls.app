@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPlayer } from '@/app/actions';
 import ConfirmModal from './ConfirmModal';
 
@@ -79,6 +79,7 @@ export function LivePlayerSelectionModal({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [newPlayerError, setNewPlayerError] = useState('');
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+    const searchRef = useRef<HTMLDivElement>(null);
     const [newPlayer, setNewPlayer] = useState({
         firstName: '',
         lastName: '',
@@ -102,8 +103,20 @@ export function LivePlayerSelectionModal({
         } else {
             document.body.style.overflow = 'unset';
         }
+
+        const handleClickOutside = (event: MouseEvent) => {
+            if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+                setSearchQuery('');
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
         return () => {
             document.body.style.overflow = 'unset';
+            document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [isOpen, allPlayers, playerModes, playerSelections, useDualCheckbox]);
 
@@ -365,7 +378,7 @@ export function LivePlayerSelectionModal({
 
 
                         {!isCreating && (
-                            <div className="relative flex items-stretch gap-2">
+                            <div className="relative flex items-stretch gap-2" ref={searchRef}>
                                 <div className="flex-1 relative">
                                     <input
                                         type="text"
@@ -685,7 +698,7 @@ export function LivePlayerSelectionModal({
                         </div>
 
                         {!isCreating && (
-                            <div className="p-1 bg-white border-t border-gray-100 flex justify-between gap-3 z-10 sticky bottom-0">
+                            <div className="p-4 bg-transparent border-t border-gray-100 flex justify-between gap-3 z-10 sticky bottom-0 backdrop-blur-sm">
                                 <button
                                     onClick={onClose}
                                     className="flex-1 py-4 bg-white text-black border-2 border-black rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
@@ -697,7 +710,7 @@ export function LivePlayerSelectionModal({
                                     className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all text-white ${hasChanges ? 'bg-blue-600' : 'bg-black'
                                         }`}
                                 >
-                                    Save ({scoreCount}S / {leaderboardCount}L)
+                                    Save
                                 </button>
                             </div>
                         )}
