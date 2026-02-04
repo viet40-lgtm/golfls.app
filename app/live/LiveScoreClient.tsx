@@ -1045,6 +1045,21 @@ export default function LiveScoreClient({
     };
 
     const handleCreateNewRound = async () => {
+        // ENFORCE: No new round if current round is today and unfinished for THIS user
+        const isToday = initialRound?.date === todayStr;
+        if (initialRound && isToday && currentUserId) {
+            const isAPlayer = initialRound.players?.some((p: any) => (p.is_guest ? p.id : p.player?.id) === currentUserId);
+            if (isAPlayer) {
+                const playerScores = scores.get(currentUserId);
+                const scoresCount = playerScores ? playerScores.size : 0;
+                const totalHoles = initialRound.course?.holes?.length || 18;
+                if (scoresCount < totalHoles) {
+                    showAlert('Round in Progress', `You already have an unfinished round for today (${scoresCount}/${totalHoles} holes). Please complete it before starting a new one.`);
+                    return;
+                }
+            }
+        }
+
         // ALWAYS treat "New" button as creating a FRESH round
         setRoundModalMode('new');
 

@@ -39,3 +39,8 @@ This file defines the core UI/UX standards and coding patterns for the G-GolfLS 
 - **Prisma Deletions**: Ensure cascading deletions are handled (e.g., deleting a `LiveRound` cleans up `LiveRoundPlayer` and `LiveScore`).
 - **Data Cleanup**: Automatically delete incomplete past rounds (date != today + scores < hole count) upon landing on the `/live` page to keep the history clean.
 - **State Management**: Use `JSON.stringify` on objects/arrays within `useEffect` dependencies or `useMemo` to prevent infinite re-render loops.
+
+## 5. Deployment & Git
+- **No Auto-Deploy**: The agent must **NEVER** run deployment commands (e.g., `npx vercel --prod`).
+- **No Auto-Push**: The agent must **NEVER** run `git push`.
+- **Manual Control**: The agent should only prepare changes, commit them locally if requested, and leave the final push and deployment to the USER.
