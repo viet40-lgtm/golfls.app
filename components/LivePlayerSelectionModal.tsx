@@ -259,13 +259,13 @@ export function LivePlayerSelectionModal({
                                         )}
                                     </div>
                                 )}
-                                <button
-                                    onClick={() => setIsCreating(true)}
-                                    className="bg-green-600 text-white font-black px-6 rounded-xl text-[14pt] shrink-0 hover:bg-green-700 transition-all shadow-md active:scale-95 h-[48px] flex items-center justify-center"
-                                >
-                                    + Guest
-                                </button>
                             </div>
+                            <button
+                                onClick={() => setIsCreating(true)}
+                                className="bg-green-600 text-white font-black px-6 rounded-xl text-[14pt] shrink-0 hover:bg-green-700 transition-all shadow-md active:scale-95 h-[48px] flex items-center justify-center"
+                            >
+                                + Guest
+                            </button>
                         </div>
                     )}
 
