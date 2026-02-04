@@ -228,10 +228,10 @@ export function LivePlayerSelectionModal({
                                     + Guest
                                 </button>
                             </div>
-                    )}
                         </div>
+                    )}
 
-                {/* Body */}
+                    {/* Body */}
                     <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
                         {isCreating ? (
                             <div className="w-full bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
@@ -433,5 +433,6 @@ export function LivePlayerSelectionModal({
                     )}
                 </div>
             </div>
-            );
+        </div>
+    );
 }
