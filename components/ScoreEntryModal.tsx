@@ -85,6 +85,7 @@ const NineHoleSection = ({
                                     <td key={h.id} className={`p-1 w-10 font-black text-[14pt] ${getScoreClass(score, h.par)}`}>
                                         <input
                                             id={`hole-input-${scoreIdx}`}
+                                            aria-label={`Score for hole ${h.hole_number}`}
                                             type="number"
                                             min="0"
                                             max="15"
@@ -168,8 +169,11 @@ export default function ScoreEntryModal({
 }: ScoreModalProps) {
     const [holes, setHoles] = useState<Hole[]>([]);
     const [scores, setScores] = useState<number[]>(Array(18).fill(0));
+    const [initialScores, setInitialScores] = useState<number[]>(Array(18).fill(0));
     const [points, setPoints] = useState<number>(currentPoints || 0);
+    const [initialPoints, setInitialPoints] = useState<number>(currentPoints || 0);
     const [payout, setPayout] = useState<number>(currentPayout || 0);
+    const [initialPayout, setInitialPayout] = useState<number>(currentPayout || 0);
     const [isSaving, setIsSaving] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -180,7 +184,9 @@ export default function ScoreEntryModal({
 
             // Reset points/payout from props
             setPoints(currentPoints || 0);
+            setInitialPoints(currentPoints || 0);
             setPayout(currentPayout || 0);
+            setInitialPayout(currentPayout || 0);
 
             // Check if this is a temporary/new round player
             const isNewRoundPlayer = roundPlayerId.startsWith('temp-');
@@ -194,6 +200,7 @@ export default function ScoreEntryModal({
                         setHoles(holeData);
                         // Initialize with empty scores
                         setScores(Array(18).fill(0));
+                        setInitialScores(Array(18).fill(0));
                         setIsLoading(false);
                     })
                     .catch(err => {
@@ -212,21 +219,18 @@ export default function ScoreEntryModal({
                         setHoles(holeData);
 
                         // If we have existing scores, map them to our scores array
+                        const loadedScores = Array(18).fill(0);
                         if (Array.isArray(existingScores) && existingScores.length > 0) {
-                            const newScores = Array(18).fill(0);
                             existingScores.forEach((s: any) => {
                                 // Find which hole index this is (0-17)
                                 const holeIndex = holeData.findIndex((h: any) => h.id === s.hole_id);
                                 if (holeIndex !== -1) {
-                                    newScores[holeIndex] = s.strokes;
+                                    loadedScores[holeIndex] = s.strokes;
                                 }
                             });
-                            setScores(newScores);
-                            console.log('Mapped scores:', newScores);
-                        } else {
-                            console.log('No existing scores found');
                         }
-
+                        setScores(loadedScores);
+                        setInitialScores([...loadedScores]);
                         setIsLoading(false);
                     })
                     .catch(err => {
@@ -238,6 +242,12 @@ export default function ScoreEntryModal({
     }, [isOpen, courseId, roundPlayerId, currentPoints, currentPayout]);
 
     if (!isOpen) return null;
+
+    const hasChanges = () => {
+        if (points !== initialPoints) return true;
+        if (payout !== initialPayout) return true;
+        return JSON.stringify(scores) !== JSON.stringify(initialScores);
+    };
 
     const frontNineHoles = holes.filter(h => h.hole_number <= 9).sort((a, b) => a.hole_number - b.hole_number);
     const backNineHoles = holes.filter(h => h.hole_number > 9).sort((a, b) => a.hole_number - b.hole_number);
@@ -297,143 +307,134 @@ export default function ScoreEntryModal({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200]">
-            <div className="bg-white shadow-xl w-full h-full overflow-hidden flex flex-col">
-
-                {/* Header Actions */}
-                <div className="flex justify-between items-center px-1 py-3 bg-white border-b border-gray-100">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Scorecard</span>
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 bg-black text-white rounded-full text-[15pt] font-bold hover:bg-gray-800 transition-colors"
-                    >
-                        Close
-                    </button>
-                </div>
-
-                {isLoading ? (
-                    <div className="p-12 text-center text-gray-500">Loading course data...</div>
-                ) : holes.length === 0 ? (
-                    <div className="p-12 text-center">
-                        <p className="text-gray-500 font-medium">No hole data found for this course.</p>
-                        <p className="text-sm text-gray-400 mt-2">Please add hole information in the database first.</p>
-                    </div>
-                ) : (
-                    <>
-                        <div className="overflow-y-auto flex-1 px-1 pb-8 bg-slate-50">
-
-                            {/* Header Title */}
-                            <div className="text-center mb-6">
-                                <h2 className="text-3xl font-black text-black tracking-tight">{playerName}</h2>
-
-                                {/* Course and Tee Box Info */}
-                                <div className="mt-3 space-y-1">
-                                    <p className="text-[14pt] font-bold text-gray-700">{courseName}</p>
-                                    {teeBox && (
-                                        <div className="flex justify-center items-center gap-3 text-[14pt] text-gray-600">
-                                            <span className="font-bold">Tee: {teeBox.name}</span>
-                                            <span>•</span>
-                                            <span>Par: {totalPar}</span>
-                                            <span>•</span>
-                                            <span>Rating: {teeBox.rating}</span>
-                                            <span>•</span>
-                                            <span>Slope: {teeBox.slope}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Big Stats Row moved to bottom */}
-
-                            {/* Front 9 */}
-                            <NineHoleSection
-                                title="Front 9"
-                                holes={frontNineHoles}
-                                totalLabel="OUT"
-                                totalPar={frontPar}
-                                totalScore={frontTotal}
-                                startIdx={0}
-                                scores={scores}
-                                updateScore={updateScore}
-                                getScoreClass={getScoreClass}
-                            />
-
-                            {/* Back 9 */}
-                            <NineHoleSection
-                                title="Back 9"
-                                holes={backNineHoles}
-                                totalLabel="IN"
-                                totalPar={backPar}
-                                totalScore={backTotal}
-                                startIdx={9}
-                                scores={scores}
-                                updateScore={updateScore}
-                                getScoreClass={getScoreClass}
-                            />
-
-                            {/* Legend */}
-                            <div className="flex flex-wrap justify-center gap-3 mt-8">
-                                <div className="flex items-center gap-1.5">
-                                    <span className="w-3 h-3 bg-blue-200 border border-blue-300 rounded-sm"></span>
-                                    <span className="text-[14pt] font-bold text-gray-500 uppercase">Eagle+</span>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                    <span className="w-3 h-3 bg-emerald-200 border border-emerald-300 rounded-sm"></span>
-                                    <span className="text-[14pt] font-bold text-gray-500 uppercase">Birdie</span>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                    <span className="w-3 h-3 bg-white border border-gray-200 rounded-sm"></span>
-                                    <span className="text-[14pt] font-bold text-gray-500 uppercase">Par</span>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                    <span className="w-3 h-3 bg-amber-100 border border-amber-200 rounded-sm"></span>
-                                    <span className="text-[14pt] font-bold text-gray-500 uppercase">Bogey</span>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                    <span className="w-3 h-3 bg-rose-200 border border-rose-300 rounded-sm"></span>
-                                    <span className="text-[14pt] font-bold text-gray-500 uppercase">Double+</span>
-                                </div>
-                            </div>
-
-                            {/* Big Stats Row */}
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mt-8 flex justify-around items-center text-center">
-                                <div>
-                                    <span className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">GRS</span>
-                                    <span className="text-3xl sm:text-4xl font-black text-black">{grossTotal || '-'}</span>
-                                </div>
-                                <div className="w-px h-10 bg-gray-100 mx-1"></div>
-                                <div>
-                                    <span className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">HCP</span>
-                                    <span className="text-3xl sm:text-4xl font-black text-black">{courseHcp}</span>
-                                </div>
-                                <div className="w-px h-10 bg-gray-100 mx-1"></div>
-                                <div>
-                                    <span className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">NET</span>
-                                    <span className="text-3xl sm:text-4xl font-black text-black">{netScore || '-'}</span>
-                                </div>
-                            </div>
-
-                        </div>
-
-                        {/* Actions Footer - Fixed at bottom */}
-                        <div className="flex gap-3 p-3 border-t border-gray-200 bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-                            <button
-                                onClick={handleSave}
-                                disabled={isSaving || grossTotal === 0}
-                                className="flex-1 bg-gray-700 hover:bg-gray-800 text-white font-bold px-4 py-2 text-[15pt] rounded-lg disabled:opacity-50 transition-colors"
-                            >
-                                {isSaving ? 'Saving...' : 'Save Score'}
-                            </button>
-                            <button
-                                onClick={onClose}
-                                className="px-4 py-2 border border-gray-300 rounded-lg text-[15pt] font-bold hover:bg-gray-50 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </>
-                )}
+        <div className="fixed inset-0 z-[200] bg-white flex flex-col animate-in fade-in duration-200">
+            {/* Header Actions */}
+            <div className="flex justify-between items-center px-1 py-3 bg-white border-b border-gray-100 shrink-0 safe-top">
+                <div className="w-10"></div>
+                <h2 className="text-lg font-black italic uppercase tracking-tighter text-center flex-1">Scorecard</h2>
+                <div className="w-10"></div>
             </div>
+
+            {isLoading ? (
+                <div className="p-12 text-center text-gray-500">Loading course data...</div>
+            ) : holes.length === 0 ? (
+                <div className="p-12 text-center">
+                    <p className="text-gray-500 font-medium">No hole data found for this course.</p>
+                    <p className="text-sm text-gray-400 mt-2">Please add hole information in the database first.</p>
+                </div>
+            ) : (
+                <>
+                    <div className="overflow-y-auto flex-1 px-1 pb-8 bg-slate-50">
+
+                        {/* Header Title */}
+                        <div className="text-center mb-6 pt-4">
+                            <h2 className="text-3xl font-black text-black tracking-tight">{playerName}</h2>
+
+                            {/* Course and Tee Box Info */}
+                            <div className="mt-3 space-y-1">
+                                <p className="text-[14pt] font-bold text-gray-700">{courseName}</p>
+                                {teeBox && (
+                                    <div className="flex justify-center items-center gap-3 text-[14pt] text-gray-600">
+                                        <span className="font-bold">Tee: {teeBox.name}</span>
+                                        <span>•</span>
+                                        <span>Par: {totalPar}</span>
+                                        <span>•</span>
+                                        <span>Rating: {teeBox.rating}</span>
+                                        <span>•</span>
+                                        <span>Slope: {teeBox.slope}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Front 9 */}
+                        <NineHoleSection
+                            title="Front 9"
+                            holes={frontNineHoles}
+                            totalLabel="OUT"
+                            totalPar={frontPar}
+                            totalScore={frontTotal}
+                            startIdx={0}
+                            scores={scores}
+                            updateScore={updateScore}
+                            getScoreClass={getScoreClass}
+                        />
+
+                        {/* Back 9 */}
+                        <NineHoleSection
+                            title="Back 9"
+                            holes={backNineHoles}
+                            totalLabel="IN"
+                            totalPar={backPar}
+                            totalScore={backTotal}
+                            startIdx={9}
+                            scores={scores}
+                            updateScore={updateScore}
+                            getScoreClass={getScoreClass}
+                        />
+
+                        {/* Legend */}
+                        <div className="flex flex-wrap justify-center gap-3 mt-8">
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-3 h-3 bg-blue-200 border border-blue-300 rounded-sm"></span>
+                                <span className="text-[14pt] font-bold text-gray-500 uppercase">Eagle+</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-3 h-3 bg-emerald-200 border border-emerald-300 rounded-sm"></span>
+                                <span className="text-[14pt] font-bold text-gray-500 uppercase">Birdie</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-3 h-3 bg-white border border-gray-200 rounded-sm"></span>
+                                <span className="text-[14pt] font-bold text-gray-500 uppercase">Par</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-3 h-3 bg-amber-100 border border-amber-200 rounded-sm"></span>
+                                <span className="text-[14pt] font-bold text-gray-500 uppercase">Bogey</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-3 h-3 bg-rose-200 border border-rose-300 rounded-sm"></span>
+                                <span className="text-[14pt] font-bold text-gray-500 uppercase">Double+</span>
+                            </div>
+                        </div>
+
+                        {/* Big Stats Row */}
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mt-8 flex justify-around items-center text-center">
+                            <div>
+                                <span className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">GRS</span>
+                                <span className="text-3xl sm:text-4xl font-black text-black">{grossTotal || '-'}</span>
+                            </div>
+                            <div className="w-px h-10 bg-gray-100 mx-1"></div>
+                            <div>
+                                <span className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">HCP</span>
+                                <span className="text-3xl sm:text-4xl font-black text-black">{courseHcp}</span>
+                            </div>
+                            <div className="w-px h-10 bg-gray-100 mx-1"></div>
+                            <div>
+                                <span className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">NET</span>
+                                <span className="text-3xl sm:text-4xl font-black text-black">{netScore || '-'}</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    {/* Actions Footer - Fixed at bottom */}
+                    <div className="flex gap-3 p-3 border-t border-gray-200 bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] shrink-0 safe-bottom">
+                        <button
+                            onClick={onClose}
+                            className="flex-1 bg-black text-white rounded-xl text-[15pt] font-bold shadow-xl active:scale-95 transition-all py-3"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleSave}
+                            disabled={isSaving || grossTotal === 0}
+                            className={`flex-1 text-white font-bold px-4 py-3 text-[15pt] rounded-xl disabled:opacity-50 transition-all shadow-xl active:scale-95 ${hasChanges() ? 'bg-blue-600' : 'bg-black'}`}
+                        >
+                            {isSaving ? 'Saving...' : 'Save Score'}
+                        </button>
+                    </div>
+                </>
+            )}
         </div >
     );
 }

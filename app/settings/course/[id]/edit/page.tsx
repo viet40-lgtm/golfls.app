@@ -106,7 +106,7 @@ export default function EditCoursePage() {
         <div className="min-h-screen bg-gray-50 pb-24">
             {/* Header */}
             <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
-                <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+                <div className="w-full mx-auto px-4 py-4 flex items-center justify-between">
                     <button onClick={() => router.back()} className="p-2 -ml-2 hover:bg-gray-50 rounded-full transition-colors" title="Back">
                         <ChevronLeft className="w-6 h-6" />
                     </button>
@@ -122,7 +122,7 @@ export default function EditCoursePage() {
                 </div>
             </header>
 
-            <main className="max-w-4xl mx-auto p-4 space-y-8">
+            <main className="w-full mx-auto p-4 space-y-8">
                 {/* Course Basic Info */}
                 <section className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-6">
                     <div className="space-y-1.5">
@@ -465,7 +465,7 @@ function ElementsModal({ hole, onClose, onSave }: { hole: any, onClose: () => vo
     return (
         <div className="fixed inset-0 z-[100] bg-white animate-in slide-in-from-bottom duration-300 flex flex-col">
             {/* Modal Header */}
-            <div className="max-w-6xl mx-auto w-full px-8 py-8 flex items-center justify-between">
+            <div className="w-full mx-auto px-8 py-8 flex items-center justify-between">
                 <h2 className="text-3xl font-black text-gray-900">Hole {hole.holeNumber} Elements</h2>
                 <button
                     onClick={onClose}
@@ -476,7 +476,7 @@ function ElementsModal({ hole, onClose, onSave }: { hole: any, onClose: () => vo
             </div>
 
             <div className="flex-1 overflow-y-auto p-8">
-                <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-16">
+                <div className="w-full mx-auto flex flex-col md:flex-row gap-16">
                     {renderSide('LEFT')}
                     {renderSide('RIGHT')}
                 </div>
@@ -484,7 +484,7 @@ function ElementsModal({ hole, onClose, onSave }: { hole: any, onClose: () => vo
 
             {/* Bottom Bar */}
             <div className="p-8 border-t border-gray-100 bg-gray-50/50">
-                <div className="max-w-6xl mx-auto flex gap-6">
+                <div className="w-full mx-auto flex gap-6">
                     <button
                         onClick={onClose}
                         className="flex-1 py-5 bg-white text-gray-500 rounded-3xl font-black uppercase tracking-widest text-sm border border-gray-200 active:scale-[0.98] transition-all"

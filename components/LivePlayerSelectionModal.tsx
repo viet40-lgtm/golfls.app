@@ -30,7 +30,8 @@ export function LivePlayerSelectionModal({
     isAdmin = false,
     frequentPlayerIds = [],
     currentUserId,
-    hasMultipleGroups = false
+    hasMultipleGroups = false,
+    roundShortId
 }: {
     allPlayers: Player[];
     selectedIds: string[];
@@ -51,12 +52,11 @@ export function LivePlayerSelectionModal({
     frequentPlayerIds?: string[];
     currentUserId?: string;
     hasMultipleGroups?: boolean;
+    roundShortId?: string;
 }) {
     const [localSelectedIds, setLocalSelectedIds] = useState<string[]>(selectedIds);
     const [searchQuery, setSearchQuery] = useState('');
     const [localAllPlayers, setLocalAllPlayers] = useState<Player[]>(allPlayers);
-
-    // Create Player Mode
     const [isCreating, setIsCreating] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [newPlayerError, setNewPlayerError] = useState('');
@@ -116,7 +116,8 @@ export function LivePlayerSelectionModal({
                 name: created.name,
                 index: created.handicapIndex,
                 preferred_tee_box: created.preferredTeeBox,
-                phone: created.phone
+                phone: created.phone,
+                player_id: created.playerId
             };
 
             setLocalAllPlayers(prev => [...prev, newPlayerObj]);
@@ -190,23 +191,16 @@ export function LivePlayerSelectionModal({
     };
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="bg-white w-full h-full flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-[200] bg-white flex flex-col">
+            <div className="w-full h-full flex flex-col overflow-hidden animate-in fade-in duration-200">
 
                 {/* Header */}
                 <div className="px-3 py-2 bg-white flex flex-col gap-1 shadow-sm z-10">
                     <div className="flex justify-between items-center">
                         <h2 className="text-[16pt] font-bold text-left ml-1">
-                            {isCreating ? "Create New Player" : "Select Players to Score For"}
+                            {isCreating ? "Create New Player" : "Search player:"}
                         </h2>
-                        {!isCreating && (
-                            <button
-                                onClick={onClose}
-                                className="px-3 py-1 bg-black text-white rounded-full text-[13pt] font-bold hover:bg-gray-800 transition-colors"
-                            >
-                                Close
-                            </button>
-                        )}
+                        {/* Close button removed as requested */}
                     </div>
 
 
@@ -215,7 +209,7 @@ export function LivePlayerSelectionModal({
                             <div className="flex-1 relative">
                                 <input
                                     type="text"
-                                    placeholder="Search by ID, Phone (last 4), Name (F-L)"
+                                    placeholder="Search by Name"
                                     title="Search players"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -270,7 +264,7 @@ export function LivePlayerSelectionModal({
                                                             )}
                                                             {isInRound && (
                                                                 <span className={`px-2 py-0.5 rounded text-[10pt] font-black uppercase tracking-wider ${isDisabled ? 'bg-gray-100 text-gray-500 border border-gray-200' : 'bg-green-100 text-green-700 border border-green-200'}`}>
-                                                                    {isDisabled ? 'Claimed' : 'In Round'}
+                                                                    {isDisabled ? 'Claimed' : (roundShortId || 'In Round')}
                                                                 </span>
                                                             )}
                                                             {player.id === currentUserId && (
@@ -408,9 +402,7 @@ export function LivePlayerSelectionModal({
                             {sortedPlayers.map(player => {
                                 const isSelected = localSelectedIds.includes(player.id);
                                 const isInRound = playersInRound.includes(player.id);
-                                // Use initial selectedIds to determine if this player was in MY group at modal open
                                 const wasInMyGroup = selectedIds.includes(player.id);
-                                // Only disable if: not admin, player is in round, multiple groups exist, AND was NOT in my group initially
                                 const isDisabled = !isAdmin && isInRound && hasMultipleGroups && !wasInMyGroup;
 
                                 return (
@@ -443,8 +435,8 @@ export function LivePlayerSelectionModal({
                                                 </span>
                                                 <div className="flex items-center gap-1">
                                                     {isInRound && (
-                                                        <span className={`px-2 py-0.5 rounded text-[10pt] font-bold uppercase tracking-wider ${isDisabled ? 'bg-gray-200 text-gray-400' : 'bg-green-100 text-green-700'}`}>
-                                                            {isDisabled ? 'Claimed' : 'In My Group'}
+                                                        <span className={`px-2 py-0.5 rounded text-[10pt] font-black uppercase tracking-wider ${isDisabled ? 'bg-gray-200 text-gray-400' : 'bg-green-100 text-green-700'}`}>
+                                                            {isDisabled ? 'Claimed' : (roundShortId || 'In Group')}
                                                         </span>
                                                     )}
                                                     {/* Course Handicap */}

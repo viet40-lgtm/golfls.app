@@ -61,7 +61,7 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-white overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-[100] flex flex-col bg-white overflow-hidden animate-in fade-in duration-200">
             {/* Header */}
             <header className="bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between shadow-sm sticky top-0 z-10">
                 <div className="flex flex-col">
@@ -118,7 +118,11 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
                                         isTournament={data.round.is_tournament}
                                         flights={data.processedFlights}
                                     />
-                                    <button className="p-2.5 bg-black rounded-lg hover:bg-gray-800 transition-colors shadow-sm text-white cursor-pointer">
+                                    <button
+                                        aria-label="Send Email"
+                                        className="p-2.5 bg-black rounded-lg hover:bg-gray-800 transition-colors shadow-sm text-white cursor-pointer"
+                                        title="Send Email"
+                                    >
                                         <Mail className="w-5 h-5" />
                                     </button>
                                 </div>

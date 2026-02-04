@@ -14,7 +14,7 @@ export function RoleSelectorModal({ isOpen, onClose, onSelectRole, courseName }:
 
     return (
         <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="bg-white w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 border border-white/20">
+            <div className="bg-white w-full rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 border border-white/20">
                 <div className="p-8 space-y-8">
                     <div className="text-center space-y-2">
                         <h2 className="text-3xl font-black text-black italic uppercase tracking-tighter leading-none">Choose Your Role</h2>

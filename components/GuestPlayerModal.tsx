@@ -62,7 +62,7 @@ export function GuestPlayerModal({ isOpen, onClose, onAdd, onUpdate, onDelete, r
             const calculatedHandicap = Math.round((indexNum * slope / 113) + (rating - par));
             setCourseHandicap(calculatedHandicap.toString());
         }
-    }, [index, roundData, editingGuest, manuallyEditedHandicap]);
+    }, [index, roundData?.slope, roundData?.rating, roundData?.par, editingGuest, manuallyEditedHandicap]);
 
     if (!isOpen) return null;
 
@@ -96,29 +96,42 @@ export function GuestPlayerModal({ isOpen, onClose, onAdd, onUpdate, onDelete, r
         onClose();
     };
 
-    return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2">
-            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4">
-                <h2 className="text-[16pt] font-bold mb-4 text-gray-800">
-                    {editingGuest ? 'Edit Guest Player' : 'Add Guest Player'}
-                </h2>
+    const isDirty = () => {
+        if (!editingGuest) {
+            return name.trim() !== '' || index !== '0' || courseHandicap !== '0';
+        }
+        return name.trim() !== editingGuest.name ||
+            parseFloat(index) !== editingGuest.index ||
+            parseInt(courseHandicap) !== editingGuest.courseHandicap;
+    };
 
-                <div className="space-y-4">
+    return (
+        <div className="fixed inset-0 bg-white z-[200] flex flex-col p-4 animate-in fade-in duration-200">
+            <div className="w-full h-full flex flex-col">
+                <div className="flex-none flex items-center justify-between mb-8 safe-top px-4">
+                    <div className="w-10"></div>
+                    <h2 className="text-[20pt] font-black italic uppercase tracking-tighter text-center flex-1">
+                        {editingGuest ? 'Edit Guest' : 'Add Guest'}
+                    </h2>
+                    <div className="w-10"></div>
+                </div>
+
+                <div className="space-y-4 px-4 flex-1 overflow-y-auto">
                     <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label className="text-[10pt] font-black text-gray-400 uppercase tracking-widest ml-1 block mb-1">
                             Name
                         </label>
                         <input
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg text-black bg-white"
+                            className="w-full px-4 py-4 bg-gray-50 border-transparent focus:bg-white focus:border-black rounded-2xl transition-all outline-none font-bold text-lg text-black"
                             placeholder="Guest Name"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label className="text-[10pt] font-black text-gray-400 uppercase tracking-widest ml-1 block mb-1">
                             Handicap Index
                         </label>
                         <input
@@ -126,14 +139,14 @@ export function GuestPlayerModal({ isOpen, onClose, onAdd, onUpdate, onDelete, r
                             step="0.1"
                             value={index}
                             onChange={(e) => setIndex(e.target.value)}
-                            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg text-black bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-full px-4 py-4 bg-gray-50 border-transparent focus:bg-white focus:border-black rounded-2xl transition-all outline-none font-bold text-lg text-black [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             placeholder="0.0"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Course Handicap {roundData && !editingGuest && !manuallyEditedHandicap && <span className="text-xs text-gray-500">(Auto-calculated)</span>}
+                        <label className="text-[10pt] font-black text-gray-400 uppercase tracking-widest ml-1 block mb-1">
+                            Course Handicap {roundData && !editingGuest && !manuallyEditedHandicap && <span className="text-xs text-gray-500 lowercase">(Auto-calculated)</span>}
                         </label>
                         <input
                             type="number"
@@ -142,18 +155,18 @@ export function GuestPlayerModal({ isOpen, onClose, onAdd, onUpdate, onDelete, r
                                 setCourseHandicap(e.target.value);
                                 setManuallyEditedHandicap(true);
                             }}
-                            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg text-black bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-full px-4 py-4 bg-gray-50 border-transparent focus:bg-white focus:border-black rounded-2xl transition-all outline-none font-bold text-lg text-black [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             placeholder="0"
                         />
                         {roundData && !editingGuest && (
-                            <p className="text-xs text-gray-500 mt-1">
-                                Based on Rating: {roundData.rating}, Slope: {roundData.slope}, Par: {roundData.par}
+                            <p className="text-[10pt] text-gray-400 font-medium px-1 mt-1">
+                                Based on R: {roundData.rating}, S: {roundData.slope}, P: {roundData.par}
                             </p>
                         )}
                     </div>
                 </div>
 
-                <div className="flex gap-3 mt-6">
+                <div className="flex flex-col gap-3 mt-6 pb-8 px-4">
                     {editingGuest && (
                         <button
                             onClick={() => {
@@ -180,23 +193,25 @@ export function GuestPlayerModal({ isOpen, onClose, onAdd, onUpdate, onDelete, r
                                     }
                                 });
                             }}
-                            className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-all text-[15pt]"
+                            className="w-full py-4 bg-red-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
                         >
-                            Delete
+                            Delete Guest
                         </button>
                     )}
-                    <button
-                        onClick={onClose}
-                        className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300 transition-all text-[15pt]"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleSubmit}
-                        className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all text-[15pt]"
-                    >
-                        {editingGuest ? 'Update Guest' : 'Add Guest'}
-                    </button>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={onClose}
+                            className="flex-1 py-4 bg-black text-white rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleSubmit}
+                            className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all text-white ${isDirty() ? 'bg-blue-600' : 'bg-black'}`}
+                        >
+                            {editingGuest ? 'Save Changes' : 'Add Guest'}
+                        </button>
+                    </div>
                 </div>
             </div>
             {confirmConfig && (

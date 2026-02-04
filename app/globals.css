@@ -43,6 +43,7 @@ body {
   -moz-osx-osx-font-smoothing: grayscale;
   font-size: 17pt;
   font-weight: 500;
+  overflow-x: hidden;
   /* Default to a solid weight, not thin */
 }
 
@@ -87,7 +88,6 @@ select:focus,
 textarea:focus {
   outline: none;
   border-color: #0f172a !important;
-  ring: 2px solid #0f172a;
   box-shadow: 0 0 0 1px #0f172a;
 }
 

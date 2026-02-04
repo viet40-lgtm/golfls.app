@@ -192,7 +192,7 @@ export default function SettingsPage() {
 
     return (
         <div className="min-h-screen bg-gray-50 pb-20 pt-4">
-            <main className="max-w-xl mx-auto p-4 space-y-6">
+            <main className="w-full mx-auto p-4 space-y-6">
                 {/* 1. Account Section */}
                 <section className="space-y-3">
                     <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Account</h2>
@@ -495,6 +495,21 @@ function PlayerProfileModal({ initialData, onClose, onSave, showAlert }: { initi
         preferredTeeBox: initialData?.preferredTeeBox || 'White'
     });
 
+    // Check if anything has changed
+    const hasChanges = () => {
+        const original = {
+            firstName: initialData?.name?.split(' ')[0] || '',
+            lastName: initialData?.name?.split(' ').slice(1).join(' ') || '',
+            email: initialData?.email || '',
+            phone: initialData?.phone || '',
+            password: '',
+            handicapIndex: initialData?.handicapIndex?.toString() || '0',
+            estimateHandicap: initialData?.estimateHandicap?.toString() || '0',
+            preferredTeeBox: initialData?.preferredTeeBox || 'White'
+        };
+        return JSON.stringify(formData) !== JSON.stringify(original);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
@@ -524,15 +539,13 @@ function PlayerProfileModal({ initialData, onClose, onSave, showAlert }: { initi
         <div className="fixed inset-0 z-[100] bg-white animate-in slide-in-from-bottom duration-300 flex flex-col">
             {/* Modal Header */}
             <div className="px-4 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md">
-                <button onClick={onClose} className="p-2 hover:bg-gray-50 rounded-full transition-colors" title="Close">
-                    <X className="w-6 h-6" />
-                </button>
+                <div className="w-10"></div>
                 <h2 className="text-lg font-black italic uppercase tracking-tighter">Edit Profile</h2>
-                <div className="w-10"></div> {/* Spacer */}
+                <div className="w-10"></div>
             </div>
 
             <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 space-y-6 pb-24">
-                <div className="max-w-xl mx-auto space-y-6">
+                <div className="w-full mx-auto space-y-6">
                     {/* Name Section */}
                     <div className="grid grid-cols-2 gap-4">
                         <ProfileInput
@@ -637,12 +650,21 @@ function PlayerProfileModal({ initialData, onClose, onSave, showAlert }: { initi
 
             {/* Bottom Bar */}
             <div className="p-4 border-t border-gray-100 sticky bottom-0 bg-white">
-                <div className="max-w-xl mx-auto">
+                <div className="w-full mx-auto flex gap-3">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="flex-1 py-4 bg-black text-white rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
+                        title="Cancel"
+                        disabled={isLoading}
+                    >
+                        Cancel
+                    </button>
                     <button
                         type="submit"
                         disabled={isLoading || !initialData}
                         onClick={handleSubmit}
-                        className="w-full bg-black text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                        className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 text-white ${hasChanges() ? 'bg-blue-600' : 'bg-black'}`}
                         title="Save Profile"
                     >
                         {isLoading ? (
@@ -650,7 +672,7 @@ function PlayerProfileModal({ initialData, onClose, onSave, showAlert }: { initi
                         ) : (
                             <>
                                 <Check className="w-5 h-5" />
-                                Save Profile
+                                Save
                             </>
                         )}
                     </button>
@@ -660,7 +682,6 @@ function PlayerProfileModal({ initialData, onClose, onSave, showAlert }: { initi
     );
 }
 
-
 function MetadataModal({ initialData, onClose, onSave, showAlert }: { initialData: any, onClose: () => void, onSave: () => void, showAlert: (t: string, m: string) => void }) {
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -668,6 +689,16 @@ function MetadataModal({ initialData, onClose, onSave, showAlert }: { initialDat
         description: initialData?.description || '',
         keywords: initialData?.keywords || ''
     });
+
+    // Check if anything has changed
+    const hasChanges = () => {
+        const original = {
+            title: initialData?.title || '',
+            description: initialData?.description || '',
+            keywords: initialData?.keywords || ''
+        };
+        return JSON.stringify(formData) !== JSON.stringify(original);
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -688,15 +719,13 @@ function MetadataModal({ initialData, onClose, onSave, showAlert }: { initialDat
         <div className="fixed inset-0 z-[100] bg-white animate-in slide-in-from-bottom duration-300 flex flex-col">
             {/* Modal Header */}
             <div className="px-4 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md">
-                <button onClick={onClose} className="p-2 hover:bg-gray-50 rounded-full transition-colors" title="Close">
-                    <X className="w-6 h-6" />
-                </button>
+                <div className="w-10"></div>
                 <h2 className="text-lg font-black italic uppercase tracking-tighter">Edit Metadata</h2>
-                <div className="w-10"></div> {/* Spacer */}
+                <div className="w-10"></div>
             </div>
 
             <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 space-y-6 pb-24">
-                <div className="max-w-xl mx-auto space-y-6">
+                <div className="w-full mx-auto space-y-6">
                     <div className="space-y-4">
                         <ProfileInput
                             label="Site Title"
@@ -727,12 +756,21 @@ function MetadataModal({ initialData, onClose, onSave, showAlert }: { initialDat
 
             {/* Bottom Bar */}
             <div className="p-4 border-t border-gray-100 sticky bottom-0 bg-white">
-                <div className="max-w-xl mx-auto">
+                <div className="w-full mx-auto flex gap-3">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="flex-1 py-4 bg-black text-white rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
+                        title="Cancel"
+                        disabled={isLoading}
+                    >
+                        Cancel
+                    </button>
                     <button
                         type="submit"
                         disabled={isLoading}
                         onClick={handleSubmit}
-                        className="w-full bg-black text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                        className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 text-white ${hasChanges() ? 'bg-blue-600' : 'bg-black'}`}
                         title="Save Metadata"
                     >
                         {isLoading ? (
@@ -740,7 +778,7 @@ function MetadataModal({ initialData, onClose, onSave, showAlert }: { initialDat
                         ) : (
                             <>
                                 <Check className="w-5 h-5" />
-                                Save Changes
+                                Save
                             </>
                         )}
                     </button>

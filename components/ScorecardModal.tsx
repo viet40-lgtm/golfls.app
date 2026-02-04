@@ -190,24 +190,20 @@ export function ScorecardModal({ data, isOpen, onClose }: ScorecardModalProps) {
     );
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-            <div className="bg-slate-50 w-full h-full flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[200] bg-white flex flex-col animate-in fade-in duration-200">
+            <div className="w-full h-full flex flex-col overflow-hidden">
 
                 {/* Header Actions */}
-                <div className="flex justify-between items-center p-3 bg-white border-b border-gray-100">
-                    <span className="text-[14pt] font-bold text-gray-400 uppercase tracking-widest">Scorecard</span>
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 bg-black text-white rounded-full text-[15pt] font-bold hover:bg-gray-800 transition-colors mr-3"
-                    >
-                        Close
-                    </button>
+                <div className="flex justify-between items-center px-4 py-4 bg-white border-b border-gray-100 sticky top-0 bg-white/80 backdrop-blur-md z-10">
+                    <div className="w-10"></div>
+                    <h2 className="text-lg font-black italic uppercase tracking-tighter text-center flex-1">Scorecard</h2>
+                    <div className="w-10"></div>
                 </div>
 
-                <div className="overflow-y-auto px-1 pb-8 bg-slate-50">
+                <div className="flex-1 overflow-y-auto px-1 pb-8 bg-slate-50">
 
                     {/* Header Title & Date */}
-                    <div className="text-center mb-8 px-1">
+                    <div className="text-center mb-8 px-1 pt-4">
                         <h2 className="text-[14pt] font-black text-black tracking-tight flex items-center justify-center gap-2">
                             {player.name}
                         </h2>
@@ -227,8 +223,6 @@ export function ScorecardModal({ data, isOpen, onClose }: ScorecardModalProps) {
                         </div>
                     </div>
 
-                    {/* Big Stats Row moved to bottom */}
-
                     {/* Front 9 */}
                     <NineHoleSection
                         title="Front 9"
@@ -246,8 +240,6 @@ export function ScorecardModal({ data, isOpen, onClose }: ScorecardModalProps) {
                         totalPar={back9Par}
                         totalScore={back9Score}
                     />
-
-                    {/* Big Stats Row moved to bottom */}
 
                     {/* Legend */}
                     <div className="flex flex-wrap justify-center gap-3 mt-8">
@@ -297,6 +289,16 @@ export function ScorecardModal({ data, isOpen, onClose }: ScorecardModalProps) {
                         </div>
                     </div>
 
+                </div>
+
+                {/* Footer */}
+                <div className="p-4 border-t border-gray-100 sticky bottom-0 bg-white">
+                    <button
+                        onClick={onClose}
+                        className="w-full py-4 bg-black text-white rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
+                    >
+                        Close
+                    </button>
                 </div>
             </div>
         </div>

@@ -59,18 +59,17 @@ export default function BirthdayPopup({ players }: BirthdayPopupProps) {
 
     return (
         <div
-            className="fixed inset-0 z-[400] flex items-center justify-center bg-black/70 animate-in fade-in duration-300 p-4"
+            className="fixed inset-0 z-[400] flex flex-col bg-white animate-in fade-in duration-300"
             onClick={() => setIsOpen(false)}
         >
             <div
-                className="animate-in zoom-in-95 duration-500 w-full max-w-sm"
+                className="flex-1 flex flex-col items-center justify-center w-full h-full p-4"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="bg-white rounded-2xl p-4 shadow-2xl border-4 border-pink-400 overflow-hidden flex flex-col max-h-[80vh]">
-
+                <div className="w-full flex-1 flex flex-col overflow-hidden">
                     {/* Scrollable Cake Section */}
-                    <div className="flex-1 overflow-y-auto mb-4 p-2 bg-pink-50 rounded-xl inner-shadow text-center">
-                        <div className="flex flex-wrap justify-center gap-1 text-[20pt] leading-none">
+                    <div className="flex-1 overflow-y-auto mb-6 p-4 bg-pink-50 inner-shadow text-center flex items-center justify-center rounded-3xl mx-4 mt-8">
+                        <div className="flex flex-wrap justify-center gap-2 text-[30pt] leading-none">
                             {birthdayPlayers.map(player => (
                                 Array.from({ length: player.age }).map((_, i) => (
                                     <span key={`${player.id}-${i}`}>🎂</span>
@@ -79,28 +78,30 @@ export default function BirthdayPopup({ players }: BirthdayPopupProps) {
                         </div>
                     </div>
 
-                    <h1 className="text-[24pt] font-black text-pink-500 mb-2 text-center leading-tight uppercase italic">
-                        Happy Birthday!
-                    </h1>
+                    <div className="px-4 py-8 text-center bg-white">
+                        <h1 className="text-[32pt] font-black text-pink-500 mb-4 leading-tight uppercase italic">
+                            Happy Birthday!
+                        </h1>
 
-                    <div className="text-[18pt] font-bold text-gray-900 text-center mb-4 w-full">
-                        {birthdayPlayers.map((player) => (
-                            <div key={player.id} className="mb-2 last:mb-0">
-                                <span className="block leading-tight text-black">{player.name}</span>
-                                <span className="block text-[14pt] text-gray-500">Turning {player.age} today!</span>
-                            </div>
-                        ))}
+                        <div className="text-[20pt] font-bold text-gray-900 text-center mb-8 w-full space-y-4">
+                            {birthdayPlayers.map((player) => (
+                                <div key={player.id} className="mb-2 last:mb-0">
+                                    <span className="block leading-tight text-black text-[24pt]">{player.name}</span>
+                                    <span className="block text-[18pt] text-gray-500">Turning {player.age} today!</span>
+                                </div>
+                            ))}
+                        </div>
+
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsOpen(false);
+                            }}
+                            className="w-full bg-black text-white rounded-full py-4 text-[18pt] font-bold hover:bg-gray-800 transition-colors shadow-xl active:scale-95 shrink-0 max-w-md mx-auto"
+                        >
+                            Close
+                        </button>
                     </div>
-
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setIsOpen(false);
-                        }}
-                        className="w-full bg-black text-white rounded-full py-3 text-[16pt] font-bold hover:bg-gray-800 transition-colors shadow-md active:scale-95 shrink-0"
-                    >
-                        Close
-                    </button>
                 </div>
             </div>
         </div>

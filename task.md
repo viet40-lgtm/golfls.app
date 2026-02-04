@@ -15,6 +15,8 @@
 - [x] Fix high-contrast input styles for sunlight visibility.
 - [x] Change GRS and HCP number colors to black for better legibility.
 - [x] Move Round ID next to Menu button and remove "ID:" prefix.
+- [x] **Refine Player Selection UI**: Removed Close button, simplifed Search, lined up Group ID/HCP/Tee badges.
+- [x] **Fix Infinite Loop**: Stabilized useEffect dependencies using content hashing (JSON.stringify) and removed aggressive state clearing in LiveScoreClient to prevent "Maximum update depth exceeded" error.
 
 #### Bug Fixes & Optimization
 - [x] Fix "Save Hole" race condition (async/await implementation).
@@ -31,10 +33,19 @@
 ### ⏳ Pending - High Priority
 
 #### Vercel Deployment
-[x] Push changes to Vercel
+- [x] Push changes to Vercel
 - [x] Stage and commit all pending changes
 - [x] Push to remote repository
 - [x] Verify Vercel deployment status
+
+#### Fullscreen Layout Implementation
+- [x] Remove width constraints from AppHeader.
+- [x] Remove width constraints from GuestPlayerModal.
+- [x] Remove width constraints from ConfirmModal.
+- [x] Remove width constraints from RoleSelectorModal.
+- [x] Remove width constraints from LiveScoreClient celebrations.
+- [x] Remove width constraints from Join Group modal.
+- [ ] Final verification of all pages.
 
 #### Play Store Readiness (Phase 3)
 - [ ] Implement `assetlinks.json` verification.

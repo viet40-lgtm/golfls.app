@@ -63,7 +63,7 @@ export default function AppHeader() {
     return (
         <>
             <header className="sticky top-0 z-50 px-1 py-1">
-                <div className="max-w-7xl mx-auto bg-white/80 backdrop-blur-md border border-gray-100 shadow-sm rounded-none p-1 flex justify-between items-center transition-all duration-300">
+                <div className="w-full mx-auto bg-white/80 backdrop-blur-md border border-gray-100 shadow-sm rounded-none p-1 flex justify-between items-center transition-all duration-300">
                     {/* Left: Logo */}
                     <Link href={isAuthenticated ? '/live' : '/'} className="flex items-center gap-2 group transition-all">
                         <div className="bg-black text-white p-1 rounded-lg group-hover:scale-110 transition-transform">
@@ -134,33 +134,35 @@ export default function AppHeader() {
             {/* Admin Login Modal */}
             {
                 showLoginModal && (
-                    <div className="fixed inset-0 z-[200] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
-                        <div className="bg-white p-8 rounded-[2rem] shadow-2xl w-full max-w-sm border border-gray-100 animate-in zoom-in-95 duration-300">
-                            <div className="flex justify-between items-center mb-6">
+                    <div className="fixed inset-0 z-[200] bg-white flex flex-col items-center justify-center p-4 animate-in fade-in duration-300">
+                        <div className="w-full h-full flex flex-col justify-center max-w-none">
+                            <div className="flex justify-between items-center mb-6 absolute top-4 right-4 left-4">
                                 <h3 className="font-extrabold text-2xl">Admin Access</h3>
-                                <button onClick={() => setShowLoginModal(false)} aria-label="Close" className="text-gray-400 hover:text-black transition-colors">
+                                <button onClick={() => setShowLoginModal(false)} aria-label="Close" className="text-gray-400 hover:text-black transition-colors p-2 bg-gray-100 rounded-full">
                                     <X className="w-6 h-6" />
                                 </button>
                             </div>
-                            <form onSubmit={handleAdminSubmit} className="space-y-6">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-gray-400 ml-1">Password</label>
-                                    <input
-                                        type="password"
-                                        autoFocus
-                                        value={passwordInput}
-                                        onChange={(e) => setPasswordInput(e.target.value)}
-                                        className="w-full px-4 py-4 bg-gray-50 border-transparent focus:bg-white focus:border-black rounded-2xl transition-all outline-none text-base font-medium"
-                                        placeholder="••••••••"
-                                    />
-                                </div>
-                                <button
-                                    type="submit"
-                                    className="w-full bg-black text-white hover:bg-gray-900 py-4 rounded-2xl font-bold text-lg transition-all shadow-lg active:scale-[0.98]"
-                                >
-                                    Verify Identity
-                                </button>
-                            </form>
+                            <div className="w-full max-w-md mx-auto px-4">
+                                <form onSubmit={handleAdminSubmit} className="space-y-6">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold uppercase tracking-wider text-gray-400 ml-1">Password</label>
+                                        <input
+                                            type="password"
+                                            autoFocus
+                                            value={passwordInput}
+                                            onChange={(e) => setPasswordInput(e.target.value)}
+                                            className="w-full px-4 py-4 bg-gray-50 border-transparent focus:bg-white focus:border-black rounded-2xl transition-all outline-none text-base font-medium"
+                                            placeholder="••••••••"
+                                        />
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        className="w-full bg-black text-white hover:bg-gray-900 py-4 rounded-2xl font-bold text-lg transition-all shadow-lg active:scale-[0.98]"
+                                    >
+                                        Verify Identity
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 )

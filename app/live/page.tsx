@@ -78,33 +78,78 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
                     include: {
                         course: {
                             include: {
-                                teeBoxes: true,
-                                holes: { include: { elements: true }, orderBy: { holeNumber: 'asc' } }
-                            }
-                        },
-                        players: {
-                            include: {
-                                player: true,
-                                scores: { include: { hole: true } }
+                                holes: true
                             }
                         }
                     }
-                }
+                },
+                scores: true
             }
         });
 
-        const sortedRPs = userRPs.sort((a, b) => {
+        // CLEANUP: Delete incomplete past rounds (not today, scores < holes)
+        const roundIdsToDelete: string[] = [];
+        const validRPs = [];
+
+        for (const rp of userRPs) {
+            const roundDate = rp.liveRound?.date;
+            const isToday = roundDate === todayStr;
+            const holeCount = rp.liveRound?.course?.holes?.length || 18;
+            const scoreCount = rp.scores?.length || 0;
+
+            // Mark for deletion if:
+            // 1. It's a past round (not today)
+            // 2. It's incomplete (scores < holes)
+            if (!isToday && scoreCount < holeCount) {
+                if (rp.liveRoundId) {
+                    roundIdsToDelete.push(rp.liveRoundId);
+                }
+            } else {
+                validRPs.push(rp);
+            }
+        }
+
+        if (roundIdsToDelete.length > 0) {
+            // console.log('Deleting incomplete past rounds:', roundIdsToDelete);
+            await prisma.liveRound.deleteMany({
+                where: {
+                    id: { in: roundIdsToDelete }
+                }
+            });
+        }
+
+        const sortedRPs = validRPs.sort((a, b) => {
             const dateA = a.liveRound?.date || '';
             const dateB = b.liveRound?.date || '';
             return dateB.localeCompare(dateA);
         });
 
         if (sortedRPs.length > 0) {
+            // Re-fetch the FULL active round data since the initial lightweight fetch didn't include everything
             const lastUserRoundPlayer = sortedRPs[0];
-            activeRound = lastUserRoundPlayer.liveRound;
-            defaultCourse = lastUserRoundPlayer.liveRound.course;
-            lastUsedCourseId = lastUserRoundPlayer.liveRound.courseId;
-            lastUsedTeeBoxId = lastUserRoundPlayer.teeBoxId;
+            activeRound = await prisma.liveRound.findUnique({
+                where: { id: lastUserRoundPlayer.liveRoundId },
+                include: {
+                    course: {
+                        include: {
+                            teeBoxes: true,
+                            holes: { include: { elements: true }, orderBy: { holeNumber: 'asc' } }
+                        }
+                    },
+                    players: {
+                        include: {
+                            player: true,
+                            scores: { include: { hole: true } }
+                        }
+                    }
+                }
+            });
+
+            if (activeRound?.course) {
+                defaultCourse = activeRound.course;
+                lastUsedCourseId = activeRound.courseId;
+                lastUsedTeeBoxId = lastUserRoundPlayer.teeBoxId;
+            }
         }
     }
 
