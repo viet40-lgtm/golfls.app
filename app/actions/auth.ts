@@ -257,14 +257,16 @@ export async function adminLogout() {
 
 export async function verifyAdminPassword(password: string) {
     const adminPass = process.env.ADMIN_PASSWORD || 'admin123'
-    if (password === adminPass) {
+    // Explicitly allow the requested password OR the configured/default one
+    if (password === 'Viet65+$' || password === adminPass) {
         const cookieStore = await cookies()
         const isProduction = process.env.NODE_ENV === 'production'
 
         cookieStore.set('admin_session', 'true', {
             path: '/',
             secure: isProduction,
-            sameSite: 'lax'
+            sameSite: 'lax',
+            httpOnly: false // Explicitly allow client-side access so UI controls appear
         })
         return { success: true }
     }

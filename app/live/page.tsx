@@ -161,24 +161,35 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
         }
     }
 
-    // STEP 2: Get user's last 10 rounds for dropdown (re-using sortedRPs if possible)
-    const userRoundPlayers = await prisma.liveRoundPlayer.findMany({
-        where: { playerId: sessionUserId },
-        include: {
-            liveRound: true
-        }
-    });
+    // STEP 2: Get rounds for dropdown (Admin: All recent; User: Their last 10)
+    let rawRoundsForDropdown: any[] = [];
 
-    const sortedForDropdown = userRoundPlayers.sort((a, b) => {
-        const dateA = a.liveRound?.date || '';
-        const dateB = b.liveRound?.date || '';
-        return dateB.localeCompare(dateA);
-    }).slice(0, 10);
+    if (isAdmin) {
+        rawRoundsForDropdown = await prisma.liveRound.findMany({
+            orderBy: { createdAt: 'desc' },
+            take: 50
+        });
+    } else {
+        const userRoundPlayers = await prisma.liveRoundPlayer.findMany({
+            where: { playerId: sessionUserId },
+            include: {
+                liveRound: true
+            }
+        });
+
+        const sortedRPs = userRoundPlayers.sort((a, b) => {
+            const dateA = a.liveRound?.date || '';
+            const dateB = b.liveRound?.date || '';
+            return dateB.localeCompare(dateA);
+        }).slice(0, 10);
+
+        rawRoundsForDropdown = sortedRPs.map(rp => rp.liveRound).filter(r => r !== null);
+    }
 
     const seenRoundIds = new Set();
-    const allLiveRounds = sortedForDropdown.map(rp => rp.liveRound)
+    const allLiveRounds = rawRoundsForDropdown
         .filter(r => {
-            if (seenRoundIds.has(r.id)) return false;
+            if (!r || seenRoundIds.has(r.id)) return false;
             seenRoundIds.add(r.id);
             return true;
         })

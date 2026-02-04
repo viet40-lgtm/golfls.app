@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Navigation, Bell, Shield, Info, Smartphone, User, X, Check, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import { getCurrentPlayerProfile, updatePlayerProfile } from '@/app/actions/update-player';
+import { verifyAdminPassword, adminLogout } from '@/app/actions/auth';
 import { recalculateAllHandicaps } from '@/app/actions/recalculate-handicaps';
 import { fetchSiteConfig, saveSiteConfig } from '@/app/actions/site-config';
 import { Tag, MapPin, Plus, Trash2, LogOut } from 'lucide-react';
@@ -155,13 +156,21 @@ export default function SettingsPage() {
         );
     };
 
-    const handleAdminLogin = (e: React.FormEvent) => {
+    const handleAdminLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (adminPassword === 'Viet65+$') {
-            setIsAdmin(true);
-            localStorage.setItem('admin_access', 'true');
-        } else {
-            showAlert('Login Failed', 'Incorrect admin password');
+        try {
+            const result = await verifyAdminPassword(adminPassword);
+            if (result.success) {
+                setIsAdmin(true);
+                localStorage.setItem('admin_access', 'true');
+                // Dispatch event so live page can pick it up if open in another tab/component
+                window.dispatchEvent(new Event('admin-change'));
+            } else {
+                showAlert('Login Failed', result.error || 'Incorrect admin password');
+            }
+        } catch (error) {
+            console.error(error);
+            showAlert('Error', 'An error occurred during login');
         }
     };
 
@@ -293,22 +302,11 @@ export default function SettingsPage() {
                 <section className="space-y-3">
                     <div className="flex items-center justify-between px-1">
                         <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Administration</h2>
-                        {isAdmin && (
-                            <button
-                                onClick={() => {
-                                    setIsAdmin(false);
-                                    setAdminPassword('');
-                                    localStorage.removeItem('admin_access');
-                                }}
-                                className="text-xs font-black text-red-500 uppercase tracking-widest flex items-center gap-1.5 active:scale-95 transition-all"
-                            >
-                                <LogOut className="w-3.5 h-3.5" />
-                                Logout
-                            </button>
-                        )}
+
                     </div>
-                    {!isAdmin ? (
-                        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                    {/* Auth Status Card - Always Visible */}
+                    <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 relative overflow-hidden">
+                        {!isAdmin ? (
                             <form onSubmit={handleAdminLogin} className="space-y-4">
                                 <div className="space-y-1.5">
                                     <label className="text-[10pt] font-black text-gray-400 uppercase tracking-widest ml-1">Admin Password</label>
@@ -327,9 +325,37 @@ export default function SettingsPage() {
                                     Login to Admin
                                 </button>
                             </form>
-                        </div>
-                    ) : (
-                        <div className="space-y-6">
+                        ) : (
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="bg-green-50 p-3 rounded-2xl text-green-600">
+                                        <Shield className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-lg leading-tight">Admin Access Active</h3>
+                                        <p className="text-sm text-gray-400 font-medium italic leading-tight mt-0.5">You have full control</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={async () => {
+                                        setIsAdmin(false);
+                                        setAdminPassword('');
+                                        localStorage.removeItem('admin_access');
+                                        await adminLogout();
+                                        window.dispatchEvent(new Event('admin-change'));
+                                    }}
+                                    className="bg-red-50 text-red-500 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-100 transition-all active:scale-95 flex items-center gap-2"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    Logout
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Admin Tools - Visible Only When Admin */}
+                    {isAdmin && (
+                        <div className="space-y-6 animate-in slide-in-from-top-4 fade-in duration-500">
                             <div className="space-y-4">
                                 {/* Recalculation inside Admin */}
                                 <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">

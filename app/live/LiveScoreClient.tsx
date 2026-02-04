@@ -726,10 +726,14 @@ export default function LiveScoreClient({
     useEffect(() => {
         const checkAdmin = () => {
             const adminCookie = Cookies.get('admin_session');
-            setIsAdmin(adminCookie === 'true');
+            // Only update if we can read the cookie - otherwise trust the server prop until an event fires
+            if (adminCookie !== undefined) {
+                setIsAdmin(adminCookie === 'true');
+            }
         };
 
-        checkAdmin();
+        // Don't call checkAdmin() immediately - trust the server prop (isAdminProp) for initial render
+        // checkAdmin(); 
 
         window.addEventListener('admin-change', checkAdmin);
         return () => window.removeEventListener('admin-change', checkAdmin);
@@ -1412,8 +1416,9 @@ export default function LiveScoreClient({
                                     </button>
                                 )}
                                 {/* Delete button - admin only (for current round) */}
-                                {isAdmin && liveRoundId && (
+                                {isAdmin && (
                                     <button
+                                        disabled={!liveRoundId}
                                         onClick={() => {
                                             if (!liveRoundId) return;
                                             setConfirmConfig({
@@ -1442,7 +1447,7 @@ export default function LiveScoreClient({
                                                 }
                                             });
                                         }}
-                                        className="bg-red-600 text-white text-xs font-black p-1 rounded-xl hover:bg-red-700 transition-all shadow-md active:scale-95 uppercase tracking-widest"
+                                        className={`bg-red-600 text-white text-xs font-black p-1 rounded-xl hover:bg-red-700 transition-all shadow-md active:scale-95 uppercase tracking-widest ${!liveRoundId ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         Delete
                                     </button>
@@ -2430,12 +2435,7 @@ export default function LiveScoreClient({
                                     </>
                                 )}
 
-                                <button
-                                    onClick={() => setIsGroupModalOpen(true)}
-                                    className="px-1 h-12 bg-black text-white border border-black rounded-xl text-sm font-black uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-md active:scale-95 min-w-[60px]"
-                                >
-                                    {initialRound?.shortId || 'Group'}
-                                </button>
+
                                 <button
                                     onClick={() => setIsStatsModalOpen(true)}
                                     className="w-12 h-12 bg-black border border-black text-white rounded-xl flex items-center justify-center hover:bg-zinc-800 transition-all shadow-md active:scale-95"
