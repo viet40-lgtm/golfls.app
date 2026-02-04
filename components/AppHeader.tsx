@@ -6,9 +6,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { logout, verifyAdminPassword, adminLogout } from '@/app/actions/auth';
 import { Menu, X, Shield, LogOut, Home, Settings } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 export default function AppHeader() {
     const router = useRouter();
+    const pathname = usePathname();
     const [isAdmin, setIsAdmin] = useState(false);
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [passwordInput, setPasswordInput] = useState('');
@@ -70,16 +72,23 @@ export default function AppHeader() {
                                 </button>
 
                                 {isMenuOpen && (
-                                    <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200">
-                                        <div className="p-2 space-y-1">
+                                    <div className="absolute top-[calc(100%+12px)] right-[-4px] w-[calc(100vw-16px)] max-w-none bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border-4 border-black overflow-hidden z-[100] animate-in fade-in slide-in-from-top-4 duration-300">
+                                        <div className="p-3 space-y-2">
                                             <MenuLink
                                                 href={isAuthenticated ? "/live" : "/"}
-                                                icon={<Home className="w-4 h-4" />}
+                                                icon={<Home className="w-8 h-8" />}
                                                 label={isAuthenticated ? "Live Scores" : "Home"}
                                                 onClick={() => setIsMenuOpen(false)}
+                                                isActive={pathname === (isAuthenticated ? "/live" : "/")}
                                             />
-                                            <MenuLink href="/settings" icon={<Settings className="w-4 h-4" />} label="Settings" onClick={() => setIsMenuOpen(false)} />
-                                            <div className="h-px bg-gray-50 my-2 mx-2"></div>
+                                            <MenuLink
+                                                href="/settings"
+                                                icon={<Settings className="w-8 h-8" />}
+                                                label="Settings"
+                                                onClick={() => setIsMenuOpen(false)}
+                                                isActive={pathname === "/settings"}
+                                            />
+                                            <div className="h-[2px] bg-black my-2 mx-2"></div>
                                             <button
                                                 onClick={async () => {
                                                     setIsMenuOpen(false);
@@ -87,9 +96,9 @@ export default function AppHeader() {
                                                     else await logout();
                                                     window.location.href = '/';
                                                 }}
-                                                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 text-red-600 font-bold rounded-xl transition-colors text-sm"
+                                                className="w-full flex items-center gap-5 px-6 py-6 hover:bg-red-50 text-red-600 font-extrabold rounded-xl transition-colors text-[18pt]"
                                             >
-                                                <LogOut className="w-4 h-4" />
+                                                <LogOut className="w-8 h-8" />
                                                 Logout
                                             </button>
                                         </div>
@@ -151,14 +160,17 @@ export default function AppHeader() {
     );
 }
 
-function MenuLink({ href, icon, label, onClick }: { href: string; icon: React.ReactNode; label: string; onClick: () => void }) {
+function MenuLink({ href, icon, label, onClick, isActive }: { href: string; icon: React.ReactNode; label: string; onClick: () => void; isActive?: boolean }) {
     return (
         <Link
             href={href}
             onClick={onClick}
-            className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 font-bold rounded-xl transition-colors text-sm text-gray-700"
+            className={`flex items-center gap-4 px-6 py-5 font-extrabold rounded-xl transition-colors text-[18pt] ${isActive
+                ? 'bg-blue-50 text-blue-600 border-2 border-blue-200'
+                : 'text-black hover:bg-gray-50'
+                }`}
         >
-            <span className="text-gray-400">{icon}</span>
+            <span className={isActive ? 'text-blue-500' : 'text-gray-400'}>{icon}</span>
             {label}
         </Link>
     );
