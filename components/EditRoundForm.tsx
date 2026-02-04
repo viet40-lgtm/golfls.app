@@ -97,12 +97,15 @@ export default function EditRoundForm({
     }, [round.players, isNew]);
 
     // State for confirmation modal
+    const [deletePassword, setDeletePassword] = useState('');
     const [confirmConfig, setConfirmConfig] = useState<{
         isOpen: boolean;
         title: string;
         message: string;
         onConfirm: () => void;
         isDestructive: boolean;
+        showInput?: boolean;
+        inputPlaceholder?: string;
     } | null>(null);
 
     // Calculate existing IDs based on STATE players
@@ -186,31 +189,16 @@ export default function EditRoundForm({
     const handleDeleteClick = () => {
         if (isNew) return;
 
-        const password = prompt("Enter password to delete:");
-        if (password !== 'cpgc-Delete') {
-            alert('Incorrect password.');
-            return;
-        }
-
+        setDeletePassword('');
         setConfirmConfig({
             isOpen: true,
-            title: 'Delete Round',
-            message: 'Are you sure you want to DELETE this round? This cannot be undone.',
+            title: 'Password Required',
+            message: 'Enter password to delete this round:',
             isDestructive: true,
+            showInput: true,
+            inputPlaceholder: 'Password',
             onConfirm: () => {
-                setConfirmConfig(null);
-                setErrorMessage('');
-
-                startTransition(async () => {
-                    try {
-                        await deleteRound(round.id);
-                        router.push('/scores');
-                        router.refresh();
-                    } catch (e) {
-                        console.error('Delete failed:', e);
-                        setErrorMessage('Failed to delete. Error: ' + e);
-                    }
-                });
+                // actual validation in onConfirm of JSX
             }
         });
     };
@@ -422,6 +410,7 @@ export default function EditRoundForm({
                             <input
                                 type="checkbox"
                                 id={`player-${p.id}`}
+                                title={`Select ${p.name}`}
                                 className="rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer"
                                 checked={selectedPlayerIds.has(p.id)}
                                 onChange={() => togglePlayerSelection(p.id)}
@@ -597,7 +586,47 @@ export default function EditRoundForm({
                     title={confirmConfig.title}
                     message={confirmConfig.message}
                     isDestructive={confirmConfig.isDestructive}
-                    onConfirm={confirmConfig.onConfirm}
+                    showInput={confirmConfig.showInput}
+                    inputPlaceholder={confirmConfig.inputPlaceholder}
+                    inputValue={deletePassword}
+                    onInputChange={setDeletePassword}
+                    onConfirm={() => {
+                        if (confirmConfig.showInput) {
+                            if (deletePassword === 'cpgc-Delete') {
+                                setConfirmConfig({
+                                    isOpen: true,
+                                    title: 'Delete Round',
+                                    message: 'Are you sure you want to DELETE this round? This cannot be undone.',
+                                    isDestructive: true,
+                                    onConfirm: () => {
+                                        setConfirmConfig(null);
+                                        setErrorMessage('');
+
+                                        startTransition(async () => {
+                                            try {
+                                                await deleteRound(round.id);
+                                                router.push('/scores');
+                                                router.refresh();
+                                            } catch (e) {
+                                                console.error('Delete failed:', e);
+                                                setErrorMessage('Failed to delete. Error: ' + e);
+                                            }
+                                        });
+                                    }
+                                });
+                            } else {
+                                setConfirmConfig({
+                                    isOpen: true,
+                                    title: 'Error',
+                                    message: 'Incorrect password.',
+                                    isDestructive: false,
+                                    onConfirm: () => setConfirmConfig(null)
+                                });
+                            }
+                        } else {
+                            confirmConfig.onConfirm();
+                        }
+                    }}
                     onCancel={() => setConfirmConfig(null)}
                 />
             )}

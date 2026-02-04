@@ -6,21 +6,19 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { Bird, Copy, Mail, Send } from 'lucide-react';
-import { LivePlayerSelectionModal } from '@/components/LivePlayerSelectionModal';
+import { generateScorecardHtml, generateClipboardHtml } from '@/app/lib/scorecard-helper';
+import { LiveLeaderboardCard } from './LiveLeaderboardCard';
+import { removePlayerFromLiveRound } from '../actions/remove-player-from-live-round'; // Force reload
+import { sendScorecardEmail } from '../actions/send-scorecard';
+import { LivePlayerSelectionModal, PlayerMode, PlayerSelection } from '@/components/LivePlayerSelectionModal';
 import { LiveRoundModal } from '@/components/LiveRoundModal';
 import { GuestPlayerModal } from '@/components/GuestPlayerModal';
 import ConfirmModal from '@/components/ConfirmModal';
 import AddToClubModal from '@/components/AddToClubModal';
 import { PoolModal } from '@/components/PoolModal';
-
 import { createLiveRound, addPlayerToLiveRound, saveLiveScore, deleteLiveRound, addGuestToLiveRound, updateGuestInLiveRound, deleteGuestFromLiveRound } from '../actions/create-live-round';
 import { joinLiveRoundByShortId } from '../actions/join-live-round';
 import { copyLiveToClub } from '../actions/copy-live-to-club';
-import { generateScorecardHtml, generateClipboardHtml } from '@/app/lib/scorecard-helper';
-import { LiveLeaderboardCard } from './LiveLeaderboardCard';
-
-import { removePlayerFromLiveRound } from '../actions/remove-player-from-live-round'; // Force reload
-import { sendScorecardEmail } from '../actions/send-scorecard';
 import { deleteUserLiveRound } from '../actions/delete-user-round';
 import { logout } from '../actions/auth';
 import { getAllCourses } from '@/app/actions/get-all-courses';
@@ -115,6 +113,7 @@ export default function LiveScoreClient({
     const [isAdmin, setIsAdmin] = useState(isAdminProp); // Initialize with server-side value
     // Start with empty selection - each device manages its own group
     const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
+    const [playerSelections, setPlayerSelections] = useState<Record<string, PlayerSelection>>({});
     const [isSaving, setIsSaving] = useState(false); // Used to show 'Saving' state on button
 
     const [isRoundModalOpen, setIsRoundModalOpen] = useState(false);
@@ -231,8 +230,33 @@ export default function LiveScoreClient({
                 });
             }
 
-            // 3. Determine target selection
+            // 3. Determine target selection & selections
             let finalSelection: Player[] = [];
+            let finalSelections: Record<string, PlayerSelection> = {};
+
+            const savedSelections = localStorage.getItem(`live_scoring_player_selections_${initialRound.id}`);
+            if (savedSelections) {
+                finalSelections = JSON.parse(savedSelections);
+            }
+
+            // Sync selections with server truth (Leaderboard status)
+            initialRound.players?.forEach((p: any) => {
+                const pid = (p.is_guest || p.isGuest || !p.player) ? p.id : p.player?.id;
+                const sid = p.scorer_id || p.scorerId;
+                const isMyScoree = (sid === clientScorerId && sid !== null) || (isAdmin && !!sid);
+
+                if (!finalSelections[pid]) {
+                    finalSelections[pid] = { score: isMyScoree, leaderboard: true };
+                } else {
+                    // Always trust server for leaderboard status if they are in the round
+                    finalSelections[pid] = { ...finalSelections[pid], leaderboard: true };
+                    // If server says someone else is scoring them, force score: false locally
+                    if (sid && sid !== clientScorerId && !isAdmin) {
+                        finalSelections[pid].score = false;
+                    }
+                }
+            });
+
             const saved = localStorage.getItem(`live_scoring_my_group_${initialRound.id}`);
 
             if (saved) {
@@ -261,13 +285,18 @@ export default function LiveScoreClient({
                 finalSelection = selectedPlayers.filter(p => !takenOverIds.has(p.id));
             }
 
-            // 4. Atomic Update of selectedPlayers
+            // 4. Atomic Update of selectedPlayers & playerSelections
             const nextSelectedIds = finalSelection.map(p => p.id).sort().join(',');
             const currentSelectedIds = selectedPlayers.map(p => p.id).sort().join(',');
 
             if (nextSelectedIds !== currentSelectedIds && finalSelection.length > 0) {
                 setSelectedPlayers(finalSelection);
-                localStorage.setItem(`live_scoring_my_group_${initialRound.id}`, JSON.stringify(finalSelection.map(p => p.id)));
+            }
+
+            const nextSelectionsStr = JSON.stringify(finalSelections);
+            const currentSelectionsStr = JSON.stringify(playerSelections);
+            if (nextSelectionsStr !== currentSelectionsStr) {
+                setPlayerSelections(finalSelections);
             }
 
             // Track last round ID for quick return
@@ -910,127 +939,93 @@ export default function LiveScoreClient({
         }
     };
 
-    const handleAddPlayers = async (newSelectedPlayerIds: string[]) => {
+    const handlePlayerSelectionsChange = async (newSelections: Record<string, PlayerSelection>) => {
+        setPlayerSelections(newSelections);
+
         const allAvailable = [...allPlayers, ...guestPlayers];
-        const combinedSelection = newSelectedPlayerIds.map(id =>
-            allAvailable.find(p => p.id === id)
-        ).filter((p): p is Player => p !== undefined);
 
-        const newSelectedPlayers = combinedSelection.filter(p => !p.isGuest && !p.id.startsWith('guest-'));
+        // Players tagged for 'Score' mode (those we are keeping score for)
+        const scorePlayers = Object.entries(newSelections)
+            .filter(([_, sel]) => sel.score)
+            .map(([id]) => allAvailable.find(p => p.id === id))
+            .filter((p): p is Player => p !== undefined);
 
-        console.log("handleAddPlayers - New Selection:", newSelectedPlayers.map(p => p.name));
-        console.log("Current Client Scorer ID:", clientScorerId);
+        // Players tagged ONLY for 'Leaderboard' mode (members of the group we aren't scoring)
+        const leaderboardOnlyPlayers = Object.entries(newSelections)
+            .filter(([_, sel]) => !sel.score && sel.leaderboard)
+            .map(([id]) => allAvailable.find(p => p.id === id))
+            .filter((p): p is Player => p !== undefined);
 
-        // Identify Claim Candidates (Takeover)
-        const playersToClaim = newSelectedPlayers.filter(p => {
+        // Players who are in the group regardless of role (synced to DB)
+        const allRelevantPlayers = Object.entries(newSelections)
+            .filter(([_, sel]) => sel.score || sel.leaderboard)
+            .map(([id]) => allAvailable.find(p => p.id === id))
+            .filter((p): p is Player => p !== undefined && !p.isGuest && !p.id.startsWith('guest-'));
+
+        // Identify Claim Candidates (only for those newly being scored by us)
+        const playersToClaim = scorePlayers.filter(p => !p.isGuest && !p.id.startsWith('guest-')).filter(p => {
             const existingLrPlayer = initialRound?.players?.find((lp: any) => lp.player?.id === p.id);
-            // Handle both camelCase (Prisma) and snake_case (Raw DB) just in case
             const currentScorerId = existingLrPlayer?.scorerId || existingLrPlayer?.scorer_id;
-
-            console.log(`Checking ${p.name}: Existing? ${!!existingLrPlayer}, ScorerID: ${currentScorerId}, MyID: ${clientScorerId}`);
-
             return existingLrPlayer && currentScorerId && currentScorerId !== clientScorerId && !isAdmin;
         });
 
-        console.log("Players to Claim:", playersToClaim.map(p => p.name));
-
         const executeUpdates = async () => {
-            setSelectedPlayers(combinedSelection);
-            localStorage.setItem(`live_scoring_my_group_${liveRoundId}`, JSON.stringify(combinedSelection.map(p => p.id)));
+            // Update local state with score players only (for scoring UI)
+            setSelectedPlayers(scorePlayers);
 
-            // Check if a round is selected
+            // Save state to localStorage
+            localStorage.setItem(`live_scoring_player_selections_${liveRoundId}`, JSON.stringify(newSelections));
+            // Legacy compat
+            localStorage.setItem(`live_scoring_my_group_${liveRoundId}`, JSON.stringify(scorePlayers.map(p => p.id)));
+
             if (!liveRoundId) {
-                showAlert('No Round Selected', 'Please create a new round or select an existing round before adding players.');
+                showAlert('No Round Selected', 'Please select or create a round first.');
                 return;
             }
 
-            // 2. Add New Players to DB (or Claim existing ones)
-            for (const player of newSelectedPlayers) {
-                // Check if player is already in the Live Round (on server)
+            // 1. Handle Additions and Mode Changes
+            for (const player of allRelevantPlayers) {
                 const existingLrPlayer = initialRound?.players?.find((p: any) => p.player?.id === player.id);
-
-                // We need to call the API if:
-                // 1. Player is NOT in the round (Create)
-                // 2. Player IS in the round, but scored by someone else (Claim) - unless we are Admin
-                // Admin doesn't need to "claim" to score, but non-admins do.
                 const currentScorerId = existingLrPlayer?.scorerId || existingLrPlayer?.scorer_id;
+                const selection = newSelections[player.id];
 
                 const needsToCreate = !existingLrPlayer;
-                const needsToClaim = existingLrPlayer && currentScorerId !== clientScorerId && !isAdmin;
+                const needsToUpdateScorer = existingLrPlayer && (
+                    (selection.score && currentScorerId !== clientScorerId && !isAdmin) ||
+                    (!selection.score && selection.leaderboard && currentScorerId === clientScorerId)
+                );
 
-                if (needsToCreate || needsToClaim) {
+                if (needsToCreate || needsToUpdateScorer) {
                     const teeBox = getPlayerTee(player);
-                    if (liveRoundId && teeBox?.id) {
-                        console.log(needsToCreate ? "Creating player in round:" : "Claiming player from other device:", player.name);
+                    if (teeBox?.id) {
+                        console.log(`Syncing ${player.name}: score=${selection.score}, board=${selection.leaderboard}`);
                         await addPlayerToLiveRound({
                             liveRoundId: liveRoundId,
                             playerId: player.id,
                             teeBoxId: teeBox.id,
-                            scorerId: isAdmin ? undefined : clientScorerId
+                            scorerId: selection.score ? (isAdmin ? undefined : clientScorerId) : null
                         });
                     }
                 }
             }
 
-            // 3. Handle Removals (Explicit Drop)
-            // Only remove players that were IN my previous selection and are NOT in the new selection.
-            // Additionally, only remove if this device added them (scorer_id matches) or if admin
-            const playersDropped = selectedPlayers.filter(p => !newSelectedPlayerIds.includes(p.id));
+            // 2. Handle Removals (those deselected completely)
+            const playersToRemove = initialRound?.players?.filter((rp: any) => {
+                const pid = rp.is_guest ? rp.id : rp.player?.id;
+                const selection = newSelections[pid];
+                return !selection || (!selection.score && !selection.leaderboard);
+            }) || [];
 
-            if (liveRoundId && initialRound?.players) {
-                const vetoedPlayers: Player[] = [];
-                for (const player of playersDropped) {
-                    // Find the LiveRoundPlayer record
-                    const lrPlayer = initialRound.players.find((lr: any) =>
-                        (lr.is_guest && lr.id === player.id) || (!lr.is_guest && lr.player?.id === player.id)
-                    );
-
-                    if (lrPlayer) {
-                        // Relaxed removal: Any device that has the player selected can remove them
-                        // This satisfies the user request: "any device that checked players can uncheck players and remove all trace"
-
-                        const hasScores = lrPlayer.scores && lrPlayer.scores.length > 0;
-                        console.log("Removing player from round:", lrPlayer.id, hasScores ? "(has scores)" : "(no scores)", "scorer_id:", lrPlayer.scorer_id, "client:", clientScorerId);
-
-                        try {
-                            const removeResult = await removePlayerFromLiveRound(lrPlayer.id);
-                            if (removeResult.success) {
-                                console.log("✓ Successfully removed player:", lrPlayer.id);
-                            } else {
-                                // Check for "Record to delete does not exist" (Prisma P2025) which counts as success
-                                if (removeResult.error && (removeResult.error.includes('does not exist') || removeResult.error.includes('Record to delete'))) {
-                                    console.log("✓ Player already removed (concurrency):", lrPlayer.id);
-                                } else {
-                                    console.error("✗ Failed to remove player:", lrPlayer.id, removeResult.error);
-                                    showAlert('Error', `Failed to remove player: ${removeResult.error || 'Unknown error'}`);
-                                    vetoedPlayers.push(player);
-                                }
-                            }
-                        } catch (error) {
-                            console.error("✗ Error removing player:", error);
-                            // Only alert if it's not a "not found" error
-                            const errorMsg = String(error);
-                            if (!errorMsg.includes('does not exist') && !errorMsg.includes('Record to delete')) {
-                                showAlert('Error', `Error removing player: ${error}`);
-                                vetoedPlayers.push(player);
-                            }
-                        }
-                    }
+            for (const lrPlayer of playersToRemove) {
+                console.log("Removing player from round:", lrPlayer.id);
+                try {
+                    await removePlayerFromLiveRound(lrPlayer.id);
+                } catch (error) {
+                    console.error("Error removing player:", error);
                 }
-
-                // Restore any vetoed players to the selection state
-                if (vetoedPlayers.length > 0) {
-                    setSelectedPlayers(prev => {
-                        // Avoid duplicates
-                        const existingIds = new Set(prev.map(p => p.id));
-                        const uniqueVetoed = vetoedPlayers.filter(p => !existingIds.has(p.id));
-                        return [...prev, ...uniqueVetoed];
-                    });
-                }
-
-                // Refresh to update server-side round state
-                router.refresh();
             }
+
+            router.refresh();
         };
 
         if (playersToClaim.length > 0) {
@@ -1613,14 +1608,13 @@ export default function LiveScoreClient({
                     currentUserId={currentUserId}
                 />
 
-                {/* Player Selection Modal */}
                 <LivePlayerSelectionModal
                     isOpen={isPlayerModalOpen}
                     onClose={() => setIsPlayerModalOpen(false)}
                     allPlayers={[...allPlayers, ...guestPlayers]}
-                    selectedIds={selectedPlayers.map(p => p.id)}
+                    playerSelections={playerSelections}
                     playersInRound={initialRound?.players?.map((p: any) => p.player?.id).filter((id: any) => !!id) || []}
-                    onSelectionChange={handleAddPlayers}
+                    onPlayerSelectionsChange={handlePlayerSelectionsChange}
                     isAdmin={isAdmin}
                     currentUserId={currentUserId}
                     courseData={defaultCourse ? {
@@ -1632,8 +1626,6 @@ export default function LiveScoreClient({
                             slope: initialRound.slope
                         } : null
                     } : null}
-                    roundShortId={initialRound?.shortId}
-
                 />
 
                 <GuestPlayerModal

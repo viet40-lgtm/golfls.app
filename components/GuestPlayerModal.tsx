@@ -27,12 +27,15 @@ export function GuestPlayerModal({ isOpen, onClose, onAdd, onUpdate, onDelete, r
     const [index, setIndex] = useState('0');
     const [courseHandicap, setCourseHandicap] = useState('0');
     const [manuallyEditedHandicap, setManuallyEditedHandicap] = useState(false);
+    const [deletePassword, setDeletePassword] = useState('');
     const [confirmConfig, setConfirmConfig] = useState<{
         isOpen: boolean;
         title: string;
         message: string;
         onConfirm: () => void;
         isDestructive?: boolean;
+        showInput?: boolean;
+        inputPlaceholder?: string;
     } | null>(null);
 
     // Load editing guest data when modal opens
@@ -170,26 +173,17 @@ export function GuestPlayerModal({ isOpen, onClose, onAdd, onUpdate, onDelete, r
                     {editingGuest && (
                         <button
                             onClick={() => {
-                                const password = prompt("Enter password to delete:");
-                                if (password !== 'cpgc-Delete') {
-                                    setConfirmConfig({
-                                        isOpen: true,
-                                        title: 'Error',
-                                        message: 'Incorrect password.',
-                                        onConfirm: () => setConfirmConfig(null)
-                                    });
-                                    return;
-                                }
+                                setDeletePassword('');
                                 setConfirmConfig({
                                     isOpen: true,
-                                    title: 'Delete Guest Player',
-                                    message: 'Are you sure you want to delete this guest player?',
-                                    isDestructive: true,
+                                    title: 'Password Required',
+                                    message: 'Enter password to delete this guest:',
+                                    showInput: true,
+                                    inputPlaceholder: 'Password',
                                     onConfirm: () => {
-                                        setConfirmConfig(null);
-                                        if (onDelete && editingGuest) {
-                                            onDelete(editingGuest.id);
-                                        }
+                                        // The actual validation will happen when they click "Confirm" in the modal
+                                        // But wait, the ConfirmModal calls onConfirm. I need to check the password here.
+                                        // I'll adjust the onConfirm to check the state.
                                     }
                                 });
                             }}
@@ -201,7 +195,7 @@ export function GuestPlayerModal({ isOpen, onClose, onAdd, onUpdate, onDelete, r
                     <div className="flex gap-3">
                         <button
                             onClick={onClose}
-                            className="flex-1 py-4 bg-white text-black border-2 border-black rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
+                            className="flex-1 py-4 bg-black text-white border-2 border-black rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
                         >
                             Cancel
                         </button>
@@ -220,7 +214,37 @@ export function GuestPlayerModal({ isOpen, onClose, onAdd, onUpdate, onDelete, r
                     title={confirmConfig.title}
                     message={confirmConfig.message}
                     isDestructive={confirmConfig.isDestructive}
-                    onConfirm={confirmConfig.onConfirm}
+                    showInput={confirmConfig.showInput}
+                    inputPlaceholder={confirmConfig.inputPlaceholder}
+                    inputValue={deletePassword}
+                    onInputChange={setDeletePassword}
+                    onConfirm={() => {
+                        if (confirmConfig.showInput) {
+                            if (deletePassword === 'cpgc-Delete') {
+                                setConfirmConfig({
+                                    isOpen: true,
+                                    title: 'Delete Guest Player',
+                                    message: 'Are you sure you want to delete this guest player?',
+                                    isDestructive: true,
+                                    onConfirm: () => {
+                                        setConfirmConfig(null);
+                                        if (onDelete && editingGuest) {
+                                            onDelete(editingGuest.id);
+                                        }
+                                    }
+                                });
+                            } else {
+                                setConfirmConfig({
+                                    isOpen: true,
+                                    title: 'Error',
+                                    message: 'Incorrect password.',
+                                    onConfirm: () => setConfirmConfig(null)
+                                });
+                            }
+                        } else {
+                            confirmConfig.onConfirm();
+                        }
+                    }}
                     onCancel={() => setConfirmConfig(null)}
                 />
             )}

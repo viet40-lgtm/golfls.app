@@ -19,24 +19,35 @@ interface TeeBox {
     slope: number;
 }
 
+export type PlayerMode = 'score' | 'leaderboard' | 'none';
+
+// New dual-checkbox selection type
+export type PlayerSelection = {
+    score: boolean;
+    leaderboard: boolean;
+};
+
 export function LivePlayerSelectionModal({
     allPlayers,
-    selectedIds,
+    playerModes,
+    playerSelections,
     playersInRound = [],
-    onSelectionChange,
+    onPlayerModesChange,
+    onPlayerSelectionsChange,
     isOpen,
     onClose,
     courseData,
     isAdmin = false,
     frequentPlayerIds = [],
     currentUserId,
-    hasMultipleGroups = false,
-    roundShortId
+    hasMultipleGroups = false
 }: {
     allPlayers: Player[];
-    selectedIds: string[];
+    playerModes?: Record<string, PlayerMode>; // Legacy support
+    playerSelections?: Record<string, PlayerSelection>; // New dual-checkbox
     playersInRound?: string[];
-    onSelectionChange: (ids: string[]) => void;
+    onPlayerModesChange?: (modes: Record<string, PlayerMode>) => void; // Legacy
+    onPlayerSelectionsChange?: (selections: Record<string, PlayerSelection>) => void; // New
     isOpen: boolean;
     onClose: () => void;
     courseData?: {
@@ -52,9 +63,15 @@ export function LivePlayerSelectionModal({
     frequentPlayerIds?: string[];
     currentUserId?: string;
     hasMultipleGroups?: boolean;
-    roundShortId?: string;
 }) {
-    const [localSelectedIds, setLocalSelectedIds] = useState<string[]>(selectedIds);
+    // Determine if using new dual-checkbox mode or legacy mode
+    const useDualCheckbox = !!onPlayerSelectionsChange;
+
+    // Legacy mode state
+    const [localPlayerModes, setLocalPlayerModes] = useState<Record<string, PlayerMode>>(playerModes || {});
+
+    // New dual-checkbox state
+    const [localPlayerSelections, setLocalPlayerSelections] = useState<Record<string, PlayerSelection>>(playerSelections || {});
     const [searchQuery, setSearchQuery] = useState('');
     const [localAllPlayers, setLocalAllPlayers] = useState<Player[]>(allPlayers);
     const [isCreating, setIsCreating] = useState(false);
@@ -71,8 +88,12 @@ export function LivePlayerSelectionModal({
     // Sync local state with prop only when modal opens
     useEffect(() => {
         if (isOpen) {
-            setLocalSelectedIds(selectedIds);
-            setLocalAllPlayers(allPlayers); // Update list if props change
+            if (useDualCheckbox) {
+                setLocalPlayerSelections(playerSelections || {});
+            } else {
+                setLocalPlayerModes(playerModes || {});
+            }
+            setLocalAllPlayers(allPlayers);
             setIsCreating(false);
             setNewPlayerError('');
             document.body.style.overflow = 'hidden';
@@ -82,18 +103,92 @@ export function LivePlayerSelectionModal({
         return () => {
             document.body.style.overflow = 'unset';
         };
-    }, [isOpen, allPlayers, selectedIds]);
+    }, [isOpen, allPlayers, playerModes, playerSelections, useDualCheckbox]);
+
+    // Sync local state when props change
+    useEffect(() => {
+        if (useDualCheckbox) {
+            setLocalPlayerSelections(playerSelections || {});
+        } else {
+            setLocalPlayerModes(playerModes || {});
+        }
+    }, [playerSelections, playerModes, useDualCheckbox]);
 
     if (!isOpen) return null;
 
-    const togglePlayer = (id: string) => {
-        setLocalSelectedIds(prev =>
-            prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
-        );
+    // Dual-checkbox helper functions
+    const getPlayerSelection = (id: string): PlayerSelection => {
+        return localPlayerSelections[id] || { score: false, leaderboard: false };
+    };
+
+    const toggleScore = (id: string) => {
+        setLocalPlayerSelections(prev => {
+            const current = getPlayerSelection(id);
+            return {
+                ...prev,
+                [id]: { score: !current.score, leaderboard: current.leaderboard || !current.score }
+            };
+        });
+    };
+
+    const toggleLeaderboard = (id: string) => {
+        setLocalPlayerSelections(prev => {
+            const current = getPlayerSelection(id);
+            return {
+                ...prev,
+                [id]: { ...current, leaderboard: !current.leaderboard }
+            };
+        });
+    };
+
+    const removePlayer = (id: string) => {
+        console.log("Marking player for removal:", id);
+        setLocalPlayerSelections(prev => {
+            const next = { ...prev };
+            delete next[id];
+            return next;
+        });
+    };
+
+    const setPlayerMode = (id: string, mode: PlayerMode) => {
+        if (useDualCheckbox) {
+            if (mode === 'none') {
+                removePlayer(id);
+            } else {
+                setLocalPlayerSelections(prev => ({
+                    ...prev,
+                    [id]: { score: mode === 'score', leaderboard: true }
+                }));
+            }
+        } else {
+            setLocalPlayerModes(prev => {
+                const next = { ...prev };
+                if (mode === 'none') {
+                    delete next[id];
+                } else {
+                    next[id] = mode;
+                }
+                return next;
+            });
+        }
+    };
+
+    const getPlayerMode = (id: string): PlayerMode => {
+        if (useDualCheckbox) {
+            const sel = getPlayerSelection(id);
+            if (sel.score) return 'score';
+            if (sel.leaderboard) return 'leaderboard';
+            return 'none';
+        }
+        return localPlayerModes[id] || 'none';
     };
 
     const handleConfirm = () => {
-        onSelectionChange(localSelectedIds);
+        if (useDualCheckbox && onPlayerSelectionsChange) {
+            onPlayerSelectionsChange(localPlayerSelections);
+        } else if (onPlayerModesChange) {
+            onPlayerModesChange(localPlayerModes);
+        }
         onClose();
     };
 
@@ -127,8 +222,15 @@ export function LivePlayerSelectionModal({
             };
 
             setLocalAllPlayers(prev => [...prev, newPlayerObj]);
-            // Automatically select the new player
-            setLocalSelectedIds(prev => [...prev, created.id]);
+            // Automatically select the new player for scoring & leaderboard
+            if (useDualCheckbox) {
+                setLocalPlayerSelections(prev => ({
+                    ...prev,
+                    [created.id]: { score: true, leaderboard: true }
+                }));
+            } else {
+                setLocalPlayerModes(prev => ({ ...prev, [created.id]: 'score' }));
+            }
 
             setIsCreating(false);
             setSearchQuery(''); // Clear search to show context or just done
@@ -140,7 +242,6 @@ export function LivePlayerSelectionModal({
         }
     };
 
-    // Filter Logic
     // Filter Logic for Dropdown
     const searchResults = searchQuery ? localAllPlayers.filter(p => {
         // Exclude current user from search results
@@ -152,323 +253,453 @@ export function LivePlayerSelectionModal({
         return p.name.toLowerCase().includes(q) || last4.includes(q) || playerId.includes(q);
     }) : [];
 
-    // Main Body Logic (Unfiltered, Sorted)
     const sortedAllPlayers = [...localAllPlayers]
         .filter(p => !currentUserId || p.id !== currentUserId) // Exclude current user
         .sort((a, b) => {
-            // Priority 1: In Group (Frequent or already selected)
-            // We prioritize selected in the main list so they are easy to find/unselect
-            const isASelected = localSelectedIds.includes(a.id);
-            const isBSelected = localSelectedIds.includes(b.id);
-            if (isASelected && !isBSelected) return -1;
-            if (!isASelected && isBSelected) return 1;
+            if (useDualCheckbox) {
+                // New dual-checkbox sorting
+                const aSelection = getPlayerSelection(a.id);
+                const bSelection = getPlayerSelection(b.id);
 
+                const aSelected = aSelection.score || aSelection.leaderboard;
+                const bSelected = bSelection.score || bSelection.leaderboard;
+
+                // Priority 1: Selected players first
+                if (aSelected && !bSelected) return -1;
+                if (!aSelected && bSelected) return 1;
+
+                // Priority 2: Within selected, score players first
+                if (aSelected && bSelected) {
+                    if (aSelection.score && !bSelection.score) return -1;
+                    if (!aSelection.score && bSelection.score) return 1;
+                }
+            } else {
+                // Legacy mode sorting
+                const aModeScore = getPlayerMode(a.id) === 'score';
+                const bModeScore = getPlayerMode(b.id) === 'score';
+                if (aModeScore && !bModeScore) return -1;
+                if (!aModeScore && bModeScore) return 1;
+
+                const aModeLeaderboard = getPlayerMode(a.id) === 'leaderboard';
+                const bModeLeaderboard = getPlayerMode(b.id) === 'leaderboard';
+                if (aModeLeaderboard && !bModeLeaderboard) return -1;
+                if (!aModeLeaderboard && bModeLeaderboard) return 1;
+            }
+
+            // Priority 3: Frequent players
             const isAFrequent = frequentPlayerIds?.includes(a.id);
             const isBFrequent = frequentPlayerIds?.includes(b.id);
             if (isAFrequent && !isBFrequent) return -1;
             if (!isAFrequent && isBFrequent) return 1;
 
-            // Priority 3: Alphabetical by Last Name
+            // Priority 4: Alphabetical by Last Name
             const aLastName = a.name.split(' ').pop() || a.name;
             const bLastName = b.name.split(' ').pop() || b.name;
             return aLastName.localeCompare(bLastName);
         });
 
+    // Filter Logic for Main Body (only show group members or suggestions)
+    const groupPlayers = sortedAllPlayers.filter(p => {
+        const sel = getPlayerSelection(p.id);
+        const mode = getPlayerMode(p.id);
+        const isSelected = useDualCheckbox ? (sel.score || sel.leaderboard) : (mode !== 'none');
+        const isInRound = playersInRound.includes(p.id);
+        return isSelected || isInRound;
+    });
+
+    // Suggestions (Frequent players not already in the group)
+    const suggestions = sortedAllPlayers.filter(p => {
+        const isInGroup = groupPlayers.some(gp => gp.id === p.id);
+        return !isInGroup && frequentPlayerIds?.includes(p.id);
+    });
+
     // Determine course handicap
     const getCourseHandicap = (player: Player): number | null => {
         if (player.index === undefined || !courseData) return null;
 
-        const isCityParkNorth = courseData.courseName.toLowerCase().includes('city park north');
-        let teeBox: TeeBox | undefined;
-
-        if (isCityParkNorth && player.preferred_tee_box) {
-            teeBox = courseData.teeBoxes.find(t =>
-                player.preferred_tee_box && t.name.toLowerCase().includes(player.preferred_tee_box.toLowerCase())
-            );
-        }
-
-        if (!teeBox && courseData.roundTeeBox) {
-            teeBox = courseData.teeBoxes.find(t =>
-                t.rating === courseData.roundTeeBox!.rating && t.slope === courseData.roundTeeBox!.slope
-            );
-        }
-
-        if (!teeBox) {
-            teeBox = courseData.teeBoxes.find(t => t.name.toLowerCase().includes('white')) || courseData.teeBoxes[0];
-        }
+        const teeBox = courseData.roundTeeBox ||
+            (player.preferred_tee_box
+                ? courseData.teeBoxes.find(t => t.name.toLowerCase().includes(player.preferred_tee_box!.toLowerCase()))
+                : courseData.teeBoxes[0]);
 
         if (!teeBox) return null;
 
-        const courseHandicap = (player.index * teeBox.slope / 113) + (teeBox.rating - courseData.par);
-        return Math.round(courseHandicap);
+        const courseHcp = Math.round(player.index * (teeBox.slope / 113) + (teeBox.rating - courseData.par));
+        return courseHcp;
     };
 
+    // Count selected players
+    const scoreCount = useDualCheckbox
+        ? Object.values(localPlayerSelections).filter(s => s.score).length
+        : Object.values(localPlayerModes).filter(m => m === 'score').length;
+    const leaderboardCount = useDualCheckbox
+        ? Object.values(localPlayerSelections).filter(s => s.leaderboard).length
+        : Object.values(localPlayerModes).filter(m => m === 'leaderboard').length;
+    const totalSelected = scoreCount + leaderboardCount;
+
+    // Check if modes have changed
+    const hasChanges = useDualCheckbox
+        ? JSON.stringify(localPlayerSelections) !== JSON.stringify(playerSelections)
+        : JSON.stringify(localPlayerModes) !== JSON.stringify(playerModes);
+
     return (
-        <div className="fixed inset-0 z-[200] bg-white flex flex-col w-full h-full overflow-hidden">
-            <div className="flex-1 flex flex-col h-full animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm">
+            {/* Full Screen Panel */}
+            <div className="w-full h-full max-w-full overflow-hidden bg-gray-50 shadow-2xl flex flex-col">
+                {/* Scrollable Content Area */}
+                <div className="flex-1 flex flex-col overflow-hidden">
 
-                {/* Header */}
-                <div className="px-3 py-2 bg-white flex flex-col gap-1 shadow-sm z-10 flex-1 h-full">
-                    <div className="flex justify-between items-center">
-                        <h2 className="text-[16pt] font-bold text-left ml-1">
-                            {isCreating ? "Create New Player" : "Search player:"}
-                        </h2>
-                        {/* Close button removed as requested */}
-                    </div>
+                    {/* Header */}
+                    <div className="px-3 py-2 bg-white flex flex-col gap-1 shadow-sm z-10 flex-1 h-full">
+                        <div className="flex justify-between items-center">
+                            <h2 className="text-[16pt] font-bold text-left ml-1">
+                                {isCreating ? "Create New Player" : "Search player:"}
+                            </h2>
+                            {/* Close button removed as requested */}
+                        </div>
 
 
-                    {!isCreating && (
-                        <div className="relative flex items-stretch gap-2">
-                            <div className="flex-1 relative">
-                                <input
-                                    type="text"
-                                    placeholder="Search by First/Last Name"
-                                    title="Search players"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full text-[14pt] h-[48px] p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black bg-white shadow-sm transition-all"
-                                />
-                                {searchQuery && (
-                                    <div className="absolute top-full left-0 w-full bg-white border-2 border-gray-200 rounded-xl mt-2 max-h-[55vh] overflow-y-auto z-50 shadow-2xl">
-                                        {searchResults.length === 0 ? (
-                                            <div className="p-4 text-center text-gray-500">No matching players</div>
-                                        ) : (
-                                            searchResults.map(p => {
-                                                const isSel = localSelectedIds.includes(p.id);
-                                                return (
-                                                    <button
-                                                        key={'search-' + p.id}
-                                                        onClick={() => {
-                                                            if (!isSel) togglePlayer(p.id);
-                                                            setSearchQuery('');
-                                                        }}
-                                                        className="w-full text-left p-3 border-b border-gray-100 last:border-0 hover:bg-blue-50 flex items-center justify-between"
-                                                    >
-                                                        <div className="flex flex-col">
-                                                            <span className="font-bold text-lg text-black">{p.name}</span>
-                                                            <span className="text-xs text-gray-400">{p.phone || 'No phone'}</span>
+                        {!isCreating && (
+                            <div className="relative flex items-stretch gap-2">
+                                <div className="flex-1 relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Search by First/Last Name"
+                                        title="Search players"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-full text-[14pt] h-[48px] p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black bg-white shadow-sm transition-all"
+                                    />
+                                    {searchQuery && (
+                                        <div className="absolute top-full left-0 w-full bg-white border-2 border-gray-200 rounded-xl mt-2 max-h-[55vh] overflow-y-auto z-50 shadow-2xl">
+                                            {searchResults.length === 0 ? (
+                                                <div className="p-4 text-center text-gray-500">No matching players</div>
+                                            ) : (
+                                                searchResults.map(p => {
+                                                    const mode = getPlayerMode(p.id);
+                                                    return (
+                                                        <button
+                                                            key={'search-' + p.id}
+                                                            onClick={() => {
+                                                                if (useDualCheckbox) {
+                                                                    setLocalPlayerSelections(prev => ({
+                                                                        ...prev,
+                                                                        [p.id]: { score: true, leaderboard: true }
+                                                                    }));
+                                                                } else {
+                                                                    setPlayerMode(p.id, 'score');
+                                                                }
+                                                                setSearchQuery('');
+                                                            }}
+                                                            className="w-full text-left p-3 border-b border-gray-100 last:border-0 hover:bg-blue-50 flex items-center justify-between"
+                                                        >
+                                                            <div className="flex flex-col">
+                                                                <span className="font-bold text-lg text-black">{p.name}</span>
+                                                                <span className="text-xs text-gray-400">{p.phone || 'No phone'}</span>
+                                                            </div>
+                                                            {mode !== 'none' ? (
+                                                                <span className="text-blue-600 text-sm font-bold bg-blue-50 px-2 py-1 rounded">
+                                                                    {mode === 'score' ? 'Score' : 'Board'}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-green-600 text-sm font-bold bg-green-50 px-2 py-1 rounded">+ Add</span>
+                                                            )}
+                                                        </button>
+                                                    )
+                                                })
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={() => setIsCreating(true)}
+                                    className="bg-green-600 text-white font-black px-6 rounded-xl text-[14pt] shrink-0 hover:bg-green-700 transition-all shadow-md active:scale-95 h-[48px] flex items-center justify-center"
+                                >
+                                    + Guest
+                                </button>
+                            </div>
+                        )}
+
+                        <div className="flex-1 overflow-y-auto p-3 space-y-6 bg-gray-50 pb-[100px]">
+                            {isCreating ? (
+                                <div className="w-full bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-bold text-gray-700 mb-1">First Name</label>
+                                            <input
+                                                type="text"
+                                                value={newPlayer.firstName}
+                                                onChange={e => setNewPlayer({ ...newPlayer, firstName: e.target.value })}
+                                                className="w-full text-lg p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black"
+                                                placeholder="First"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-bold text-gray-700 mb-1">Last Name</label>
+                                            <input
+                                                type="text"
+                                                value={newPlayer.lastName}
+                                                onChange={e => setNewPlayer({ ...newPlayer, lastName: e.target.value })}
+                                                className="w-full text-lg p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black"
+                                                placeholder="Last"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-bold text-gray-700 mb-1">Phone <span className="text-gray-400 font-normal">(optional)</span></label>
+                                            <input
+                                                type="tel"
+                                                value={newPlayer.phone}
+                                                onChange={e => setNewPlayer({ ...newPlayer, phone: e.target.value })}
+                                                className="w-full text-lg p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black"
+                                                placeholder="504-555-1234"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-bold text-gray-700 mb-1">Handicap Index</label>
+                                            <input
+                                                type="text"
+                                                inputMode="decimal"
+                                                value={newPlayer.handicapIndex}
+                                                onChange={e => setNewPlayer({ ...newPlayer, handicapIndex: e.target.value })}
+                                                className="w-full text-lg p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black"
+                                                placeholder="0"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-1">Email <span className="text-gray-400 font-normal">(optional)</span></label>
+                                        <input
+                                            type="email"
+                                            value={newPlayer.email}
+                                            onChange={e => setNewPlayer({ ...newPlayer, email: e.target.value })}
+                                            className="w-full text-lg p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black"
+                                            placeholder="player@example.com"
+                                        />
+                                    </div>
+                                    {newPlayerError && (
+                                        <div className="p-3 bg-red-100 text-red-700 rounded-lg font-medium text-sm">{newPlayerError}</div>
+                                    )}
+                                    <div className="flex gap-3 pt-2">
+                                        <button
+                                            onClick={() => {
+                                                setIsCreating(false);
+                                                setNewPlayerError('');
+                                            }}
+                                            className="flex-1 bg-gray-200 text-gray-700 font-bold py-3 rounded-lg text-xl"
+                                        >
+                                            Back
+                                        </button>
+                                        <button
+                                            onClick={handleCreatePlayer}
+                                            disabled={isSubmitting}
+                                            className="flex-1 bg-black text-white font-bold py-3 rounded-lg text-xl disabled:opacity-50"
+                                        >
+                                            {isSubmitting ? "Creating..." : "Create Player"}
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    {/* Section 1: Your Group */}
+                                    <div className="space-y-3">
+                                        {groupPlayers.length > 0 ? (
+                                            <>
+                                                <div className="flex items-center justify-between px-1">
+                                                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">Your Group</h3>
+                                                    <span className="text-[10pt] font-bold text-zinc-400">{groupPlayers.length} Players</span>
+                                                </div>
+                                                {groupPlayers.map(player => {
+                                                    const mode = getPlayerMode(player.id);
+                                                    const selection = useDualCheckbox ? getPlayerSelection(player.id) : null;
+                                                    const isSelected = useDualCheckbox ? (selection?.score || selection?.leaderboard) : (mode !== 'none');
+
+                                                    const isInRound = playersInRound.includes(player.id);
+                                                    const wasInMyGroup = useDualCheckbox
+                                                        ? !!playerSelections?.[player.id]
+                                                        : (playerModes[player.id] === 'score' || playerModes[player.id] === 'leaderboard');
+
+                                                    const isDisabled = !isAdmin && isInRound && hasMultipleGroups && !wasInMyGroup;
+
+                                                    return (
+                                                        <div
+                                                            key={player.id}
+                                                            className={`p-4 rounded-2xl border-2 transition-all shadow-sm ${isDisabled
+                                                                ? 'border-zinc-200 bg-zinc-100/50 opacity-60'
+                                                                : isSelected
+                                                                    ? 'border-blue-500 bg-white'
+                                                                    : 'border-white bg-white/50 grayscale'
+                                                                }`}
+                                                        >
+                                                            {/* Player Name Row */}
+                                                            <div className="flex items-center justify-between mb-3">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className={`text-[19pt] font-black italic uppercase tracking-tighter ${isDisabled ? 'text-zinc-400' : isSelected ? 'text-zinc-900' : 'text-zinc-500'}`}>
+                                                                        {player.name}
+                                                                    </span>
+                                                                    <div className="flex items-center gap-1">
+                                                                        {isInRound && (
+                                                                            <span className={`px-2 py-0.5 rounded-lg text-[10pt] font-black uppercase tracking-widest ${isDisabled ? 'bg-zinc-200 text-zinc-400' : 'bg-green-100 text-green-700'}`}>
+                                                                                {isDisabled ? 'Claimed' : 'Locked'}
+                                                                            </span>
+                                                                        )}
+                                                                        {/* Course Handicap */}
+                                                                        {(() => {
+                                                                            const courseHcp = getCourseHandicap(player);
+                                                                            return courseHcp !== null && (
+                                                                                <span className={`text-[14pt] font-bold ${isDisabled ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                                                                                    ({courseHcp})
+                                                                                </span>
+                                                                            );
+                                                                        })()}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="flex gap-2">
+                                                                {useDualCheckbox ? (
+                                                                    <>
+                                                                        <button
+                                                                            onClick={() => !isDisabled && toggleScore(player.id)}
+                                                                            disabled={isDisabled}
+                                                                            className={`flex-1 h-12 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${selection?.score
+                                                                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
+                                                                                : isDisabled
+                                                                                    ? 'bg-zinc-100 text-zinc-400'
+                                                                                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                                                                                }`}
+                                                                        >
+                                                                            Score
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => !isDisabled && toggleLeaderboard(player.id)}
+                                                                            disabled={isDisabled}
+                                                                            className={`flex-1 h-12 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${selection?.leaderboard
+                                                                                ? 'bg-zinc-900 text-white shadow-lg shadow-zinc-200'
+                                                                                : isDisabled
+                                                                                    ? 'bg-zinc-100 text-zinc-400'
+                                                                                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                                                                                }`}
+                                                                        >
+                                                                            Board
+                                                                        </button>
+                                                                        {(() => {
+                                                                            const isSelectedAny = selection?.score || selection?.leaderboard;
+                                                                            const isRemoved = isInRound && !isSelectedAny;
+
+                                                                            return (
+                                                                                <button
+                                                                                    onClick={() => !isDisabled && removePlayer(player.id)}
+                                                                                    disabled={isDisabled}
+                                                                                    className={`flex-1 h-12 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${isRemoved
+                                                                                        ? 'bg-red-600 text-white shadow-lg shadow-red-200'
+                                                                                        : isDisabled
+                                                                                            ? 'bg-zinc-100 text-zinc-400'
+                                                                                            : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                                                                                        }`}
+                                                                                >
+                                                                                    {isRemoved ? 'Undo' : 'Delete'}
+                                                                                </button>
+                                                                            );
+                                                                        })()}
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <button
+                                                                            onClick={() => !isDisabled && setPlayerMode(player.id, 'score')}
+                                                                            disabled={isDisabled}
+                                                                            className={`flex-1 h-12 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${mode === 'score'
+                                                                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
+                                                                                : isDisabled
+                                                                                    ? 'bg-zinc-100 text-zinc-400'
+                                                                                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                                                                                }`}
+                                                                        >
+                                                                            Score
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => !isDisabled && setPlayerMode(player.id, 'leaderboard')}
+                                                                            disabled={isDisabled}
+                                                                            className={`flex-1 h-12 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${mode === 'leaderboard'
+                                                                                ? 'bg-zinc-900 text-white shadow-lg shadow-zinc-200'
+                                                                                : isDisabled
+                                                                                    ? 'bg-zinc-100 text-zinc-400'
+                                                                                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                                                                                }`}
+                                                                        >
+                                                                            Board
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => !isDisabled && setPlayerMode(player.id, 'none')}
+                                                                            disabled={isDisabled}
+                                                                            className={`flex-1 h-12 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${mode === 'none'
+                                                                                ? 'bg-red-600 text-white shadow-lg shadow-red-200'
+                                                                                : isDisabled
+                                                                                    ? 'bg-zinc-100 text-zinc-400'
+                                                                                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                                                                                }`}
+                                                                        >
+                                                                            Delete
+                                                                        </button>
+                                                                    </>
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                        {isSel ? (
-                                                            <span className="text-blue-600 text-sm font-bold bg-blue-50 px-2 py-1 rounded">Selected</span>
-                                                        ) : (
-                                                            <span className="text-green-600 text-sm font-bold bg-green-50 px-2 py-1 rounded">+ Add</span>
-                                                        )}
-                                                    </button>
-                                                )
-                                            })
+                                                    );
+                                                })}
+                                            </>
+                                        ) : (
+                                            <div className="py-12 flex flex-col items-center justify-center text-zinc-400 gap-3 border-2 border-dashed border-zinc-200 rounded-3xl">
+                                                <div className="text-4xl">🏌️‍♂️</div>
+                                                <div className="font-black uppercase tracking-widest text-xs">Search to add players</div>
+                                            </div>
                                         )}
                                     </div>
-                                )}
-                            </div>
-                            <button
-                                onClick={() => setIsCreating(true)}
-                                className="bg-green-600 text-white font-black px-6 rounded-xl text-[14pt] shrink-0 hover:bg-green-700 transition-all shadow-md active:scale-95 h-[48px] flex items-center justify-center"
-                            >
-                                + Guest
-                            </button>
+
+                                    {/* Section 2: Quick Suggestions */}
+                                    {suggestions.length > 0 && (
+                                        <div className="space-y-3 pb-8">
+                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400 px-1">Frequent Buddies</h3>
+                                            <div className="grid grid-cols-1 gap-2">
+                                                {suggestions.map(player => (
+                                                    <button
+                                                        key={'suggest-' + player.id}
+                                                        onClick={() => toggleScore(player.id)}
+                                                        className="flex items-center justify-between p-4 bg-white rounded-2xl border border-zinc-100 shadow-sm active:scale-[0.98] transition-all hover:border-zinc-300"
+                                                    >
+                                                        <div className="flex flex-col items-start">
+                                                            <span className="text-[14pt] font-black uppercase italic tracking-tighter text-zinc-900">{player.name}</span>
+                                                            <span className="text-[10pt] font-bold text-zinc-400">{player.phone ? player.phone.slice(-4) : 'No phone'}</span>
+                                                        </div>
+                                                        <span className="bg-zinc-100 text-zinc-900 font-black px-4 py-2 rounded-xl text-xs uppercase tracking-widest">+ Add</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )}
                         </div>
-                    )}
 
-                    {/* Body */}
-                    <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
-                        {isCreating ? (
-                            <div className="w-full bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-1">First Name</label>
-                                        <input
-                                            type="text"
-                                            title="First Name"
-                                            className="w-full border-2 border-gray-300 p-3 rounded-lg text-lg text-black bg-white"
-                                            value={newPlayer.firstName}
-                                            onChange={e => setNewPlayer({ ...newPlayer, firstName: e.target.value })}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-1">Last Name</label>
-                                        <input
-                                            type="text"
-                                            title="Last Name"
-                                            className="w-full border-2 border-gray-300 p-3 rounded-lg text-lg text-black bg-white"
-                                            value={newPlayer.lastName}
-                                            onChange={e => setNewPlayer({ ...newPlayer, lastName: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">Email (Optional)</label>
-                                    <input
-                                        type="email"
-                                        title="Email Address"
-                                        className="w-full border-2 border-gray-300 p-3 rounded-lg text-lg text-black bg-white"
-                                        value={newPlayer.email}
-                                        onChange={e => setNewPlayer({ ...newPlayer, email: e.target.value })}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">Mobile Phone (Optional)</label>
-                                    <input
-                                        type="tel"
-                                        title="Mobile Phone"
-                                        className="w-full border-2 border-gray-300 p-3 rounded-lg text-lg text-black bg-white"
-                                        value={newPlayer.phone}
-                                        onChange={e => setNewPlayer({ ...newPlayer, phone: e.target.value })}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">Handicap Index (Optional)</label>
-                                    <input
-                                        type="number"
-                                        step="0.1"
-                                        title="Handicap Index"
-                                        className="w-full border-2 border-gray-300 p-3 rounded-lg text-lg text-black bg-white"
-                                        value={newPlayer.handicapIndex}
-                                        onChange={e => setNewPlayer({ ...newPlayer, handicapIndex: e.target.value })}
-                                        placeholder="0.0"
-                                    />
-                                </div>
-
-                                {newPlayerError && (
-                                    <div className="text-red-600 font-bold bg-red-50 p-3 rounded-lg text-center">
-                                        {newPlayerError}
-                                    </div>
-                                )}
-
-                                <div className="flex gap-4 pt-4">
-                                    <button
-                                        onClick={() => { setIsCreating(false); setNewPlayerError(''); }}
-                                        className="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-lg text-xl"
-                                        disabled={isSubmitting}
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={handleCreatePlayer}
-                                        disabled={isSubmitting}
-                                        className="flex-1 bg-black text-white font-bold py-3 rounded-lg text-xl disabled:opacity-50"
-                                    >
-                                        {isSubmitting ? "Creating..." : "Create Player"}
-                                    </button>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {/* Empty State / No Results */}
-                                {sortedAllPlayers.length === 0 && (
-                                    <div className="col-span-full text-center py-10 text-gray-500">
-                                        <div className="text-[20pt] mb-2">No players found</div>
-                                        <div>Try a different search or create a new player.</div>
-                                        <button
-                                            onClick={() => setIsCreating(true)}
-                                            className="mt-6 bg-green-600 text-white font-bold px-6 py-3 rounded-full text-lg shadow-md"
-                                        >
-                                            Create New Player
-                                        </button>
-                                    </div>
-                                )}
-
-                                {sortedAllPlayers.map(player => {
-                                    const isSelected = localSelectedIds.includes(player.id);
-                                    const isInRound = playersInRound.includes(player.id);
-                                    const wasInMyGroup = selectedIds.includes(player.id);
-                                    const isDisabled = !isAdmin && isInRound && hasMultipleGroups && !wasInMyGroup;
-
-                                    return (
-                                        <button
-                                            key={player.id}
-                                            onClick={() => togglePlayer(player.id)}
-                                            disabled={isDisabled}
-                                            className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left ${isDisabled
-                                                ? 'border-gray-200 bg-gray-100 opacity-60 cursor-not-allowed'
-                                                : isSelected
-                                                    ? 'border-blue-500 bg-blue-50 shadow-sm cursor-pointer'
-                                                    : 'border-gray-100 bg-white hover:border-gray-200 cursor-pointer'
-                                                }`}
-                                        >
-                                            <div className={`w-7 h-7 shrink-0 rounded flex items-center justify-center border-2 transition-colors ${isDisabled
-                                                ? 'bg-gray-200 border-gray-300'
-                                                : isSelected
-                                                    ? 'bg-blue-600 border-blue-600'
-                                                    : 'bg-white border-gray-300'
-                                                }`}>
-                                                {isSelected && (
-                                                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
-                                                )}
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-2">
-                                                    <span className={`text-[18pt] font-bold ${isDisabled ? 'text-gray-400' : isSelected ? 'text-blue-800' : 'text-gray-700'
-                                                        }`}>
-                                                        {player.name}
-                                                    </span>
-                                                    <div className="flex items-center gap-1">
-                                                        {isInRound && (
-                                                            <span className={`px-2 py-0.5 rounded text-[10pt] font-black uppercase tracking-wider ${isDisabled ? 'bg-gray-200 text-gray-400' : 'bg-green-100 text-green-700'}`}>
-                                                                {isDisabled ? 'Claimed' : (roundShortId || 'In Group')}
-                                                            </span>
-                                                        )}
-                                                        {/* Course Handicap */}
-                                                        {(() => {
-                                                            const courseHcp = getCourseHandicap(player);
-                                                            return courseHcp !== null && (
-                                                                <span className={`text-[14pt] font-semibold ${isDisabled ? 'text-gray-400' : 'text-gray-600'}`}>
-                                                                    ({courseHcp})
-                                                                </span>
-                                                            );
-                                                        })()}
-                                                        {/* Tee Box Indicator */}
-                                                        {player.preferred_tee_box && (
-                                                            <span className={`px-2 py-0.5 rounded text-[12pt] font-bold ${isDisabled
-                                                                ? 'bg-gray-200 text-gray-400'
-                                                                : player.preferred_tee_box.toLowerCase().includes('white')
-                                                                    ? 'bg-white text-black border border-black'
-                                                                    : player.preferred_tee_box.toLowerCase().includes('gold')
-                                                                        ? 'bg-yellow-400 text-black'
-                                                                        : 'bg-gray-300 text-gray-700'
-                                                                }`}>
-                                                                {player.preferred_tee_box.toLowerCase().includes('white')
-                                                                    ? 'W'
-                                                                    : player.preferred_tee_box.toLowerCase().includes('gold')
-                                                                        ? 'G'
-                                                                        : player.preferred_tee_box.charAt(0).toUpperCase()}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                {isDisabled && (
-                                                    <div className="text-[11pt] text-gray-500 italic mt-0.5">Scored by another device.</div>
-                                                )}
-                                            </div>
-                                        </button>
-                                    );
-                                })}
+                        {!isCreating && (
+                            <div className="p-4 bg-white border-t border-gray-100 flex justify-between gap-3 z-10 sticky bottom-0">
+                                <button
+                                    onClick={onClose}
+                                    className="flex-1 py-4 bg-black text-white border-2 border-black rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleConfirm}
+                                    className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all text-white ${hasChanges ? 'bg-blue-600' : 'bg-black'
+                                        }`}
+                                >
+                                    Save ({scoreCount}S / {leaderboardCount}L)
+                                </button>
                             </div>
                         )}
                     </div>
-
-                    {!isCreating && (
-                        <div className="p-4 bg-white border-t border-gray-100 flex justify-between gap-3 z-10 sticky bottom-0">
-                            <button
-                                onClick={onClose}
-                                className="flex-1 py-4 bg-black text-white border-2 border-black rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleConfirm}
-                                className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all text-white ${(() => {
-                                    const nextIds = [...localSelectedIds].sort().join(',');
-                                    const prevIds = [...selectedIds].sort().join(',');
-                                    return nextIds !== prevIds ? 'bg-blue-600' : 'bg-black';
-                                })()}`}
-                            >
-                                Save ({localSelectedIds.length})
-                            </button>
-                        </div>
-                    )}
                 </div>
             </div>
         </div>

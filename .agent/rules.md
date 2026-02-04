@@ -36,7 +36,10 @@ This file defines the core UI/UX standards and coding patterns for the G-GolfLS 
 - **Input Patterns**:
     - Hole score inputs should have `aria-label` for accessibility.
     - Use `inputMode="numeric"` or `inputMode="decimal"` for mobile keyboards.
-- **Confirmations**:
+- **Confirmations & Prompts**:
+    - **NEVER** use native browser `confirm()` or `prompt()` dialogs.
+    - **ALWAYS** use the custom `ConfirmModal` for confirmations.
+    - For sensitive actions requiring a password (like deleting a guest), implement a dedicated field within the modal or a specific password entry popup.
     - Use `ConfirmModal` for destructive actions (Delete) or taking over scorekeeping from another user.
 
 ## 4. Coding Standards
@@ -44,7 +47,11 @@ This file defines the core UI/UX standards and coding patterns for the G-GolfLS 
 - **Data Cleanup**: Automatically delete incomplete past rounds (date != today + scores < hole count) upon landing on the `/live` page to keep the history clean.
 - **State Management**: Use `JSON.stringify` on objects/arrays within `useEffect` dependencies or `useMemo` to prevent infinite re-render loops.
 
-## 5. Deployment & Git
-- **No Auto-Deploy**: The agent must **NEVER** run deployment commands (e.g., `npx vercel --prod`).
-- **No Auto-Push**: The agent must **NEVER** run `git push`.
-- **Manual Control**: The agent should only prepare changes, commit them locally if requested, and leave the final push and deployment to the USER.
+## 5. Deployment & Git (CRITICAL)
+- **NO AUTO-PUSH**: The agent must **NEVER** run `git push` to origin/remote. Pushing affects production (Vercel) and is the **USER'S RESPONSIBILITY**.
+- **NO AUTO-DEPLOY**: The agent must **NEVER** run deployment commands (e.g., `npx vercel --prod`).
+- **Workflow**: 
+    1. Make local changes.
+    2. Verify locally (`npm run build` is allowed).
+    3. Commit locally if needed.
+    4. **STOP**. Do not push.

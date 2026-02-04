@@ -379,7 +379,7 @@ export function LiveRoundModal({
                     <button
                         onClick={onClose}
                         disabled={isSaving}
-                        className="flex-1 py-4 bg-white text-black border-2 border-black rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
+                        className="flex-1 py-4 bg-black text-white border-2 border-black rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
                     >
                         Cancel
                     </button>
