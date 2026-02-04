@@ -201,7 +201,7 @@ export function LivePlayerSelectionModal({
             <div className="flex-1 flex flex-col h-full animate-in fade-in duration-200">
 
                 {/* Header */}
-                <div className="px-3 py-2 bg-white flex flex-col gap-1 shadow-sm z-10">
+                <div className="px-3 py-2 bg-white flex flex-col gap-1 shadow-sm z-10 flex-1 h-full">
                     <div className="flex justify-between items-center">
                         <h2 className="text-[16pt] font-bold text-left ml-1">
                             {isCreating ? "Create New Player" : "Search player:"}
