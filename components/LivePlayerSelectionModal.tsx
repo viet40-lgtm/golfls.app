@@ -141,21 +141,27 @@ export function LivePlayerSelectionModal({
     };
 
     // Filter Logic
-    const filteredPlayers = localAllPlayers.filter(p => {
-        if (!searchQuery) return true;
-
+    // Filter Logic for Dropdown
+    const searchResults = searchQuery ? localAllPlayers.filter(p => {
         const q = searchQuery.toLowerCase();
         const last4 = p.phone ? p.phone.slice(-4) : '';
         const playerId = p.player_id ? p.player_id.toLowerCase() : '';
         return p.name.toLowerCase().includes(q) || last4.includes(q) || playerId.includes(q);
-    });
+    }) : [];
 
-    const sortedPlayers = [...filteredPlayers].sort((a, b) => {
+    // Main Body Logic (Unfiltered, Sorted)
+    const sortedAllPlayers = [...localAllPlayers].sort((a, b) => {
         // Priority 1: Current User
         if (currentUserId && a.id === currentUserId) return -1;
         if (currentUserId && b.id === currentUserId) return 1;
 
         // Priority 2: In Group (Frequent or already selected)
+        // We prioritize selected in the main list so they are easy to find/unselect
+        const isASelected = localSelectedIds.includes(a.id);
+        const isBSelected = localSelectedIds.includes(b.id);
+        if (isASelected && !isBSelected) return -1;
+        if (!isASelected && isBSelected) return 1;
+
         const isAFrequent = frequentPlayerIds?.includes(a.id);
         const isBFrequent = frequentPlayerIds?.includes(b.id);
         if (isAFrequent && !isBFrequent) return -1;
@@ -221,6 +227,37 @@ export function LivePlayerSelectionModal({
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="w-full text-[14pt] h-[48px] p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black bg-white shadow-sm transition-all"
                                 />
+                                {searchQuery && (
+                                    <div className="absolute top-full left-0 w-full bg-white border-2 border-gray-200 rounded-xl mt-2 max-h-60 overflow-y-auto z-50 shadow-2xl">
+                                        {searchResults.length === 0 ? (
+                                            <div className="p-4 text-center text-gray-500">No matching players</div>
+                                        ) : (
+                                            searchResults.map(p => {
+                                                const isSel = localSelectedIds.includes(p.id);
+                                                return (
+                                                    <button
+                                                        key={'search-' + p.id}
+                                                        onClick={() => {
+                                                            if (!isSel) togglePlayer(p.id);
+                                                            setSearchQuery('');
+                                                        }}
+                                                        className="w-full text-left p-3 border-b border-gray-100 last:border-0 hover:bg-blue-50 flex items-center justify-between"
+                                                    >
+                                                        <div className="flex flex-col">
+                                                            <span className="font-bold text-lg text-black">{p.name}</span>
+                                                            <span className="text-xs text-gray-400">{p.phone || 'No phone'}</span>
+                                                        </div>
+                                                        {isSel ? (
+                                                            <span className="text-blue-600 text-sm font-bold bg-blue-50 px-2 py-1 rounded">Selected</span>
+                                                        ) : (
+                                                            <span className="text-green-600 text-sm font-bold bg-green-50 px-2 py-1 rounded">+ Add</span>
+                                                        )}
+                                                    </button>
+                                                )
+                                            })
+                                        )}
+                                    </div>
+                                )}
                                 <button
                                     onClick={() => setIsCreating(true)}
                                     className="bg-green-600 text-white font-black px-6 rounded-xl text-[14pt] shrink-0 hover:bg-green-700 transition-all shadow-md active:scale-95 h-[48px] flex items-center justify-center"
@@ -319,7 +356,7 @@ export function LivePlayerSelectionModal({
                         ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {/* Empty State / No Results */}
-                                {sortedPlayers.length === 0 && (
+                                {sortedAllPlayers.length === 0 && (
                                     <div className="col-span-full text-center py-10 text-gray-500">
                                         <div className="text-[20pt] mb-2">No players found</div>
                                         <div>Try a different search or create a new player.</div>
@@ -332,7 +369,7 @@ export function LivePlayerSelectionModal({
                                     </div>
                                 )}
 
-                                {sortedPlayers.map(player => {
+                                {sortedAllPlayers.map(player => {
                                     const isSelected = localSelectedIds.includes(player.id);
                                     const isInRound = playersInRound.includes(player.id);
                                     const wasInMyGroup = selectedIds.includes(player.id);
