@@ -194,21 +194,22 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
             return { id: r.id, name: displayName };
         });
 
-    // Extract players from the round itself
-    let allPlayers: any[] = [];
-    if (activeRound?.players) {
-        allPlayers = activeRound.players
-            .filter((rp: any) => rp.player)
-            .map((rp: any) => ({
-                id: rp.player.id,
-                name: rp.player.name,
-                index: rp.player.handicapIndex,
-                handicapIndex: rp.player.handicapIndex,
-                preferred_tee_box: rp.player.preferredTeeBox,
-                preferredTeeBox: rp.player.preferredTeeBox,
-                email: rp.player.email
-            }));
-    }
+    // Fetch ALL players for the selection modal
+    const allDbPlayers = await prisma.player.findMany({
+        orderBy: { name: 'asc' }
+    });
+
+    const allPlayers = allDbPlayers.map(p => ({
+        id: p.id,
+        name: p.name,
+        index: p.handicapIndex ?? 0,
+        handicapIndex: p.handicapIndex ?? 0,
+        preferred_tee_box: p.preferredTeeBox,
+        preferredTeeBox: p.preferredTeeBox,
+        phone: p.phone,
+        player_id: p.playerId,
+        email: p.email
+    }));
 
     // Fetch all courses for the "New Round" dropdown
     const availableCourses = await prisma.course.findMany({
