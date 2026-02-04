@@ -63,7 +63,7 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
     return (
         <div className="fixed inset-0 z-[100] flex flex-col bg-white overflow-hidden animate-in fade-in duration-200">
             {/* Header */}
-            <header className="bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between shadow-sm sticky top-0 z-10">
+            <header className="bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between sticky top-0 z-10">
                 <div className="flex flex-col">
                     <h2 className="text-[18pt] font-black text-green-600 leading-tight text-left ml-3">$5 Pool Results</h2>
                     {data?.round && (
@@ -72,16 +72,10 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
                         </p>
                     )}
                 </div>
-                <button
-                    onClick={onClose}
-                    className="px-4 py-2 bg-black text-white rounded-full text-[15pt] font-bold hover:bg-gray-800 transition-colors mr-3"
-                >
-                    Close
-                </button>
             </header>
 
             {/* Content Area */}
-            <div className="flex-1 overflow-y-auto bg-gray-50">
+            <div className="flex-1 overflow-y-auto bg-gray-50 pb-[100px]">
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center h-full space-y-4 py-20">
                         <div className="w-12 h-12 border-4 border-green-200 border-t-green-600 rounded-full animate-spin"></div>
@@ -152,6 +146,16 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
                         </div>
                     </main>
                 )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-gray-100 sticky bottom-0 bg-white">
+                <button
+                    onClick={onClose}
+                    className="w-full py-4 bg-black text-white rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
+                >
+                    Close
+                </button>
             </div>
         </div>
     );

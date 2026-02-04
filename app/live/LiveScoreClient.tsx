@@ -2545,17 +2545,11 @@ export default function LiveScoreClient({
             {/* Stats Modal */}
             {
                 isStatsModalOpen && (
-                    <div className="fixed inset-0 z-[300] bg-gray-50 overflow-y-auto">
+                    <div className="fixed inset-0 z-[300] bg-gray-50 flex flex-col">
                         {/* Header */}
                         <div className="bg-white shadow-sm sticky top-0 z-10 px-1 py-3 border-b border-gray-200">
                             <div className="flex items-center justify-between">
-                                <h1 className="text-[18pt] font-bold text-gray-900 tracking-tight text-left ml-3">Round Stats</h1>
-                                <button
-                                    onClick={() => setIsStatsModalOpen(false)}
-                                    className="px-1 py-2 bg-black text-white rounded-xl text-[14pt] font-bold hover:bg-gray-800 transition-colors mr-3"
-                                >
-                                    Close
-                                </button>
+                                <h1 className="text-[18pt] font-black italic uppercase tracking-tighter text-gray-900 text-left ml-3">Round Stats</h1>
                             </div>
                         </div>
 
@@ -2634,7 +2628,7 @@ export default function LiveScoreClient({
                                         e.stopPropagation();
                                         setBirdiePlayers([]);
                                     }}
-                                    className="w-full bg-black text-white rounded-xl py-2 text-[15pt] font-bold hover:bg-gray-800 transition-colors shadow-md active:scale-95"
+                                    className="w-full bg-black text-white rounded-2xl py-4 text-[15pt] font-black uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-xl active:scale-95"
                                 >
                                     Close
                                 </button>
@@ -2674,7 +2668,7 @@ export default function LiveScoreClient({
                                         e.stopPropagation();
                                         setEaglePlayers([]);
                                     }}
-                                    className="w-full bg-black text-white rounded-xl py-2 text-[15pt] font-bold hover:bg-gray-800 transition-colors shadow-md active:scale-95"
+                                    className="w-full bg-black text-white rounded-2xl py-4 text-[15pt] font-black uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-xl active:scale-95"
                                 >
                                     Close
                                 </button>

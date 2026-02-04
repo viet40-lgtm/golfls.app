@@ -217,14 +217,14 @@ export function AddPlayerModal({ isOpen, onClose }: AddPlayerModalProps) {
                     <button
                         type="button"
                         onClick={onClose}
-                        className="flex-1 px-4 py-2 bg-black text-white rounded-full text-[15pt] font-bold shadow-md active:scale-95"
+                        className="flex-1 py-4 bg-white text-black border-2 border-black rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
                         disabled={isSubmitting}
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
-                        className={`flex-1 px-4 py-2 text-white rounded-full text-[15pt] font-bold transition-all shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${isDirty() ? 'bg-blue-600' : 'bg-black'}`}
+                        className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all text-white disabled:opacity-50 disabled:cursor-not-allowed ${isDirty() ? 'bg-blue-600' : 'bg-black'}`}
                         disabled={isSubmitting}
                     >
                         {isSubmitting ? 'Adding...' : 'Add Player'}

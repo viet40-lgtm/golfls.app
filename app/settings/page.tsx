@@ -648,13 +648,12 @@ function PlayerProfileModal({ initialData, onClose, onSave, showAlert }: { initi
                 </div>
             </form>
 
-            {/* Bottom Bar */}
             <div className="p-4 border-t border-gray-100 sticky bottom-0 bg-white">
                 <div className="w-full mx-auto flex gap-3">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="flex-1 py-4 bg-black text-white rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
+                        className="flex-1 py-4 bg-white text-black border-2 border-black rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
                         title="Cancel"
                         disabled={isLoading}
                     >
@@ -754,13 +753,12 @@ function MetadataModal({ initialData, onClose, onSave, showAlert }: { initialDat
                 </div>
             </form>
 
-            {/* Bottom Bar */}
             <div className="p-4 border-t border-gray-100 sticky bottom-0 bg-white">
                 <div className="w-full mx-auto flex gap-3">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="flex-1 py-4 bg-black text-white rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
+                        className="flex-1 py-4 bg-white text-black border-2 border-black rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
                         title="Cancel"
                         disabled={isLoading}
                     >

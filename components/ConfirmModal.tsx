@@ -35,9 +35,9 @@ export default function ConfirmModal({
                     <div className="flex flex-col gap-4 w-full px-4">
                         <button
                             onClick={onConfirm}
-                            className={`w-full py-4 text-white text-[18pt] font-bold rounded-full transition-colors shadow-xl active:scale-95 ${isDestructive
+                            className={`w-full py-4 text-white text-[18pt] font-black uppercase tracking-widest rounded-2xl transition-colors shadow-xl active:scale-95 ${isDestructive
                                 ? 'bg-red-600 hover:bg-red-700'
-                                : 'bg-black hover:bg-gray-800'
+                                : 'bg-black hover:bg-zinc-800'
                                 }`}
                         >
                             {confirmText}
@@ -45,7 +45,7 @@ export default function ConfirmModal({
                         {!hideCancel && (
                             <button
                                 onClick={onCancel}
-                                className="w-full py-4 bg-black text-white text-[18pt] font-bold rounded-full transition-colors shadow-xl active:scale-95"
+                                className="w-full py-4 bg-white text-black border-2 border-black text-[18pt] font-black uppercase tracking-widest rounded-2xl transition-colors shadow-xl active:scale-95"
                             >
                                 {cancelText}
                             </button>

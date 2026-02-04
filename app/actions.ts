@@ -678,8 +678,8 @@ export async function createPlayer(data: {
     const name = `${data.firstName.trim()} ${data.lastName.trim()}`;
 
     // Basic validation
-    if (!data.email || !data.phone) {
-        throw new Error("Email and Phone are required.");
+    if (!data.firstName || !data.lastName) {
+        throw new Error("First and Last Name are required.");
     }
 
     try {

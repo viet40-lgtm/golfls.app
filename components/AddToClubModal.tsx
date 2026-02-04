@@ -169,19 +169,18 @@ export default function AddToClubModal({ isOpen, onClose, players, liveRoundId, 
                 )}
             </div>
 
-            {/* Footer */}
-            <div className="border-t-2 border-gray-200 p-4 bg-gray-50 rounded-b-xl">
+            <div className="border-t-2 border-gray-200 p-4 bg-white sticky bottom-0">
                 <div className="flex gap-3">
                     <button
                         onClick={onClose}
-                        className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-900 font-bold px-4 py-2 rounded-full text-[15pt] transition-colors"
+                        className="flex-1 py-4 bg-white text-black border-2 border-black rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleSave}
                         disabled={selectedIds.size === 0 || isSaving}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-full text-[15pt] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all text-white disabled:opacity-50 disabled:cursor-not-allowed ${selectedIds.size > 0 ? 'bg-blue-600' : 'bg-black'}`}
                     >
                         {isSaving ? 'Saving...' : `Save to Club (${selectedIds.size})`}
                     </button>
