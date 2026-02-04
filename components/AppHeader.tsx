@@ -24,9 +24,25 @@ export default function AppHeader() {
         const isAuth = authStatus === 'true';
         setIsAuthenticated(isAuth);
 
-        // Load initial round ID
+        // Load initial round ID ONLY if it's from today
         const initialRoundId = Cookies.get('current_round_short_id');
-        if (initialRoundId) setRoundShortId(initialRoundId);
+        const initialRoundDate = Cookies.get('current_round_date');
+
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'America/Chicago',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
+        const todayStr = formatter.format(new Date());
+
+        if (initialRoundId && initialRoundDate === todayStr) {
+            setRoundShortId(initialRoundId);
+        } else if (initialRoundId) {
+            // Clean up stale cookies if they exist
+            Cookies.remove('current_round_short_id');
+            Cookies.remove('current_round_date');
+        }
     }, []);
 
     // Listen for round ID updates from LiveScoreClient
