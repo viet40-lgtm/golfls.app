@@ -210,6 +210,15 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
             }));
     }
 
+    // Fetch all courses for the "New Round" dropdown
+    const availableCourses = await prisma.course.findMany({
+        include: {
+            teeBoxes: true,
+            holes: { include: { elements: true }, orderBy: { holeNumber: 'asc' } }
+        },
+        orderBy: { name: 'asc' }
+    });
+
     // Fetch current user's profile for welcome message
     const currentPlayerProfile = await prisma.player.findUnique({
         where: { id: sessionUserId },
@@ -220,7 +229,7 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
         <LiveScoreClient
             allPlayers={allPlayers}
             defaultCourse={defaultCourse ? JSON.parse(JSON.stringify(defaultCourse)) : null}
-            allCourses={[]}
+            allCourses={JSON.parse(JSON.stringify(availableCourses))}
             initialRound={activeRound ? JSON.parse(JSON.stringify(activeRound)) : null}
             todayStr={todayStr}
             allLiveRounds={allLiveRounds}
