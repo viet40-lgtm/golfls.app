@@ -229,7 +229,7 @@ export function LivePlayerSelectionModal({
                                     className="w-full text-[14pt] h-[48px] p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black bg-white shadow-sm transition-all"
                                 />
                                 {searchQuery && (
-                                    <div className="absolute top-full left-0 w-full bg-white border-2 border-gray-200 rounded-xl mt-2 max-h-60 overflow-y-auto z-50 shadow-2xl">
+                                    <div className="absolute top-full left-0 w-full bg-white border-2 border-gray-200 rounded-xl mt-2 max-h-[60vh] overflow-y-auto z-50 shadow-2xl">
                                         {searchResults.length === 0 ? (
                                             <div className="p-4 text-center text-gray-500">No matching players</div>
                                         ) : (
