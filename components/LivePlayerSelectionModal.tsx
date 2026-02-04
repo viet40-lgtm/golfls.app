@@ -249,6 +249,10 @@ export function LivePlayerSelectionModal({
         // Exclude current user from search results
         if (currentUserId && p.id === currentUserId) return false;
 
+        // Exclude players already in the round
+        const mode = getPlayerMode(p.id);
+        if (mode !== 'none') return false;
+
         const q = searchQuery.toLowerCase();
         const last4 = p.phone ? p.phone.slice(-4) : '';
         const playerId = p.player_id ? p.player_id.toLowerCase() : '';
