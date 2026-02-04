@@ -143,6 +143,9 @@ export function LivePlayerSelectionModal({
     // Filter Logic
     // Filter Logic for Dropdown
     const searchResults = searchQuery ? localAllPlayers.filter(p => {
+        // Exclude current user from search results
+        if (currentUserId && p.id === currentUserId) return false;
+
         const q = searchQuery.toLowerCase();
         const last4 = p.phone ? p.phone.slice(-4) : '';
         const playerId = p.player_id ? p.player_id.toLowerCase() : '';
@@ -150,28 +153,26 @@ export function LivePlayerSelectionModal({
     }) : [];
 
     // Main Body Logic (Unfiltered, Sorted)
-    const sortedAllPlayers = [...localAllPlayers].sort((a, b) => {
-        // Priority 1: Current User
-        if (currentUserId && a.id === currentUserId) return -1;
-        if (currentUserId && b.id === currentUserId) return 1;
+    const sortedAllPlayers = [...localAllPlayers]
+        .filter(p => !currentUserId || p.id !== currentUserId) // Exclude current user
+        .sort((a, b) => {
+            // Priority 1: In Group (Frequent or already selected)
+            // We prioritize selected in the main list so they are easy to find/unselect
+            const isASelected = localSelectedIds.includes(a.id);
+            const isBSelected = localSelectedIds.includes(b.id);
+            if (isASelected && !isBSelected) return -1;
+            if (!isASelected && isBSelected) return 1;
 
-        // Priority 2: In Group (Frequent or already selected)
-        // We prioritize selected in the main list so they are easy to find/unselect
-        const isASelected = localSelectedIds.includes(a.id);
-        const isBSelected = localSelectedIds.includes(b.id);
-        if (isASelected && !isBSelected) return -1;
-        if (!isASelected && isBSelected) return 1;
+            const isAFrequent = frequentPlayerIds?.includes(a.id);
+            const isBFrequent = frequentPlayerIds?.includes(b.id);
+            if (isAFrequent && !isBFrequent) return -1;
+            if (!isAFrequent && isBFrequent) return 1;
 
-        const isAFrequent = frequentPlayerIds?.includes(a.id);
-        const isBFrequent = frequentPlayerIds?.includes(b.id);
-        if (isAFrequent && !isBFrequent) return -1;
-        if (!isAFrequent && isBFrequent) return 1;
-
-        // Priority 3: Alphabetical by Last Name
-        const aLastName = a.name.split(' ').pop() || a.name;
-        const bLastName = b.name.split(' ').pop() || b.name;
-        return aLastName.localeCompare(bLastName);
-    });
+            // Priority 3: Alphabetical by Last Name
+            const aLastName = a.name.split(' ').pop() || a.name;
+            const bLastName = b.name.split(' ').pop() || b.name;
+            return aLastName.localeCompare(bLastName);
+        });
 
     // Determine course handicap
     const getCourseHandicap = (player: Player): number | null => {
