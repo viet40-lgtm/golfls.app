@@ -14,8 +14,6 @@ export default function AppHeader() {
     const [passwordInput, setPasswordInput] = useState('');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [roundShortId, setRoundShortId] = useState<string | null>(null);
-
     useEffect(() => {
         const session = Cookies.get('admin_session');
         setIsAdmin(session === 'true');
@@ -23,35 +21,6 @@ export default function AppHeader() {
         const authStatus = Cookies.get('auth_status');
         const isAuth = authStatus === 'true';
         setIsAuthenticated(isAuth);
-
-        // Load initial round ID ONLY if it's from today
-        const initialRoundId = Cookies.get('current_round_short_id');
-        const initialRoundDate = Cookies.get('current_round_date');
-
-        const formatter = new Intl.DateTimeFormat('en-CA', {
-            timeZone: 'America/Chicago',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-        });
-        const todayStr = formatter.format(new Date());
-
-        if (initialRoundId && initialRoundDate === todayStr) {
-            setRoundShortId(initialRoundId);
-        } else if (initialRoundId) {
-            // Clean up stale cookies if they exist
-            Cookies.remove('current_round_short_id');
-            Cookies.remove('current_round_date');
-        }
-    }, []);
-
-    // Listen for round ID updates from LiveScoreClient
-    useEffect(() => {
-        const handleUpdate = (event: any) => {
-            setRoundShortId(event.detail);
-        };
-        window.addEventListener('round_id_updated' as any, handleUpdate);
-        return () => window.removeEventListener('round_id_updated' as any, handleUpdate);
     }, []);
 
     useEffect(() => {
@@ -90,11 +59,6 @@ export default function AppHeader() {
 
                     {/* Right: Actions */}
                     <div className="flex items-center gap-3">
-                        {roundShortId && (
-                            <div className="bg-green-600 text-white px-3 py-1.5 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl border border-black italic leading-none transform -rotate-1 active:scale-95 transition-all">
-                                {roundShortId}
-                            </div>
-                        )}
                         {isAuthenticated && (
                             <div className="relative menu-container">
                                 <button

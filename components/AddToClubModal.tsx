@@ -83,20 +83,11 @@ export default function AddToClubModal({ isOpen, onClose, players, liveRoundId, 
 
     return (
         <div className="fixed inset-0 bg-white z-[200] flex flex-col">
-            {/* Header */}
-            <div className="flex-none bg-gradient-to-r from-blue-600 to-blue-700 p-4 safe-top">
-                <div className="flex justify-between items-center">
-                    <h2 className="text-[18pt] font-bold text-white text-left ml-3">Add to Club Scores</h2>
-                    <button
-                        onClick={onClose}
-                        className="bg-white/20 hover:bg-white/30 text-white rounded-lg px-4 py-2 transition-colors font-bold text-[15pt]"
-                    >
-                        Close
-                    </button>
-                </div>
-                <p className="text-white/90 text-[12pt] mt-1 ml-3">
-                    Select players to copy their scores to the main club scores page
-                </p>
+            {/* Modal Header */}
+            <div className="px-4 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md">
+                <div className="w-10"></div>
+                <h2 className="text-lg font-black italic uppercase tracking-tighter">Add to Club Scores</h2>
+                <div className="w-10"></div>
             </div>
 
             {/* Content */}

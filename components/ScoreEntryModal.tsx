@@ -421,7 +421,7 @@ export default function ScoreEntryModal({
                     <div className="flex gap-3 p-3 border-t border-gray-200 bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] shrink-0 safe-bottom">
                         <button
                             onClick={onClose}
-                            className="flex-1 bg-black text-white rounded-xl text-[15pt] font-bold shadow-xl active:scale-95 transition-all py-3"
+                            className="flex-1 bg-white text-black border-2 border-black rounded-xl text-[15pt] font-bold shadow-xl active:scale-95 transition-all py-3"
                         >
                             Cancel
                         </button>

@@ -15,6 +15,7 @@ This file defines the core UI/UX standards and coding patterns for the G-GolfLS 
         <div className="w-10"></div> {/* Right Spacer */}
     </div>
     ```
+- **Player Selection Modal**: All internal sections (header, content, group lists) must use **minimal padding** (`p-1`) to maximize usable space on all screen sizes.
 
 ## 2. Design System & Styling
 - **Button Roundness**: All buttons must be fully rounded or highly rounded. Use `rounded-full` or `rounded-2xl` depending on the surrounding context.

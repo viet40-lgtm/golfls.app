@@ -170,19 +170,7 @@ export default function LiveScoreClient({
         setClientScorerId(id);
     }, []);
 
-    // Sync Round ID to global header via cookie and event
-    useEffect(() => {
-        const isToday = initialRound?.date === todayStr;
-        if (initialRound?.shortId && isToday) {
-            Cookies.set('current_round_short_id', initialRound.shortId, { expires: 1 });
-            Cookies.set('current_round_date', initialRound.date, { expires: 1 });
-            window.dispatchEvent(new CustomEvent('round_id_updated', { detail: initialRound.shortId }));
-        } else {
-            Cookies.remove('current_round_short_id');
-            Cookies.remove('current_round_date');
-            window.dispatchEvent(new CustomEvent('round_id_updated', { detail: null }));
-        }
-    }, [initialRound?.shortId, initialRound?.date, todayStr]);
+
 
 
 

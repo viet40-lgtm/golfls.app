@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createPlayer } from '@/app/actions';
+import ConfirmModal from './ConfirmModal';
 
 interface Player {
     id: string;
@@ -77,6 +78,7 @@ export function LivePlayerSelectionModal({
     const [isCreating, setIsCreating] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [newPlayerError, setNewPlayerError] = useState('');
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const [newPlayer, setNewPlayer] = useState({
         firstName: '',
         lastName: '',
@@ -303,8 +305,7 @@ export function LivePlayerSelectionModal({
         const sel = getPlayerSelection(p.id);
         const mode = getPlayerMode(p.id);
         const isSelected = useDualCheckbox ? (sel.score || sel.leaderboard) : (mode !== 'none');
-        const isInRound = playersInRound.includes(p.id);
-        return isSelected || isInRound;
+        return isSelected;
     });
 
     // Suggestions (Frequent players not already in the group)
@@ -350,7 +351,7 @@ export function LivePlayerSelectionModal({
                 <div className="flex-1 flex flex-col overflow-hidden">
 
                     {/* Header */}
-                    <div className="px-3 py-2 bg-white flex flex-col gap-1 shadow-sm z-10 flex-1 h-full">
+                    <div className="p-1 bg-white flex flex-col gap-1 shadow-sm z-10 flex-1 h-full">
                         <div className="flex justify-between items-center">
                             <h2 className="text-[16pt] font-bold text-left ml-1">
                                 {isCreating ? "Create New Player" : "Search player:"}
@@ -391,7 +392,7 @@ export function LivePlayerSelectionModal({
                                                                 }
                                                                 setSearchQuery('');
                                                             }}
-                                                            className="w-full text-left p-3 border-b border-gray-100 last:border-0 hover:bg-blue-50 flex items-center justify-between"
+                                                            className="w-full text-left p-1 border-b border-gray-100 last:border-0 hover:bg-blue-50 flex items-center justify-between"
                                                         >
                                                             <div className="flex flex-col">
                                                                 <span className="font-bold text-lg text-black">{p.name}</span>
@@ -420,7 +421,7 @@ export function LivePlayerSelectionModal({
                             </div>
                         )}
 
-                        <div className="flex-1 overflow-y-auto p-3 space-y-6 bg-gray-50 pb-[100px]">
+                        <div className="flex-1 overflow-y-auto p-1 space-y-6 bg-gray-50 pb-[100px]">
                             {isCreating ? (
                                 <div className="w-full bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
                                     <div className="grid grid-cols-2 gap-4">
@@ -525,7 +526,7 @@ export function LivePlayerSelectionModal({
                                                     return (
                                                         <div
                                                             key={player.id}
-                                                            className={`p-4 rounded-2xl border-2 transition-all shadow-sm ${isDisabled
+                                                            className={`p-1 rounded-2xl border-2 transition-all shadow-sm ${isDisabled
                                                                 ? 'border-zinc-200 bg-zinc-100/50 opacity-60'
                                                                 : isSelected
                                                                     ? 'border-blue-500 bg-white'
@@ -584,25 +585,19 @@ export function LivePlayerSelectionModal({
                                                                         >
                                                                             Board
                                                                         </button>
-                                                                        {(() => {
-                                                                            const isSelectedAny = selection?.score || selection?.leaderboard;
-                                                                            const isRemoved = isInRound && !isSelectedAny;
-
-                                                                            return (
-                                                                                <button
-                                                                                    onClick={() => !isDisabled && removePlayer(player.id)}
-                                                                                    disabled={isDisabled}
-                                                                                    className={`flex-1 h-12 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${isRemoved
-                                                                                        ? 'bg-red-600 text-white shadow-lg shadow-red-200'
-                                                                                        : isDisabled
-                                                                                            ? 'bg-zinc-100 text-zinc-400'
-                                                                                            : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-                                                                                        }`}
-                                                                                >
-                                                                                    {isRemoved ? 'Undo' : 'Delete'}
-                                                                                </button>
-                                                                            );
-                                                                        })()}
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                if (isDisabled) return;
+                                                                                setConfirmDeleteId(player.id);
+                                                                            }}
+                                                                            disabled={isDisabled}
+                                                                            className={`flex-1 h-12 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${isDisabled
+                                                                                ? 'bg-zinc-100 text-zinc-400'
+                                                                                : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                                                                                }`}
+                                                                        >
+                                                                            Delete
+                                                                        </button>
                                                                     </>
                                                                 ) : (
                                                                     <>
@@ -631,7 +626,10 @@ export function LivePlayerSelectionModal({
                                                                             Board
                                                                         </button>
                                                                         <button
-                                                                            onClick={() => !isDisabled && setPlayerMode(player.id, 'none')}
+                                                                            onClick={() => {
+                                                                                if (isDisabled) return;
+                                                                                setConfirmDeleteId(player.id);
+                                                                            }}
                                                                             disabled={isDisabled}
                                                                             className={`flex-1 h-12 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${mode === 'none'
                                                                                 ? 'bg-red-600 text-white shadow-lg shadow-red-200'
@@ -666,7 +664,7 @@ export function LivePlayerSelectionModal({
                                                     <button
                                                         key={'suggest-' + player.id}
                                                         onClick={() => toggleScore(player.id)}
-                                                        className="flex items-center justify-between p-4 bg-white rounded-2xl border border-zinc-100 shadow-sm active:scale-[0.98] transition-all hover:border-zinc-300"
+                                                        className="flex items-center justify-between p-1 bg-white rounded-2xl border border-zinc-100 shadow-sm active:scale-[0.98] transition-all hover:border-zinc-300"
                                                     >
                                                         <div className="flex flex-col items-start">
                                                             <span className="text-[14pt] font-black uppercase italic tracking-tighter text-zinc-900">{player.name}</span>
@@ -683,10 +681,10 @@ export function LivePlayerSelectionModal({
                         </div>
 
                         {!isCreating && (
-                            <div className="p-4 bg-white border-t border-gray-100 flex justify-between gap-3 z-10 sticky bottom-0">
+                            <div className="p-1 bg-white border-t border-gray-100 flex justify-between gap-3 z-10 sticky bottom-0">
                                 <button
                                     onClick={onClose}
-                                    className="flex-1 py-4 bg-black text-white border-2 border-black rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
+                                    className="flex-1 py-4 bg-white text-black border-2 border-black rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
                                 >
                                     Cancel
                                 </button>
@@ -702,6 +700,28 @@ export function LivePlayerSelectionModal({
                     </div>
                 </div>
             </div>
+            {/* Confirmation Modal */}
+            {confirmDeleteId && (
+                <ConfirmModal
+                    isOpen={!!confirmDeleteId}
+                    title="Remove Player?"
+                    message={`Are you sure you want to remove ${localAllPlayers.find(p => p.id === confirmDeleteId)?.name} from this round?`}
+                    confirmText="Remove"
+                    cancelText="Cancel"
+                    onConfirm={() => {
+                        if (confirmDeleteId) {
+                            if (useDualCheckbox) {
+                                removePlayer(confirmDeleteId);
+                            } else {
+                                setPlayerMode(confirmDeleteId, 'none');
+                            }
+                            setConfirmDeleteId(null);
+                        }
+                    }}
+                    onCancel={() => setConfirmDeleteId(null)}
+                    isDestructive
+                />
+            )}
         </div>
     );
 }
