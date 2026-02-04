@@ -273,7 +273,7 @@ export default function LiveScoreClient({
         } catch (e) {
             console.error('Failed to sync players:', e);
         }
-    }, [initialRound.id, JSON.stringify(initialRound.players), JSON.stringify(allPlayers.map(p => p.id)), clientScorerId, isAdmin, currentUserId]);
+    }, [initialRound?.id, JSON.stringify(initialRound?.players), JSON.stringify(allPlayers.map(p => p.id)), clientScorerId, isAdmin, currentUserId]);
 
 
 
