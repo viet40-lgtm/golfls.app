@@ -28,7 +28,11 @@ This file defines the core UI/UX standards and coding patterns for the G-GolfLS 
 
 ## 3. Interaction & UX
 - **Modal Navigation**:
-    - Bottom bars should typically contain a **Cancel** button (Black background/White text) and a **Save/Action** button (tracking the dirty state color) side-by-side.
+    - Bottom bars must contain:
+        - **Cancel**: Black background, white text (`bg-black text-white`).
+        - **Save**: Black background, white text (`bg-black text-white`) by default.
+        - **Save (Dirty)**: Change to Blue (`bg-blue-600`) when changes are detected.
+    - Both buttons should be fixed/sticky at the bottom of the screen.
 - **Input Patterns**:
     - Hole score inputs should have `aria-label` for accessibility.
     - Use `inputMode="numeric"` or `inputMode="decimal"` for mobile keyboards.

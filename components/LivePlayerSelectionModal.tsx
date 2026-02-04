@@ -415,7 +415,7 @@ export function LivePlayerSelectionModal({
                         <div className="p-4 bg-white border-t border-gray-100 flex justify-between gap-3 z-10 sticky bottom-0">
                             <button
                                 onClick={onClose}
-                                className="flex-1 py-4 bg-white text-black border-2 border-black rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
+                                className="flex-1 py-4 bg-black text-white border-2 border-black rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
                             >
                                 Cancel
                             </button>
