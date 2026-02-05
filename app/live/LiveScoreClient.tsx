@@ -1,11 +1,11 @@
 'use client';
-// build-trigger: 1.0.6
+// build-trigger: 1.0.8
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Cookies from 'js-cookie';
-import { Bird, Copy, Mail, Send } from 'lucide-react';
+import { Bird, Copy, Mail, Send, Menu } from 'lucide-react';
 import { generateScorecardHtml, generateClipboardHtml } from '@/app/lib/scorecard-helper';
 import { LiveLeaderboardCard } from './LiveLeaderboardCard';
 import { removePlayerFromLiveRound } from '../actions/remove-player-from-live-round'; // Force reload
@@ -22,6 +22,7 @@ import { copyLiveToClub } from '../actions/copy-live-to-club';
 import { deleteUserLiveRound } from '../actions/delete-user-round';
 import { logout } from '../actions/auth';
 import { getAllCourses } from '@/app/actions/get-all-courses';
+import { getAllPlayers } from '@/app/actions/get-players';
 
 
 interface Player {
@@ -76,11 +77,12 @@ interface Course {
     holes: Hole[];
 }
 
+
 interface LiveScoreClientProps {
     allPlayers: Player[];
     defaultCourse: Course | null;
     initialRound?: any;
-    todayStr: string; // Pass from server to avoid hydration mismatch
+    todayStr: string;
     allLiveRounds: Array<{
         id: string;
         name: string;
@@ -94,12 +96,12 @@ interface LiveScoreClientProps {
 }
 
 export default function LiveScoreClient({
-    allPlayers,
+    allPlayers: initialAllPlayers,
     defaultCourse,
     initialRound,
     todayStr,
     allLiveRounds,
-    allCourses,
+    allCourses: initialAllCourses,
     isAdmin: isAdminProp,
     currentUserId,
     currentUserName,
@@ -107,7 +109,34 @@ export default function LiveScoreClient({
     lastUsedTeeBoxId,
 }: LiveScoreClientProps) {
     const router = useRouter();
-    // Initialize State from Server Data
+
+    // State for lazy-loaded data
+    const [allPlayers, setAllPlayers] = useState<Player[]>(initialAllPlayers || []);
+    const [allCourses, setAllCourses] = useState<Course[]>(initialAllCourses || []);
+    const [isLoadingLazyData, setIsLoadingLazyData] = useState(false);
+
+    useEffect(() => {
+        const loadHeavyData = async () => {
+            // Only fetch if initial data is empty (prevents redundant fetches if server actually succeeded)
+            if (allPlayers.length > 0 && allCourses.length > 0) return;
+
+            setIsLoadingLazyData(true);
+            try {
+                const [players, courses] = await Promise.all([
+                    allPlayers.length === 0 ? getAllPlayers() : Promise.resolve(allPlayers),
+                    allCourses.length === 0 ? getAllCourses() : Promise.resolve(allCourses)
+                ]);
+                setAllPlayers(players);
+                setAllCourses(courses);
+            } catch (error) {
+                console.error("Failed to lazy load page data:", error);
+            } finally {
+                setIsLoadingLazyData(false);
+            }
+        };
+        loadHeavyData();
+    }, []);
+
     const [liveRoundId, setLiveRoundId] = useState<string | null>(initialRound?.id || null);
 
     const [isAdmin, setIsAdmin] = useState(isAdminProp); // Initialize with server-side value
