@@ -15,7 +15,7 @@ export const metadata = {
 
 import { ensureRoundHasShortId } from '@/app/actions/ensure-short-id';
 
-export default async function LiveScorePage(props: { searchParams: Promise<{ roundId?: string }> }) {
+async function LiveScorePageContent(props: { searchParams: Promise<{ roundId?: string }> }) {
     const resolvedSearchParams = await props.searchParams;
     const roundIdFromUrl = resolvedSearchParams.roundId;
 
@@ -284,4 +284,25 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
             lastUsedTeeBoxId={lastUsedTeeBoxId}
         />
     );
+}
+
+export default async function LiveScorePage(props: { searchParams: Promise<{ roundId?: string }> }) {
+    try {
+        return await LiveScorePageContent(props);
+    } catch (e: any) {
+        console.error("CRITICAL LIVE PAGE ERROR:", e);
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-white text-black">
+                <h1 className="text-xl font-black uppercase tracking-tighter mb-4">Error Loading Live Round</h1>
+                <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded w-full max-w-lg mb-6 overflow-auto font-mono text-xs">
+                    <p className="font-bold mb-2">System Message:</p>
+                    {e.message || "Unknown Error"}
+                    {e.digest && <p className="mt-2 text-gray-500">Digest: {e.digest}</p>}
+                </div>
+                <a href="/" className="px-8 py-4 bg-black text-white rounded-full font-black uppercase tracking-widest text-sm hover:scale-105 transition-transform">
+                    Return Home
+                </a>
+            </div>
+        );
+    }
 }
