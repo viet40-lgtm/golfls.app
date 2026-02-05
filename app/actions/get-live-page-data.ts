@@ -1,7 +1,7 @@
 'use server'
 
-import { prisma } from '@/lib/prisma'
-import { getSession } from '@/lib/auth'
+import { prisma } from '../../lib/prisma'
+import { getSession } from '../../lib/auth'
 
 export async function getLiveRoundData(roundId: string) {
     if (!roundId) return null;
@@ -77,7 +77,7 @@ export async function getLiveRoundData(roundId: string) {
 
         return JSON.parse(JSON.stringify(round));
     } catch (e) {
-        console.error("getLiveRoundData failed:", e);
+        console.error("getLiveRoundData Server Action Error:", e);
         return null;
     }
 }
@@ -166,7 +166,7 @@ export async function getInitialLivePageData(todayStr: string) {
             lastUsedTeeBoxId
         }));
     } catch (e: any) {
-        console.error("getInitialLivePageData failed:", e);
+        console.error("getInitialLivePageData Server Action Error:", e);
         return { error: String(e.message || e) };
     }
 }

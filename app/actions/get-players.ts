@@ -1,6 +1,6 @@
 'use server'
 
-import { prisma } from '@/lib/prisma'
+import { prisma } from '../../lib/prisma'
 
 export async function getAllPlayers() {
     try {
@@ -32,7 +32,7 @@ export async function getAllPlayers() {
 
         return JSON.parse(JSON.stringify(results));
     } catch (error) {
-        console.error('getAllPlayers Failed:', error);
+        console.error('getAllPlayers Server Action Error:', error);
         return [];
     }
 }

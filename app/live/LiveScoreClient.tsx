@@ -1,5 +1,5 @@
 'use client';
-// build-trigger: 1.0.9
+// build-trigger: 1.0.91
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
@@ -132,7 +132,7 @@ export default function LiveScoreClient({
             setIsLoadingLazyData(true);
             try {
                 // 1. Cleanup old incomplete rounds (Rule #4) - Background task
-                cleanupIncompleteRounds(todayStr).catch(err => console.error("Cleanup error:", err));
+                // cleanupIncompleteRounds(todayStr).catch(err => console.error("Cleanup error:", err));
 
                 // 2. Fetch Round Data (Highest Priority)
                 let pageData;
