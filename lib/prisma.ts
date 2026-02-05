@@ -39,11 +39,15 @@ try {
     prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
 } catch (e) {
     console.error("CRITICAL: Prisma Global Init Failed:", e);
-    // Fallback? If we can't init prisma, the app is largely broken.
-    // But we want to avoid 500 on valid static pages.
-    // We can't really "fake" a PrismaClient easily without a proxy.
-    // Re-throwing is probably the most honest thing, but logging it explicitly helps diagnostics.
-    throw e;
+    // Return a dummy object that logs errors when accessed, preventing module crash
+    prisma = new Proxy({}, {
+        get(_target, prop) {
+            return () => {
+                console.error(`PRISMA CALL FAILED: Cannot call ${String(prop)} because Prisma failed to initialize.`);
+                return Promise.reject(new Error(`Prisma Client is not initialized. check server logs.`));
+            };
+        }
+    }) as any;
 }
 
 if (process.env.NODE_ENV !== 'production') {
