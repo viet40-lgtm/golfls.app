@@ -59,21 +59,25 @@ export function LiveRoundModal({
                 setSlope(existingRound.slope);
                 setSelectedCourseId(existingRound.courseId || '');
 
-                // Find the course to find its tees
-                const course = allCourses.find(c => c.id === existingRound.courseId);
-                if (course) {
-                    // Try to find the tee box that matches the round's rating/slope
-                    const matchingTee = course.teeBoxes.find((t: any) =>
-                        Math.abs(t.rating - existingRound.rating) < 0.1 &&
-                        t.slope === existingRound.slope
-                    );
-                    if (matchingTee) {
-                        setSelectedTeeId(matchingTee.id);
+                if (Array.isArray(allCourses)) {
+                    // Find the course to find its tees
+                    const course = allCourses.find(c => c.id === existingRound.courseId);
+                    if (course) {
+                        // Try to find the tee box that matches the round's rating/slope
+                        const matchingTee = course.teeBoxes.find((t: any) =>
+                            Math.abs(t.rating - existingRound.rating) < 0.1 &&
+                            t.slope === existingRound.slope
+                        );
+                        if (matchingTee) {
+                            setSelectedTeeId(matchingTee.id);
+                        }
                     }
                 }
             } else {
                 // New Mode: Populating from defaults/props
-                const cpNorth = allCourses.find(c => c.name.toLowerCase().includes('city park north'));
+                if (!Array.isArray(allCourses) || allCourses.length === 0) return;
+
+                const cpNorth = allCourses.find(c => c.name?.toLowerCase().includes('city park north'));
                 const initialCourse = cpNorth || allCourses.find(c => c.id === courseId) || allCourses[0];
 
                 if (initialCourse) {
