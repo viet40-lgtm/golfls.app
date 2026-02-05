@@ -48,22 +48,17 @@ This file defines the core UI/UX standards and coding patterns for the G-GolfLS 
 - **Data Cleanup**: Automatically delete incomplete past rounds (date != today + scores < hole count) upon landing on the `/live` page to keep the history clean.
 - **State Management**: Use `JSON.stringify` on objects/arrays within `useEffect` dependencies or `useMemo` to prevent infinite re-render loops.
 
+## 7. Shell & Environment Compatibility
+- **PowerShell Separators**:
+    - The user is running **Windows PowerShell v5.1** (or non-PowerShell 7 environment).
+    - **NEVER** use `&&` to chain commands (e.g., `git add . && git commit...`). This causes immediate parser errors.
+    - **ALWAYS** use `;` to chain commands (e.g., `git add . ; git commit...`).
+
 ## 5. Deployment & Git (CRITICAL)
-- **NO AUTO-PUSH**: The agent must **NEVER** run `git push` to origin/remote. Pushing affects production (Vercel) and is the **USER'S RESPONSIBILITY**.
+- **NO AUTO-PUSH**: The agent must **NEVER** run `git push` to origin/remote *unless explicitly asked by the user*. Pushing affects production (Vercel).
 - **NO AUTO-DEPLOY**: The agent must **NEVER** run deployment commands (e.g., `npx vercel --prod`).
 - **Workflow**: 
     1. Make local changes.
     2. Verify locally (`npm run build` is allowed).
     3. Commit locally if needed.
-    4. **STOP**. Do not push.
-
-## 6. Local Server Strategy (AI Agents)
-- **Role: The "Junior Intern" (Generator)**
-    - The local server (Gemma 3 on LM Studio, `192.168.1.67:1234`) helps generate code, logic, and text.
-    - It **cannot** see files, edit code, or run commands. It is a "Chatbot in a Box".
-- **Role: The "Lead Engineer" (Antigravity)**
-    - The cloud-based Agent (Antigravity) is the only one authorized to edit files and run commands.
-    - Antigravity acts as the bridge: it sends prompts to the Local Server and implements the returned code.
-- **Usage**:
-    - Use the helper script: `node scripts/query_local_llm.js "Your Prompt Here"`
-    - Use this for generating complex logic, SQL queries, or content without cloud costs/latency.
+    4. **STOP**. Do not push (unless instructed).

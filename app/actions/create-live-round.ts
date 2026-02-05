@@ -251,7 +251,6 @@ export async function addPlayerToLiveRound(data: {
     liveRoundId: string;
     playerId: string;
     teeBoxId: string;
-    scorerId?: string;
 }) {
     console.log('SERVER ACTION: addPlayerToLiveRound starting...', data.playerId, 'to', data.liveRoundId);
     try {
@@ -288,18 +287,10 @@ export async function addPlayerToLiveRound(data: {
         });
 
         if (existing) {
-            // If exists, just update scorerId
-            await prisma.liveRoundPlayer.update({
-                where: { id: existing.id },
-                data: {
-                    scorerId: data.scorerId
-                }
-            });
-            revalidatePath('/');
+            // If exists, do nothing
             return { success: true, liveRoundPlayerId: existing.id };
         }
 
-        // Create live round player
         // Create live round player
         const liveRoundPlayer = await prisma.liveRoundPlayer.create({
             data: {
@@ -309,7 +300,6 @@ export async function addPlayerToLiveRound(data: {
                 indexAtTime: handicapIndex, // Snapshot
                 teeBoxName: teeBox.name, // Snapshot
                 courseHandicap: Math.round((handicapIndex * (teeBox.slope / 113)) + (teeBox.rating - par)),
-                scorerId: data.scorerId
             }
         });
 
@@ -325,27 +315,7 @@ export async function addPlayerToLiveRound(data: {
     }
 }
 
-/**
- * Updates the scorerId for a player (Claim/Takeover)
- */
-export async function updatePlayerScorer(data: {
-    liveRoundPlayerId: string;
-    scorerId: string;
-}) {
-    try {
-        await prisma.liveRoundPlayer.update({
-            where: { id: data.liveRoundPlayerId },
-            data: {
-                scorerId: data.scorerId
-            }
-        });
-        revalidatePath('/');
-        return { success: true };
-    } catch (error) {
-        console.error('Failed to update player scorer:', error);
-        return { success: false, error: 'Failed to update scorer' };
-    }
-}
+
 
 /**
  * Adds a guest player to a live round
@@ -358,7 +328,6 @@ export async function addGuestToLiveRound(data: {
     rating: number;
     slope: number;
     par: number;
-    scorerId?: string;
 }) {
     try {
         // We typically need a teeBoxId. If 'Guest' tee doesn't exist, we might need a workaround.
@@ -391,7 +360,6 @@ export async function addGuestToLiveRound(data: {
                 teeBoxName: fallbackTeeBox.name || 'Guest',
                 indexAtTime: data.index,
                 courseHandicap: data.courseHandicap,
-                scorerId: data.scorerId
             }
         });
 
@@ -463,14 +431,13 @@ export async function saveLiveScore(data: {
     liveRoundId: string;
     holeNumber: number;
     playerScores: Array<{ playerId: string; strokes: number }>;
-    scorerId?: string;
 }) {
     const results: Array<{ playerId: string, success: boolean, error?: string }> = [];
     const { getSession } = await import('@/lib/auth');
     const session = await getSession();
 
     try {
-        console.log(`SERVER ACTION: saveLiveScore - Round: ${data.liveRoundId}, Hole: ${data.holeNumber}, Scorer: ${data.scorerId}`);
+        console.log(`SERVER ACTION: saveLiveScore - Round: ${data.liveRoundId}, Hole: ${data.holeNumber}`);
         console.log(`Scores to save: ${JSON.stringify(data.playerScores)}`);
 
         // Get the live round with course and holes
@@ -514,49 +481,7 @@ export async function saveLiveScore(data: {
                     continue;
                 }
 
-                // ENFORCE OWNERSHIP
-                if (data.scorerId) {
-                    let isLocked = false;
-                    if (liveRoundPlayer.scorerId && liveRoundPlayer.scorerId !== data.scorerId) {
-                        isLocked = true;
-
-                        // OVERRIDE: If the user is authenticated and matches the player, allow takeover
-                        // We need to fetch session first - doing it lazily inside loop might be slow if many players, 
-                        // but usually it's just 1-4. Ideally fetch once at top.
-                        // For now we assume fetch at top of function.
-                        if (session && session.id && liveRoundPlayer.playerId === session.id) {
-                            console.log(`LOCK OVERRIDE: Player ${session.id} reclaiming scoring control.`);
-                            isLocked = false;
-                            // Update scorerId to the new one
-                            await prisma.liveRoundPlayer.update({
-                                where: { id: liveRoundPlayer.id },
-                                data: { scorerId: data.scorerId }
-                            });
-                        }
-                    }
-
-                    if (isLocked) {
-                        console.warn(`Scoring locked by another device for ${liveRoundPlayer.guestName || liveRoundPlayer.playerId}`);
-                        results.push({
-                            playerId: ps.playerId,
-                            success: false,
-                            error: `Locked by another device`
-                        });
-                        continue;
-                    }
-
-                    // Implicit Claim: If no scorer set, or if we just reclaimed it (implicit in the update above, but safe to repeat check logic)
-                    if (!liveRoundPlayer.scorerId || liveRoundPlayer.scorerId === data.scorerId) { // Added check to avoid redundant update if we just updated it
-                        if (!liveRoundPlayer.scorerId) {
-                            await prisma.liveRoundPlayer.update({
-                                where: { id: liveRoundPlayer.id },
-                                data: {
-                                    scorerId: data.scorerId
-                                }
-                            });
-                        }
-                    }
-                }
+                // Removed Locking Logic - Anyone can score anyone
 
                 // Save or update the score
                 const existingScore = await prisma.liveScore.findFirst({
@@ -629,7 +554,7 @@ export async function saveLiveScore(data: {
                 success: true,
                 partialFailure: true,
                 results,
-                error: `Some scores could not be saved (locked or error).`
+                error: `Some scores could not be saved.`
             };
         }
 

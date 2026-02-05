@@ -32,7 +32,6 @@ interface Player {
     email?: string | null;
     isGuest?: boolean;
     liveRoundPlayerId?: string; // LiveRoundPlayer ID for server actions
-    scorerId?: string | null; // Scorer tracking
     liveRoundData?: {
         tee_box_name: string | null;
         course_hcp: number | null;
@@ -158,30 +157,16 @@ export default function LiveScoreClient({
 
 
 
-    // Unique ID for this scoring device
-    // Use hydration-safe initialization
-    const [clientScorerId, setClientScorerId] = useState('');
-    useEffect(() => {
-        let id = localStorage.getItem('live_scoring_device_id');
-        if (!id) {
-            id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-            localStorage.setItem('live_scoring_device_id', id);
-        }
-        setClientScorerId(id);
-    }, []);
 
 
 
 
-
-
-
-    // CONSOLIDATED PLAYER INITIALIZATION & SYNC: Load guests, restore selection, and handle remote-kick
+    // SIMPLIFIED SYNC: Guests & Selections only
     useEffect(() => {
         if (!initialRound?.id) return;
 
         try {
-            // 1. Extract Guest Players from Server Data
+            // 1. Extract Guest Players (Read-Only sync)
             const guestsFromDb: Player[] = [];
             initialRound.players?.forEach((p: any) => {
                 if (p.is_guest || p.isGuest || !p.player) {
@@ -199,26 +184,14 @@ export default function LiveScoreClient({
                 }
             });
 
-            // Guard setGuestPlayers update
+            // Update Guests State
             const nextGuestIds = guestsFromDb.map(p => p.id).sort().join(',');
             const currentGuestIds = guestPlayers.map(p => p.id).sort().join(',');
             if (nextGuestIds !== currentGuestIds) {
                 setGuestPlayers(guestsFromDb);
             }
 
-            // 2. Identify players owned by other devices (Remote Kick / Auto-Lock)
-            const takenOverIds = new Set<string>();
-            if (clientScorerId && !isAdmin) {
-                initialRound.players?.forEach((p: any) => {
-                    const pid = (p.is_guest || p.isGuest || !p.player) ? p.id : p.player?.id;
-                    const sid = p.scorer_id || p.scorerId;
-                    if (pid && sid && sid !== clientScorerId) {
-                        takenOverIds.add(pid);
-                    }
-                });
-            }
-
-            // 3. Determine target selection & selections
+            // 2. Restore Selections
             let finalSelection: Player[] = [];
             let finalSelections: Record<string, PlayerSelection> = {};
 
@@ -227,53 +200,31 @@ export default function LiveScoreClient({
                 finalSelections = JSON.parse(savedSelections);
             }
 
-            // Sync selections with server truth (Leaderboard status)
-            initialRound.players?.forEach((p: any) => {
-                const pid = (p.is_guest || p.isGuest || !p.player) ? p.id : p.player?.id;
-                const sid = p.scorer_id || p.scorerId;
-                const isMyScoree = (sid === clientScorerId && sid !== null) || (isAdmin && !!sid);
-
-                if (!finalSelections[pid]) {
-                    finalSelections[pid] = { score: isMyScoree, leaderboard: true };
-                } else {
-                    // Always trust server for leaderboard status if they are in the round
-                    finalSelections[pid] = { ...finalSelections[pid], leaderboard: true };
-                    // If server says someone else is scoring them, force score: false locally
-                    if (sid && sid !== clientScorerId && !isAdmin) {
-                        finalSelections[pid].score = false;
-                    }
-                }
-            });
-
             const saved = localStorage.getItem(`live_scoring_my_group_${initialRound.id}`);
-
             if (saved) {
                 const savedIds: string[] = JSON.parse(saved);
                 const allAvail = [...allPlayers, ...guestsFromDb];
                 finalSelection = savedIds
                     .map(id => allAvail.find(p => p.id === id))
-                    .filter((p): p is Player => p !== undefined && !takenOverIds.has(p.id));
+                    .filter((p): p is Player => p !== undefined);
             } else if (selectedPlayers.length === 0) {
-                // Fallbacks (Only if nothing selected)
+                // Defaults
                 if (isAdmin) {
-                    // Admin: Everything
                     initialRound.players?.forEach((p: any) => {
                         const pid = (p.is_guest || p.isGuest || !p.player) ? p.id : p.player?.id;
                         const allAvail = [...allPlayers, ...guestsFromDb];
-                        const playerObj = allAvail.find(avail => avail.id === pid);
-                        if (playerObj) finalSelection.push(playerObj);
+                        const found = allAvail.find(a => a.id === pid);
+                        if (found) finalSelection.push(found);
                     });
                 } else if (currentUserId) {
-                    // User: Just me
                     const me = allPlayers.find(p => p.id === currentUserId);
-                    if (me && !takenOverIds.has(me.id)) finalSelection.push(me);
+                    if (me) finalSelection.push(me);
                 }
             } else {
-                // Maintenance: Existing selection minus kicked players
-                finalSelection = selectedPlayers.filter(p => !takenOverIds.has(p.id));
+                finalSelection = selectedPlayers;
             }
 
-            // 4. Atomic Update of selectedPlayers & playerSelections
+            // 3. Update State
             const nextSelectedIds = finalSelection.map(p => p.id).sort().join(',');
             const currentSelectedIds = selectedPlayers.map(p => p.id).sort().join(',');
 
@@ -287,13 +238,12 @@ export default function LiveScoreClient({
                 setPlayerSelections(finalSelections);
             }
 
-            // Track last round ID for quick return
             localStorage.setItem('live_scoring_last_round_id', initialRound.id);
 
         } catch (e) {
             console.error('Failed to sync players:', e);
         }
-    }, [initialRound?.id, JSON.stringify(initialRound?.players), JSON.stringify(allPlayers.map(p => p.id)), clientScorerId, isAdmin, currentUserId]);
+    }, [initialRound?.id, JSON.stringify(initialRound?.players), isAdmin, currentUserId]);
 
 
 
@@ -855,8 +805,7 @@ export default function LiveScoreClient({
             courseHandicap: guest.courseHandicap,
             rating: initialRound.rating,
             slope: initialRound.slope,
-            par: initialRound.par,
-            scorerId: isAdmin ? undefined : clientScorerId
+            par: initialRound.par
         });
 
         if (result.success && result.guestPlayerId) {
@@ -944,15 +893,9 @@ export default function LiveScoreClient({
 
         const allAvailable = [...allPlayers, ...guestPlayers];
 
-        // Players tagged for 'Score' mode (those we are keeping score for)
+        // Players tagged for 'Score' mode
         const scorePlayers = Object.entries(newSelections)
             .filter(([_, sel]) => sel.score)
-            .map(([id]) => allAvailable.find(p => p.id === id))
-            .filter((p): p is Player => p !== undefined);
-
-        // Players tagged ONLY for 'Leaderboard' mode (members of the group we aren't scoring)
-        const leaderboardOnlyPlayers = Object.entries(newSelections)
-            .filter(([_, sel]) => !sel.score && sel.leaderboard)
             .map(([id]) => allAvailable.find(p => p.id === id))
             .filter((p): p is Player => p !== undefined);
 
@@ -962,81 +905,57 @@ export default function LiveScoreClient({
             .map(([id]) => allAvailable.find(p => p.id === id))
             .filter((p): p is Player => p !== undefined && !p.isGuest && !p.id.startsWith('guest-'));
 
-        // Identify Claim Candidates (only for those newly being scored by us)
-        const playersToClaim = scorePlayers.filter(p => !p.isGuest && !p.id.startsWith('guest-')).filter(p => {
-            const existingLrPlayer = initialRound?.players?.find((lp: any) => lp.player?.id === p.id);
-            const currentScorerId = existingLrPlayer?.scorerId || existingLrPlayer?.scorer_id;
-            return existingLrPlayer && currentScorerId && currentScorerId !== clientScorerId && !isAdmin;
-        });
 
-        const executeUpdates = async () => {
-            // Update local state with score players only (for scoring UI)
-            setSelectedPlayers(scorePlayers);
+        // Update local state with score players only (for scoring UI)
+        setSelectedPlayers(scorePlayers);
 
-            // Save state to localStorage
-            localStorage.setItem(`live_scoring_player_selections_${liveRoundId}`, JSON.stringify(newSelections));
-            // Legacy compat
-            localStorage.setItem(`live_scoring_my_group_${liveRoundId}`, JSON.stringify(scorePlayers.map(p => p.id)));
+        // Save state to localStorage
+        localStorage.setItem(`live_scoring_player_selections_${liveRoundId}`, JSON.stringify(newSelections));
+        // Legacy compat
+        localStorage.setItem(`live_scoring_my_group_${liveRoundId}`, JSON.stringify(scorePlayers.map(p => p.id)));
 
-            if (!liveRoundId) {
-                showAlert('No Round Selected', 'Please select or create a round first.');
-                return;
-            }
-
-            // 1. Handle Additions and Mode Changes
-            for (const player of allRelevantPlayers) {
-                const existingLrPlayer = initialRound?.players?.find((p: any) => p.player?.id === player.id);
-                const currentScorerId = existingLrPlayer?.scorerId || existingLrPlayer?.scorer_id;
-                const selection = newSelections[player.id];
-
-                const needsToCreate = !existingLrPlayer;
-                const needsToUpdateScorer = existingLrPlayer && (
-                    (selection.score && currentScorerId !== clientScorerId && !isAdmin) ||
-                    (!selection.score && selection.leaderboard && currentScorerId === clientScorerId)
-                );
-
-                if (needsToCreate || needsToUpdateScorer) {
-                    const teeBox = getPlayerTee(player);
-                    if (teeBox?.id) {
-                        console.log(`Syncing ${player.name}: score=${selection.score}, board=${selection.leaderboard}`);
-                        await addPlayerToLiveRound({
-                            liveRoundId: liveRoundId,
-                            playerId: player.id,
-                            teeBoxId: teeBox.id,
-                            scorerId: selection.score ? (isAdmin ? undefined : clientScorerId) : null
-                        });
-                    }
-                }
-            }
-
-            // 2. Handle Removals (those deselected completely)
-            const playersToRemove = initialRound?.players?.filter((rp: any) => {
-                const pid = rp.is_guest ? rp.id : rp.player?.id;
-                const selection = newSelections[pid];
-                return !selection || (!selection.score && !selection.leaderboard);
-            }) || [];
-
-            for (const lrPlayer of playersToRemove) {
-                console.log("Removing player from round:", lrPlayer.id);
-                try {
-                    await removePlayerFromLiveRound(lrPlayer.id);
-                } catch (error) {
-                    console.error("Error removing player:", error);
-                }
-            }
-
-            router.refresh();
-        };
-
-        if (playersToClaim.length > 0) {
-            showConfirm(
-                'Confirm Scorekeeper Change',
-                `Are you sure you want to keep score for: ${playersToClaim.map(p => p.name).join(', ')}?`,
-                executeUpdates
-            );
-        } else {
-            await executeUpdates();
+        if (!liveRoundId) {
+            showAlert('No Round Selected', 'Please select or create a round first.');
+            return;
         }
+
+        // 1. Handle Additions and Mode Changes
+        for (const player of allRelevantPlayers) {
+            const existingLrPlayer = initialRound?.players?.find((p: any) => p.player?.id === player.id);
+            const selection = newSelections[player.id];
+
+            // Re-sync if new or status changed significantly
+            // Since we don't track scorer, we just ensure they are in the round if selected
+            if (!existingLrPlayer) {
+                const teeBox = getPlayerTee(player);
+                if (teeBox?.id) {
+                    console.log(`Adding ${player.name} to round`);
+                    await addPlayerToLiveRound({
+                        liveRoundId: liveRoundId,
+                        playerId: player.id,
+                        teeBoxId: teeBox.id
+                    });
+                }
+            }
+        }
+
+        // 2. Handle Removals (those deselected completely)
+        const playersToRemove = initialRound?.players?.filter((rp: any) => {
+            const pid = rp.is_guest ? rp.id : rp.player?.id;
+            const selection = newSelections[pid];
+            return !selection || (!selection.score && !selection.leaderboard);
+        }) || [];
+
+        for (const lrPlayer of playersToRemove) {
+            console.log("Removing player from round:", lrPlayer.id);
+            try {
+                await removePlayerFromLiveRound(lrPlayer.id);
+            } catch (error) {
+                console.error("Error removing player:", error);
+            }
+        }
+
+        router.refresh();
     };
 
     const handleCreateNewRound = async () => {
@@ -1115,8 +1034,7 @@ export default function LiveScoreClient({
             const result = await saveLiveScore({
                 liveRoundId,
                 holeNumber,
-                playerScores: [{ playerId, strokes: numericValue }],
-                scorerId: isAdmin ? undefined : clientScorerId
+                playerScores: [{ playerId, strokes: numericValue }]
             });
 
             if (!result.success || result.partialFailure) {
@@ -1179,20 +1097,20 @@ export default function LiveScoreClient({
     /*
     useEffect(() => {
         if (!liveRoundId || selectedPlayers.length === 0) return;
-    
+     
         const syncMissingPlayers = async () => {
             const missingFromServer = selectedPlayers.filter(p => {
                 // Ignore guests (handled separately)
                 if (p.isGuest) return false;
-    
+     
                 // Check if player is in the server-provided initialRound
                 const existsOnServer = initialRound?.players?.some((rp: any) => rp.player?.id === p.id);
                 return !existsOnServer;
             });
-    
+     
             if (missingFromServer.length > 0) {
                 console.log("Found players missing from server (Ghost Players). Attempting repair:", missingFromServer.map(p => p.name));
-    
+     
                 let restoredCount = 0;
                 for (const p of missingFromServer) {
                     const teeBox = getPlayerTee(p);
@@ -1205,14 +1123,14 @@ export default function LiveScoreClient({
                         if (res.success) restoredCount++;
                     }
                 }
-    
+     
                 if (restoredCount > 0) {
                     console.log(`Repaired ${restoredCount} ghost players. Refreshing...`);
                     router.refresh();
                 }
             }
         };
-    
+     
         // Debounce check to avoid spamming while initialRound loads
         const timer = setTimeout(syncMissingPlayers, 3000);
         return () => clearTimeout(timer);
@@ -1242,7 +1160,6 @@ export default function LiveScoreClient({
                         preferred_tee_box: null,
                         isGuest: true,
                         liveRoundPlayerId: p.id, // For guests, the ID is already the LiveRoundPlayer ID
-                        scorerId: p.scorer_id, // Store the scorer ID
                         liveRoundData: {
                             tee_box_name: p.tee_box_name,
                             course_hcp: p.course_handicap
@@ -1256,7 +1173,6 @@ export default function LiveScoreClient({
                         index: p.player.index,
                         preferred_tee_box: p.player.preferred_tee_box,
                         liveRoundPlayerId: p.id, // Store the LiveRoundPlayer ID
-                        scorerId: p.scorer_id, // Store the scorer ID
                         liveRoundData: {
                             tee_box_name: p.tee_box_name,
                             course_hcp: p.course_handicap
