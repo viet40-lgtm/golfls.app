@@ -158,6 +158,9 @@ export default function LiveScoreClient({
                     if (pageData.allLiveRounds) {
                         setLiveRoundsForDropdown(pageData.allLiveRounds);
                     }
+                    if (pageData.lastUsedCourseId) {
+                        setLastUsedCourseId(pageData.lastUsedCourseId);
+                    }
                     if (pageData.lastUsedTeeBoxId) {
                         setLastUsedTeeBoxId(pageData.lastUsedTeeBoxId);
                     }
@@ -1551,10 +1554,10 @@ export default function LiveScoreClient({
                             {isRoundDropdownOpen && (
                                 <>
                                     <div
-                                        className="fixed inset-0 z-40 bg-transparent"
+                                        className="fixed inset-0 z-20 bg-transparent"
                                         onClick={() => setIsRoundDropdownOpen(false)}
                                     />
-                                    <div className="absolute top-full left-0 right-0 mt-0.5 bg-black text-white rounded-xl border border-zinc-800 shadow-2xl z-50 overflow-y-auto max-h-[300px] py-1">
+                                    <div className="absolute top-full left-0 right-0 mt-0.5 bg-black text-white rounded-xl border border-zinc-800 shadow-2xl z-30 overflow-y-auto max-h-[300px] py-1">
                                         {allLiveRounds.map((round) => {
                                             const isSelected = round.id === liveRoundId;
 

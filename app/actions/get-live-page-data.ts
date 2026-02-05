@@ -22,7 +22,15 @@ export async function getLiveRoundData(roundId: string) {
                     select: {
                         id: true,
                         name: true,
-                        teeBoxes: true,
+                        teeBoxes: {
+                            select: {
+                                id: true,
+                                name: true,
+                                rating: true,
+                                slope: true,
+                                par: true
+                            }
+                        },
                         holes: {
                             select: {
                                 holeNumber: true,
@@ -87,7 +95,8 @@ export async function getInitialLivePageData(todayStr: string) {
                         date: true,
                         course: {
                             select: {
-                                holes: { select: { holeNumber: true } }
+                                id: true,
+                                holes: { select: { id: true, holeNumber: true } }
                             }
                         }
                     }
@@ -121,6 +130,23 @@ export async function getInitialLivePageData(todayStr: string) {
             activeRound = await getLiveRoundData(lastRP.liveRoundId);
             lastUsedCourseId = activeRound?.courseId;
             lastUsedTeeBoxId = lastRP.teeBoxId;
+        }
+
+        // if no active round found in LiveRounds, try to at least find last used course/tee from legacy rounds
+        if (!lastUsedCourseId) {
+            try {
+                const lastLegacyRP = await prisma.roundPlayer.findFirst({
+                    where: { playerId: sessionUserId },
+                    orderBy: { round: { date: 'desc' } },
+                    select: { teeBoxId: true, round: { select: { courseId: true } } }
+                });
+                if (lastLegacyRP) {
+                    lastUsedCourseId = lastLegacyRP.round.courseId;
+                    lastUsedTeeBoxId = lastLegacyRP.teeBoxId;
+                }
+            } catch (e) {
+                console.error("Legacy round lookup failed:", e);
+            }
         }
 
         // Dropdown Rounds - only select what we need

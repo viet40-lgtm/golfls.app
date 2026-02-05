@@ -8,7 +8,15 @@ export async function getAllCourses() {
             select: {
                 id: true,
                 name: true,
-                teeBoxes: true,
+                teeBoxes: {
+                    select: {
+                        id: true,
+                        name: true,
+                        rating: true,
+                        slope: true,
+                        par: true
+                    }
+                },
                 holes: {
                     select: {
                         holeNumber: true,
