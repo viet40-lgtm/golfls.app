@@ -21,7 +21,7 @@ import { joinLiveRoundByShortId } from '../actions/join-live-round';
 import { copyLiveToClub } from '../actions/copy-live-to-club';
 import { deleteUserLiveRound } from '../actions/delete-user-round';
 import { logout } from '../actions/auth';
-import { getAllCourses } from '@/app/actions/get-all-courses';
+import { getCoursesSafe } from '@/app/actions/get-courses-safe';
 import { getAllPlayers } from '@/app/actions/get-players';
 import { getLiveRoundData, getInitialLivePageData } from '../actions/get-live-page-data';
 import { cleanupIncompleteRounds } from '@/app/actions/cleanup-rounds';
@@ -162,7 +162,7 @@ export default function LiveScoreClient({
                 const players = await getAllPlayers();
                 setAllPlayers(players);
 
-                const courses = await getAllCourses();
+                const courses = await getCoursesSafe();
                 setAllCourses(courses);
 
             } catch (error) {
@@ -1110,7 +1110,7 @@ export default function LiveScoreClient({
         if (allCourses.length === 0 && lazyLoadedCourses.length === 0 && !isLoadingCourses) {
             setIsLoadingCourses(true);
             try {
-                const courses = await getAllCourses();
+                const courses = await getCoursesSafe();
                 if (courses && courses.length > 0) {
                     setAllCourses(courses);
                     setLazyLoadedCourses(courses);
