@@ -726,14 +726,22 @@ export default function LiveScoreClient({
     useEffect(() => {
         const checkAdmin = () => {
             const adminCookie = Cookies.get('admin_session');
-            // Only update if we can read the cookie - otherwise trust the server prop until an event fires
-            if (adminCookie !== undefined) {
-                setIsAdmin(adminCookie === 'true');
-            }
+            const adminStorage = typeof window !== 'undefined' ? localStorage.getItem('admin_access') : null;
+
+            // Check if either source indicates admin access
+            const isReallyAdmin = adminCookie === 'true' || adminStorage === 'true';
+
+            setIsAdmin(isReallyAdmin);
+
+            // Debug log to help troubleshoot visibility
+            console.log('Admin Access Check:', {
+                cookie: adminCookie,
+                storage: adminStorage,
+                granted: isReallyAdmin
+            });
         };
 
-        // Don't call checkAdmin() immediately - trust the server prop (isAdminProp) for initial render
-        // checkAdmin(); 
+        checkAdmin();
 
         window.addEventListener('admin-change', checkAdmin);
         return () => window.removeEventListener('admin-change', checkAdmin);
@@ -1407,6 +1415,13 @@ export default function LiveScoreClient({
                             <label htmlFor="round-selector" className="text-xs font-black text-zinc-400 uppercase tracking-widest ml-1">Select Round</label>
                             <div className="flex gap-1">
 
+                                <button
+                                    onClick={handleCreateNewRound}
+                                    className="px-2 py-1 bg-black text-white border border-black rounded-xl text-xs font-black hover:bg-zinc-800 transition-all shadow-md active:scale-95 uppercase tracking-widest"
+                                >
+                                    New
+                                </button>
+
                                 {/* Delete button - admin only (for current round) */}
                                 {isAdmin && (
                                     <button
@@ -1444,13 +1459,6 @@ export default function LiveScoreClient({
                                         Delete
                                     </button>
                                 )}
-
-                                <button
-                                    onClick={handleCreateNewRound}
-                                    className="px-2 py-1 bg-black text-white border border-black rounded-xl text-xs font-black hover:bg-zinc-800 transition-all shadow-md active:scale-95 uppercase tracking-widest"
-                                >
-                                    New
-                                </button>
                             </div>
                         </div>
 

@@ -17,12 +17,21 @@ export default function AppHeader() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     useEffect(() => {
-        const session = Cookies.get('admin_session');
-        setIsAdmin(session === 'true');
+        const checkAdmin = () => {
+            const adminCookie = Cookies.get('admin_session');
+            const adminStorage = typeof window !== 'undefined' ? localStorage.getItem('admin_access') : null;
+            const isReallyAdmin = adminCookie === 'true' || adminStorage === 'true';
+            setIsAdmin(isReallyAdmin);
+        };
+
+        checkAdmin();
+        window.addEventListener('admin-change', checkAdmin);
 
         const authStatus = Cookies.get('auth_status');
         const isAuth = authStatus === 'true';
         setIsAuthenticated(isAuth);
+
+        return () => window.removeEventListener('admin-change', checkAdmin);
     }, []);
 
     useEffect(() => {
@@ -61,6 +70,11 @@ export default function AppHeader() {
 
                     {/* Right: Actions */}
                     <div className="flex items-center gap-3">
+                        {isAdmin && (
+                            <div className="bg-red-100 text-red-600 w-8 h-8 rounded-full flex items-center justify-center font-black text-lg border-2 border-red-500 shadow-sm" title="Admin Mode Active">
+                                A
+                            </div>
+                        )}
                         {isAuthenticated && (
                             <div className="relative menu-container">
                                 <button
