@@ -23,7 +23,7 @@ import { deleteUserLiveRound } from '../actions/delete-user-round';
 import { logout } from '../actions/auth';
 import { getCoursesSafe } from '@/app/actions/get-courses-safe';
 import { getAllPlayers } from '@/app/actions/get-players';
-import { getLiveRoundData, getInitialLivePageData } from '../actions/get-live-page-data';
+import { getLiveRoundDataV2, getInitialLivePageDataV2 } from '../actions/get-live-page-data-v2';
 import { cleanupIncompleteRounds } from '@/app/actions/cleanup-rounds';
 
 
@@ -137,10 +137,10 @@ export default function LiveScoreClient({
                 // 2. Fetch Round Data (Highest Priority)
                 let pageData;
                 if (roundIdFromUrl) {
-                    const round = await getLiveRoundData(roundIdFromUrl);
+                    const round = await getLiveRoundDataV2(roundIdFromUrl);
                     pageData = { activeRound: round };
                 } else {
-                    pageData = await getInitialLivePageData(todayStr);
+                    pageData = await getInitialLivePageDataV2(todayStr);
                 }
 
                 if (pageData && !pageData.error) {
