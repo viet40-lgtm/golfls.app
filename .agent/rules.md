@@ -55,10 +55,10 @@ This file defines the core UI/UX standards and coding patterns for the G-GolfLS 
     - **ALWAYS** use `;` to chain commands (e.g., `git add . ; git commit...`).
 
 ## 5. Deployment & Git (CRITICAL)
-- **NO AUTO-PUSH**: The agent must **NEVER** run `git push` to origin/remote *unless explicitly asked by the user*. Pushing affects production (Vercel).
+- **NO AUTO-PUSH**: The agent must **NEVER** run `git push` to origin/remote. Pushing affects production (Vercel) and is the **USER'S RESPONSIBILITY**.
 - **NO AUTO-DEPLOY**: The agent must **NEVER** run deployment commands (e.g., `npx vercel --prod`).
 - **Workflow**: 
     1. Make local changes.
     2. Verify locally (`npm run build` is allowed).
     3. Commit locally if needed.
-    4. **STOP**. Do not push (unless instructed).
+    4. **STOP**. Do not push. User will handle deployment manually.

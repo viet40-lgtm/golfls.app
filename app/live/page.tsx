@@ -246,10 +246,19 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
     }));
 
     // Fetch all courses for the "New Round" dropdown
+    // OPTIMIZED: Exclude 'elements' to reduce payload size causing Vercel crashes
     const availableCourses = await prisma.course.findMany({
-        include: {
+        select: {
+            id: true,
+            name: true,
             teeBoxes: true,
-            holes: { include: { elements: true }, orderBy: { holeNumber: 'asc' } }
+            holes: {
+                select: {
+                    holeNumber: true,
+                    par: true
+                },
+                orderBy: { holeNumber: 'asc' }
+            }
         },
         orderBy: { name: 'asc' }
     });
