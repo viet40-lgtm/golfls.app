@@ -11,4 +11,6 @@ This project follows specific UI/UX patterns to ensure a premium, high-contrast 
 6. **Centered Headers**: Modal titles should be centered using spacers (`w-10`) on the left and right.
 7. **Cleanup**: Incomplete past rounds (scores < 18 and not today) should be auto-deleted on `/live` page load.
 
+8. **Local Server (AI)**: We use a local LLM (`192.168.1.67`) for code generation. The Cloud Agent (Lead) asks the Local LLM (Intern) via `scripts/query_local_llm.js` and applies the code.
+
 See `.agent/rules.md` for more technical details.

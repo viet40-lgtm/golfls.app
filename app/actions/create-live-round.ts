@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { getSession } from '@/lib/auth';
 
 /**
  * Generates a unique 4-character shortId: [Initial][3 random numbers]
@@ -51,7 +52,6 @@ export async function createLiveRound(data: {
 }) {
     console.log('SERVER ACTION: createLiveRound starting...', data.name);
     try {
-        const { getSession } = await import('@/lib/auth');
         const session = await getSession();
         const shortId = await generateUniqueShortId(getInitialFromName(session));
 
@@ -106,7 +106,6 @@ export async function createDefaultLiveRound(date: string, creatorName?: string,
         const defaultTeeBox = whiteTee || defaultCourse.teeBoxes[0];
 
         // Check for logged-in user
-        const { getSession } = await import('@/lib/auth');
         const session = await getSession();
 
         let roundName = `Live Round - ${date}`;

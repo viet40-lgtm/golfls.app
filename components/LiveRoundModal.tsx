@@ -112,6 +112,14 @@ export function LiveRoundModal({
         const slopeVal = parseInt(slope.toString()) || (existingRound?.slope || 100);
 
         setIsSaving(true);
+
+        if (!Array.isArray(allCourses)) {
+            console.error('CRASH: allCourses is not an array', allCourses);
+            showAlert('Error', 'Internal Error: Course data is invalid/missing.');
+            setIsSaving(false);
+            return;
+        }
+
         try {
             if (existingRound) {
                 const result = await updateLiveRound({
@@ -201,7 +209,8 @@ export function LiveRoundModal({
             }
         } catch (e) {
             console.error('CRASH:', e);
-            showAlert('Error', 'A critical error occurred. Please refresh.');
+            console.error('CRASH:', e);
+            showAlert('Error', 'Critical Error: ' + (e instanceof Error ? e.message : String(e)));
             setIsSaving(false);
         }
     };

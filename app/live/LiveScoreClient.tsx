@@ -1406,15 +1406,7 @@ export default function LiveScoreClient({
                         <div className="flex justify-between items-center">
                             <label htmlFor="round-selector" className="text-xs font-black text-zinc-400 uppercase tracking-widest ml-1">Select Round</label>
                             <div className="flex gap-1">
-                                {/* Transfer button - Admin only */}
-                                {liveRoundId && isAdmin && (
-                                    <button
-                                        onClick={() => setIsAddToClubModalOpen(true)}
-                                        className="bg-green-600 text-white text-[15pt] font-bold px-1 py-1 rounded-xl hover:bg-green-700 transition-all shadow-md active:scale-95"
-                                    >
-                                        Transfer
-                                    </button>
-                                )}
+
                                 {/* Delete button - admin only (for current round) */}
                                 {isAdmin && (
                                     <button

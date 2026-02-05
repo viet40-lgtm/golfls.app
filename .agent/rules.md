@@ -56,3 +56,14 @@ This file defines the core UI/UX standards and coding patterns for the G-GolfLS 
     2. Verify locally (`npm run build` is allowed).
     3. Commit locally if needed.
     4. **STOP**. Do not push.
+
+## 6. Local Server Strategy (AI Agents)
+- **Role: The "Junior Intern" (Generator)**
+    - The local server (Gemma 3 on LM Studio, `192.168.1.67:1234`) helps generate code, logic, and text.
+    - It **cannot** see files, edit code, or run commands. It is a "Chatbot in a Box".
+- **Role: The "Lead Engineer" (Antigravity)**
+    - The cloud-based Agent (Antigravity) is the only one authorized to edit files and run commands.
+    - Antigravity acts as the bridge: it sends prompts to the Local Server and implements the returned code.
+- **Usage**:
+    - Use the helper script: `node scripts/query_local_llm.js "Your Prompt Here"`
+    - Use this for generating complex logic, SQL queries, or content without cloud costs/latency.
