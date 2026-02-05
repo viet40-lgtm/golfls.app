@@ -1645,7 +1645,7 @@ export default function LiveScoreClient({
                                                 if (lazyLoadedCourses.length === 0 && !isLoadingCourses) {
                                                     setIsLoadingCourses(true);
                                                     try {
-                                                        const courses = await getAllCourses();
+                                                        const courses = await getCoursesSafe();
                                                         setLazyLoadedCourses(courses);
                                                     } catch (error) {
                                                         console.error('Failed to load courses:', error);
