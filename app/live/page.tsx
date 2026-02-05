@@ -32,13 +32,18 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
     const isAdmin = cookieStore.get('admin_session')?.value === 'true';
 
     // Resolve Today's Date (Chicago)
-    const formatter = new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'America/Chicago',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-    });
-    const todayStr = formatter.format(new Date());
+    let todayStr = new Date().toISOString().split('T')[0]; // Default Fallback (UTC)
+    try {
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'America/Chicago',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
+        todayStr = formatter.format(new Date());
+    } catch (e) {
+        console.error("Date formatting failed:", e);
+    }
 
     let activeRound: any = null;
     let defaultCourse: any = null;
@@ -154,11 +159,15 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
     }
 
     // AUTO-HEAL: Ensure active round has a shortId
-    if (activeRound && !activeRound.shortId) {
-        const newShortId = await ensureRoundHasShortId(activeRound.id);
-        if (newShortId) {
-            activeRound.shortId = newShortId;
+    try {
+        if (activeRound && !activeRound.shortId) {
+            const newShortId = await ensureRoundHasShortId(activeRound.id);
+            if (newShortId) {
+                activeRound.shortId = newShortId;
+            }
         }
+    } catch (e) {
+        console.error("Failed to ensure shortId:", e);
     }
 
     // STEP 2: Get rounds for dropdown (Admin: All recent; User: Their last 10)
