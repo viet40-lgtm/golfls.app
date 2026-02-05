@@ -165,11 +165,18 @@ export default function LiveScoreClient({
                 }
 
                 // 3. Sequential Fetch for Players & Courses (Prevents connection spike)
-                const players = await getAllPlayers();
-                setAllPlayers(players);
+                // 3. Sequential Fetch for Players & Courses via API (No Server Actions)
+                const playersRes = await fetch('/api/players');
+                if (playersRes.ok) {
+                    const players = await playersRes.json();
+                    setAllPlayers(players);
+                }
 
-                const courses = await getCoursesSafe();
-                setAllCourses(courses);
+                const coursesRes = await fetch('/api/courses');
+                if (coursesRes.ok) {
+                    const courses = await coursesRes.json();
+                    setAllCourses(courses);
+                }
 
             } catch (error) {
                 console.error("Critical lazy load failed:", error);
