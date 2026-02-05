@@ -1,6 +1,6 @@
 'use server'
 
-import { prisma } from '@/lib/prisma'
+import { prisma } from '../../lib/prisma'
 
 export async function getAllCourses() {
     try {
@@ -34,9 +34,11 @@ export async function getAllCourses() {
             holes: [...course.holes].sort((a, b) => a.holeNumber - b.holeNumber)
         }));
 
-        return JSON.parse(JSON.stringify(sortedCourses));
+        const result = JSON.parse(JSON.stringify(sortedCourses));
+        return result;
     } catch (error) {
-        console.error('getAllCourses Failed:', error);
+        console.error('getAllCourses Server Action Error:', error);
+        // ALWAYS return a safe value, never throw
         return [];
     }
 }
