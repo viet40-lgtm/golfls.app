@@ -14,7 +14,8 @@ export const metadata = {
 
 async function LiveScorePageContent(props: { searchParams: Promise<{ roundId?: string }> }) {
     const resolvedSearchParams = await props.searchParams;
-    const roundIdFromUrl = resolvedSearchParams.roundId;
+    // SIMPLIFICATION: Ignore URL roundId as requested
+    // const roundIdFromUrl = resolvedSearchParams.roundId;
 
     // Check if user is authenticated via cookies ONLY (fast)
     const cookieStore = await cookies();
@@ -55,7 +56,7 @@ async function LiveScorePageContent(props: { searchParams: Promise<{ roundId?: s
             currentUserName={currentUserName}
             lastUsedCourseId={null}
             lastUsedTeeBoxId={null}
-            roundIdFromUrl={roundIdFromUrl}
+        // roundIdFromUrl={roundIdFromUrl}  <-- REMOVED
         />
     );
 }
