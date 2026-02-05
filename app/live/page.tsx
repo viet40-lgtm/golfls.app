@@ -195,13 +195,27 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
         })
         .map(r => {
             // Format date as "Sat-02/01"
-            const date = new Date(r.date + 'T12:00:00');
+            let dateStr = r.date;
+            try {
+                // Determine valid date string
+                if (!dateStr) dateStr = new Date().toISOString().split('T')[0];
+            } catch (e) {
+                dateStr = new Date().toISOString().split('T')[0];
+            }
+
+            const date = new Date(dateStr + 'T12:00:00');
             const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
-            // Clean up course name (remove "New Orleans" if present)
-            const courseName = r.courseName.replace(/New Orleans/gi, '').trim();
-            const displayName = `${dayName}-${month}/${day}-${courseName}`;
+            // Clean up course name (remove "New Orleans" if present) and slugify
+            const rawName = r.courseName || 'Unknown Course';
+            const courseName = rawName
+                .replace(/New Orleans/gi, '')
+                .trim()
+                .toLowerCase()
+                .replace(/\s+/g, '-');
+
+            const displayName = `${dayName}-${month}-${day}-${courseName}`;
             return { id: r.id, name: displayName };
         });
 
