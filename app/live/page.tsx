@@ -16,6 +16,7 @@ export const metadata = {
 import { ensureRoundHasShortId } from '@/app/actions/ensure-short-id';
 
 async function LiveScorePageContent(props: { searchParams: Promise<{ roundId?: string }> }) {
+    console.log("BUILD_TRACE: Page render triggered at 2026-02-05 12:27");
     const resolvedSearchParams = await props.searchParams;
     const roundIdFromUrl = resolvedSearchParams.roundId;
 
