@@ -63,12 +63,17 @@ export async function getInitialLivePageDataV2(todayStr: string) {
 
         console.log(`SERVER ACTION: getInitialLivePageDataV2 Success. Active: ${activeRound?.id}, All: ${allLiveRounds.length}`);
 
-        return {
+
+        // CRITICAL FIX: Sanitize the return value to ensure it is generic JSON.
+        // Prisma objects may contain Dates, Decimals, or other non-serializable types.
+        const result = {
             activeRound,
             allLiveRounds,
             lastUsedCourseId,
             lastUsedTeeBoxId
         };
+
+        return JSON.parse(JSON.stringify(result));
 
     } catch (error: any) {
         console.error("SERVER ACTION ERROR: getInitialLivePageDataV2", error);
