@@ -12,12 +12,26 @@ export default function Live2Client() {
     const [status, setStatus] = useState('Idle');
     const [allCourses, setAllCourses] = useState<any[]>([]);
 
+    const [activeRound, setActiveRound] = useState<any>(null);
+
     useEffect(() => {
-        // Fetch courses for the modal
+        // Fetch courses
         fetch('/api/courses')
             .then(res => res.json())
             .then(data => setAllCourses(data))
             .catch(err => setStatus('Failed to load courses: ' + err.message));
+
+        // Fetch Live Data
+        const today = new Date().toISOString().split('T')[0];
+        fetch(`/api/live-data?date=${today}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.activeRound) {
+                    setActiveRound(data.activeRound);
+                    setStatus('Active Round Found: ' + data.activeRound.name);
+                }
+            })
+            .catch(err => console.error(err));
     }, []);
 
     const handleCreateDefault = async () => {
@@ -57,6 +71,21 @@ export default function Live2Client() {
                     Quick Create Default
                 </button>
             </div>
+
+            {activeRound && (
+                <div className="bg-blue-50 p-4 rounded-xl border-2 border-blue-200">
+                    <h2 className="text-xl font-bold">{activeRound.name}</h2>
+                    <p>{activeRound.courseName}</p>
+                    <div className="mt-2">
+                        <h3 className="font-bold">Players ({activeRound.players.length})</h3>
+                        <ul>
+                            {activeRound.players.map((p: any) => (
+                                <li key={p.id}>{p.player?.name || p.guestName}</li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+            )}
 
             <div className="mt-4 p-4 bg-gray-50 font-mono text-sm break-all">
                 Status: {status}
