@@ -136,11 +136,17 @@ export default function LiveScoreClient({
 
                 // 2. Fetch Round Data (Highest Priority)
                 let pageData;
+                // SWITCH TO API ROUTE to bypass Server Action 500 errors
                 if (roundIdFromUrl) {
+                    // For specific round, keep old logic or implement API if needed.
+                    // IMPORTANT: If roundIdFromUrl is present, we still use the old action for now or Mock?
+                    // Let's rely on the mock for roundIdFromUrl as user is focused on "New Round" flow (no ID)
                     const round = await getLiveRoundDataV2(roundIdFromUrl);
                     pageData = { activeRound: round };
                 } else {
-                    pageData = await getInitialLivePageDataV2(todayStr);
+                    const res = await fetch(`/api/live-data?date=${todayStr}`);
+                    if (!res.ok) throw new Error('API Failed: ' + res.status);
+                    pageData = await res.json();
                 }
 
                 if (pageData && !pageData.error) {
