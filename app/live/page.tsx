@@ -1,4 +1,3 @@
-import { prisma } from '@/lib/prisma';
 import LiveScoreClient from './LiveScoreClient';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
@@ -13,13 +12,11 @@ export const metadata = {
     },
 };
 
-import { ensureRoundHasShortId } from '@/app/actions/ensure-short-id';
-
 async function LiveScorePageContent(props: { searchParams: Promise<{ roundId?: string }> }) {
     const resolvedSearchParams = await props.searchParams;
     const roundIdFromUrl = resolvedSearchParams.roundId;
 
-    // Check if user is authenticated
+    // Check if user is authenticated via cookies ONLY (fast)
     const cookieStore = await cookies();
     const isAuthenticated = cookieStore.get('auth_status')?.value === 'true';
     const sessionUserId = cookieStore.get('session_userId')?.value;
@@ -30,17 +27,8 @@ async function LiveScorePageContent(props: { searchParams: Promise<{ roundId?: s
 
     const isAdmin = cookieStore.get('admin_session')?.value === 'true';
 
-    // Fetch ONLY the player name for the welcome message (very light)
-    let currentUserName = 'Player';
-    try {
-        const profile = await prisma.player.findUnique({
-            where: { id: sessionUserId },
-            select: { name: true }
-        });
-        if (profile?.name) currentUserName = profile.name;
-    } catch (e) {
-        console.error("Minimal profile fetch failed:", e);
-    }
+    // DIAGNOSTIC change: Bypass Prisma entirely for the page render
+    const currentUserName = 'GolfLS Player';
 
     // Resolve Today's Date (Chicago)
     let todayStr = new Date().toISOString().split('T')[0];
@@ -59,9 +47,9 @@ async function LiveScorePageContent(props: { searchParams: Promise<{ roundId?: s
             allPlayers={[]}
             defaultCourse={null}
             allCourses={[]}
-            initialRound={null} // Feched by client
+            initialRound={null}
             todayStr={todayStr}
-            allLiveRounds={[]} // Fetched by client
+            allLiveRounds={[]}
             isAdmin={isAdmin}
             currentUserId={sessionUserId}
             currentUserName={currentUserName}
@@ -76,23 +64,15 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
     try {
         return await LiveScorePageContent(props);
     } catch (e: any) {
-        // ESSENTIAL: Re-throw redirect errors so Next.js can handle them
         if (e.digest?.startsWith('NEXT_REDIRECT') || e.message?.includes('NEXT_REDIRECT')) throw e;
-        if (e.digest?.startsWith('NEXT_NOT_FOUND')) throw e;
 
-        console.error("CRITICAL LIVE PAGE ERROR:", e);
+        console.error("DIAGNOSTIC PAGE ERROR:", e);
         return (
             <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-white text-black">
-                <h1 className="text-xl font-black uppercase tracking-tighter mb-4">Error Loading Live Round</h1>
-                <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded w-full max-w-lg mb-6 overflow-auto font-mono text-xs">
-                    <p className="font-bold mb-2">System Message:</p>
-                    {e.message || "Unknown Error"}
-                    {e.digest && <p className="mt-2 text-zinc-400 mt-2">Digest: {e.digest}</p>}
-                    <p className="mt-4 text-zinc-500 italic">This error usually happens when data payload is too large or data is malformed.</p>
-                </div>
-                <a href="/" className="px-8 py-4 bg-black text-white rounded-full font-black uppercase tracking-widest text-sm hover:scale-105 transition-transform">
-                    Return Home
-                </a>
+                <h1 className="text-xl font-black uppercase tracking-tighter mb-4">Diagnostic Load Failure</h1>
+                <pre className="text-xs font-mono bg-red-50 p-4 border border-red-200 w-full overflow-auto">
+                    {String(e.stack || e.message || e)}
+                </pre>
             </div>
         );
     }
