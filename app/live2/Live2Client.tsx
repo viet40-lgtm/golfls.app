@@ -4,15 +4,26 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { LiveRoundModal } from '@/components/LiveRoundModal';
-import { createDefaultLiveRound } from '@/app/actions/create-live-round';
+import { createDefaultLiveRound, saveLiveScore } from '@/app/actions/create-live-round';
 
-export default function Live2Client() {
+export default function Live2Client({
+    currentUserId,
+    isAdmin
+}: {
+    currentUserId: string;
+    isAdmin: boolean;
+}) {
     const router = useRouter();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [status, setStatus] = useState('Idle');
     const [allCourses, setAllCourses] = useState<any[]>([]);
-
     const [activeRound, setActiveRound] = useState<any>(null);
+    const [activeHole, setActiveHole] = useState(1);
+    const [isSaving, setIsSaving] = useState(false);
+
+    // scores: Map<playerId, Map<holeNumber, strokes>>
+    const [scores, setScores] = useState<Map<string, Map<number, number>>>(new Map());
+    const [pendingScores, setPendingScores] = useState<Map<string, number>>(new Map());
 
     useEffect(() => {
         // Fetch courses
@@ -41,11 +52,93 @@ export default function Live2Client() {
             const result = await createDefaultLiveRound(dateStr, "Test User");
             if (result.success) {
                 setStatus('Success!');
+                // Re-fetch to show the new round
+                const today = new Date().toISOString().split('T')[0];
+                const res = await fetch(`/api/live-data?date=${today}`);
+                const data = await res.json();
+                if (data.activeRound) setActiveRound(data.activeRound);
             } else {
                 setStatus('Error: ' + result.error);
             }
         } catch (e: any) {
             setStatus('Crash: ' + e.message);
+        }
+    };
+
+    // Sync local scores with activeRound data when it loads
+    useEffect(() => {
+        if (activeRound?.players) {
+            const initialScores = new Map();
+            activeRound.players.forEach((p: any) => {
+                const playerScores = new Map();
+                if (p.scores) {
+                    p.scores.forEach((s: any) => {
+                        if (s.hole?.holeNumber) {
+                            playerScores.set(s.hole.holeNumber, s.strokes);
+                        }
+                    });
+                }
+                initialScores.set(p.id, playerScores);
+            });
+            setScores(initialScores);
+        }
+    }, [activeRound]);
+
+    // --- Scoring Logic ---
+    const getScore = (playerId: string, holeNumber: number) => {
+        const pending = pendingScores.get(playerId);
+        if (pending !== undefined) return pending;
+
+        const playerScores = scores.get(playerId);
+        return playerScores?.get(holeNumber);
+    };
+
+    const updateScore = (playerId: string, increment: boolean) => {
+        const currentScore = getScore(playerId, activeHole) || 4; // Default to par 4
+        const newScore = increment ? currentScore + 1 : Math.max(1, currentScore - 1);
+        setPendingScores(prev => new Map(prev).set(playerId, newScore));
+    };
+
+    const handleSaveHole = async () => {
+        if (!activeRound || isSaving) return;
+        setIsSaving(true);
+        setStatus('Saving Hole ' + activeHole + '...');
+
+        try {
+            const updates = activeRound.players.map((p: any) => {
+                const pid = p.id; // LiveRoundPlayer ID
+                const strokes = getScore(pid, activeHole) || 4;
+                return { playerId: pid, strokes };
+            });
+
+            const result = await saveLiveScore({
+                liveRoundId: activeRound.id,
+                holeNumber: activeHole,
+                playerScores: updates
+            });
+
+            if (result.success) {
+                // Update local scores state optimistically
+                setScores(prev => {
+                    const next = new Map(prev);
+                    updates.forEach((u: any) => {
+                        const pScores = new Map(next.get(u.playerId) || []);
+                        pScores.set(activeHole, u.strokes);
+                        next.set(u.playerId, pScores);
+                    });
+                    return next;
+                });
+                setPendingScores(new Map());
+                setStatus('Hole ' + activeHole + ' Saved!');
+                // Auto-advance hole
+                if (activeHole < 18) setActiveHole(activeHole + 1);
+            } else {
+                setStatus('Save Failed: ' + result.error);
+            }
+        } catch (e: any) {
+            setStatus('Save Crash: ' + e.message);
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -66,23 +159,79 @@ export default function Live2Client() {
                 <div className="text-sm text-gray-400">Debug Tools</div>
                 <button
                     onClick={handleCreateDefault}
-                    className="bg-green-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-green-700"
+                    className="bg-green-600/20 text-green-700 border border-green-600 px-4 py-2 rounded-lg font-bold hover:bg-green-600 hover:text-white transition-all text-sm"
                 >
                     Quick Create Default
                 </button>
             </div>
 
             {activeRound && (
-                <div className="bg-blue-50 p-4 rounded-xl border-2 border-blue-200">
-                    <h2 className="text-xl font-bold">{activeRound.name}</h2>
-                    <p>{activeRound.courseName}</p>
-                    <div className="mt-2">
-                        <h3 className="font-bold">Players ({activeRound.players.length})</h3>
-                        <ul>
-                            {activeRound.players.map((p: any) => (
-                                <li key={p.id}>{p.player?.name || p.guestName}</li>
-                            ))}
-                        </ul>
+                <div className="space-y-4">
+                    {/* Header */}
+                    <div className="bg-black text-white p-4 rounded-2xl shadow-xl flex justify-between items-center">
+                        <div className="text-left">
+                            <h2 className="text-2xl font-black italic uppercase tracking-tighter">{activeRound.name}</h2>
+                            <p className="text-zinc-400 font-bold uppercase text-xs">{activeRound.courseName}</p>
+                        </div>
+                        <div className="text-right">
+                            <div className="text-3xl font-black">Hole {activeHole}</div>
+                            <div className="text-xs font-bold uppercase text-zinc-400">Par {activeRound.par}</div>
+                        </div>
+                    </div>
+
+                    {/* Hole Selector */}
+                    <div className="grid grid-cols-6 gap-1">
+                        {Array.from({ length: 18 }, (_, i) => i + 1).map(h => (
+                            <button
+                                key={h}
+                                onClick={() => setActiveHole(h)}
+                                className={`py-2 rounded-xl font-black transition-all ${activeHole === h ? 'bg-blue-600 text-white scale-105 shadow-lg' : 'bg-gray-100 text-zinc-400 hover:bg-gray-200'}`}
+                            >
+                                {h}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Scoring List */}
+                    <div className="bg-white border-4 border-black rounded-2xl overflow-hidden shadow-2xl">
+                        <div className="p-4 space-y-4">
+                            {activeRound.players.map((p: any) => {
+                                const pid = p.id;
+                                const currentScore = getScore(pid, activeHole) || 4;
+                                const name = p.player?.name || p.guestName || "Player";
+
+                                return (
+                                    <div key={pid} className="flex justify-between items-center border-b last:border-0 border-zinc-100 pb-2 last:pb-0">
+                                        <div className="text-left">
+                                            <div className="font-black text-xl italic uppercase tracking-tighter text-zinc-900">{name}</div>
+                                            <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{p.courseHandicap ? `HCP: ${p.courseHandicap}` : ''}</div>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <button
+                                                onClick={() => updateScore(pid, false)}
+                                                className="w-12 h-12 rounded-full border-4 border-black font-black text-2xl active:scale-90 transition-all"
+                                            >
+                                                -
+                                            </button>
+                                            <div className="text-4xl font-black italic w-10 text-center">{currentScore}</div>
+                                            <button
+                                                onClick={() => updateScore(pid, true)}
+                                                className="w-12 h-12 rounded-full border-4 border-black font-black text-2xl active:scale-90 transition-all bg-black text-white"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <button
+                            onClick={handleSaveHole}
+                            disabled={isSaving}
+                            className="w-full bg-blue-600 text-white py-6 text-2xl font-black uppercase tracking-widest hover:bg-blue-700 transition-all disabled:opacity-50"
+                        >
+                            {isSaving ? 'Saving...' : `Save Hole ${activeHole}`}
+                        </button>
                     </div>
                 </div>
             )}
@@ -98,7 +247,7 @@ export default function Live2Client() {
                 allCourses={allCourses}
                 showAlert={(title, msg) => alert(`${title}: ${msg}`)}
                 defaultTeeBoxId={undefined}
-                currentUserId={'diagnostic-user'}
+                currentUserId={currentUserId}
             />
         </div>
     );

@@ -1,13 +1,25 @@
-
 import Live2Client from './Live2Client';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-export default function Live2Page() {
+export default async function Live2Page() {
+    const cookieStore = await cookies();
+    const isAuthenticated = cookieStore.get('auth_status')?.value === 'true';
+    const sessionUserId = cookieStore.get('session_userId')?.value;
+    const isAdmin = cookieStore.get('admin_session')?.value === 'true';
+
+    if (!isAuthenticated || !sessionUserId) {
+        redirect('/');
+    }
+
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
-            <h1 className="text-3xl font-black mb-8">GolfLS v2</h1>
-            <Live2Client />
+        <div className="min-h-screen bg-gray-100 p-4">
+            <Live2Client
+                currentUserId={sessionUserId}
+                isAdmin={isAdmin}
+            />
         </div>
     );
 }
