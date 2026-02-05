@@ -152,7 +152,6 @@ model Score {
 
 model LiveRound {
   id         String            @id @default(uuid())
-  shortId    String?           @unique
   name       String
   date       String
   courseId   String

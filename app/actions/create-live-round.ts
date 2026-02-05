@@ -23,7 +23,6 @@ export async function createLiveRound(data: {
         const liveRound = await prisma.liveRound.create({
             data: {
                 name: data.name,
-                // shortId: shortId, // DISABLED: Schema mismatch in prod
                 date: data.date,
                 course: { connect: { id: data.courseId } },
                 courseName: data.courseName,
@@ -109,7 +108,6 @@ export async function createDefaultLiveRound(date: string, creatorName?: string,
         const newRound = await prisma.liveRound.create({
             data: {
                 name: roundName,
-                // shortId: shortId, // DISABLED: Schema mismatch
                 date: date,
                 courseId: defaultCourse.id,
                 courseName: defaultCourse.name,
