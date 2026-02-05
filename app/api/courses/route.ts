@@ -1,22 +1,26 @@
 
 import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
         console.log("API: /api/courses called");
-        // Return Mocked Course
-        const mock = [
-            {
-                id: 'mock-course',
-                name: 'Diagnostic Course',
-                teeBoxes: [{ id: 'mock-tee', name: 'White', rating: 68.0, slope: 110, par: 70 }],
-                holes: Array.from({ length: 18 }, (_, i) => ({ holeNumber: i + 1, par: 4, difficulty: i + 1 }))
+
+        const courses = await prisma.course.findMany({
+            orderBy: { name: 'asc' },
+            include: {
+                teeBoxes: true,
+                holes: {
+                    orderBy: { holeNumber: 'asc' }
+                }
             }
-        ];
-        return NextResponse.json(mock);
+        });
+
+        return NextResponse.json(courses);
     } catch (error: any) {
+        console.error("API Courses Error:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
