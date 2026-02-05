@@ -13,20 +13,9 @@ async function generateUniqueShortId(initial: string) {
     let attempts = 0;
     const cleanInitial = (initial[0] || 'R').toUpperCase();
 
-    while (!isUnique && attempts < 15) {
-        const randomNums = Math.floor(100 + Math.random() * 900).toString();
-        shortId = `${cleanInitial}${randomNums}`;
-
-        const existingRound = await prisma.liveRound.findUnique({
-            where: { shortId }
-        });
-
-        if (!existingRound) {
-            isUnique = true;
-        }
-        attempts++;
-    }
-    return shortId;
+    // DISABLED: shortId column missing in prod
+    // while (!isUnique && attempts < 15) { ... }
+    return '0000';
 }
 
 /**
@@ -58,7 +47,7 @@ export async function createLiveRound(data: {
         const liveRound = await prisma.liveRound.create({
             data: {
                 name: data.name,
-                shortId: shortId,
+                // shortId: shortId, // DISABLED: Schema mismatch in prod
                 date: data.date,
                 course: { connect: { id: data.courseId } },
                 courseName: data.courseName,
@@ -147,7 +136,7 @@ export async function createDefaultLiveRound(date: string, creatorName?: string,
         const newRound = await prisma.liveRound.create({
             data: {
                 name: roundName,
-                shortId: shortId,
+                // shortId: shortId, // DISABLED: Schema mismatch in prod
                 date: date,
                 courseId: defaultCourse.id,
                 courseName: defaultCourse.name,
