@@ -21,15 +21,11 @@ export async function getAllCourses() {
                     select: {
                         holeNumber: true,
                         par: true,
-                        difficulty: true
+                        difficulty: true,
+                        latitude: true,
+                        longitude: true
                     },
                     orderBy: { holeNumber: 'asc' }
-                },
-                _count: {
-                    select: {
-                        rounds: true,
-                        liveRounds: true
-                    }
                 }
             },
             orderBy: { name: 'asc' }

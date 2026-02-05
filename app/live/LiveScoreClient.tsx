@@ -24,6 +24,7 @@ import { logout } from '../actions/auth';
 import { getAllCourses } from '@/app/actions/get-all-courses';
 import { getAllPlayers } from '@/app/actions/get-players';
 import { getLiveRoundData, getInitialLivePageData } from '../actions/get-live-page-data';
+import { cleanupIncompleteRounds } from '@/app/actions/cleanup-rounds';
 
 
 interface Player {
@@ -130,7 +131,10 @@ export default function LiveScoreClient({
         const loadEverything = async () => {
             setIsLoadingLazyData(true);
             try {
-                // 1. Fetch Players & Courses
+                // 1. Cleanup old incomplete rounds (Rule #4)
+                cleanupIncompleteRounds(todayStr).catch(err => console.error("Cleanup error:", err));
+
+                // 2. Fetch Players & Courses
                 const [players, courses] = await Promise.all([
                     getAllPlayers(),
                     getAllCourses()
@@ -1107,13 +1111,23 @@ export default function LiveScoreClient({
         setRoundModalMode('new');
 
         // Lazy-load courses if not already loaded
-        if (lazyLoadedCourses.length === 0 && !isLoadingCourses) {
+        if (allCourses.length === 0 && lazyLoadedCourses.length === 0 && !isLoadingCourses) {
             setIsLoadingCourses(true);
             try {
                 const courses = await getAllCourses();
-                setLazyLoadedCourses(courses || []);
+                if (courses && courses.length > 0) {
+                    setAllCourses(courses);
+                    setLazyLoadedCourses(courses);
+                } else {
+                    showAlert('Error', 'Failed to load courses. Please check your connection.');
+                    setIsLoadingCourses(false);
+                    return;
+                }
             } catch (error) {
                 console.error('Failed to load courses:', error);
+                showAlert('Error', 'Failed to connect to course server.');
+                setIsLoadingCourses(false);
+                return;
             } finally {
                 setIsLoadingCourses(false);
             }

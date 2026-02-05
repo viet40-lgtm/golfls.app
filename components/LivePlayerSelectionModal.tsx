@@ -361,362 +361,359 @@ export function LivePlayerSelectionModal({
         : JSON.stringify(localPlayerModes) !== JSON.stringify(playerModes);
 
     return (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm">
-            {/* Full Screen Panel */}
-            <div className="w-full h-full max-w-full overflow-hidden bg-gray-50 shadow-2xl flex flex-col">
-                {/* Scrollable Content Area */}
-                <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-[100] bg-white flex flex-col animate-in fade-in duration-200">
+            {/* Header (Rule #1) */}
+            <div className="px-4 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md z-20">
+                <div className="w-10"></div>
+                <h2 className="text-lg font-black italic uppercase tracking-tighter text-center flex-1">
+                    {isCreating ? "Create New Player" : "Select Players"}
+                </h2>
+                <div className="w-10"></div>
+            </div>
 
-                    {/* Header */}
-                    <div className="p-1 bg-white flex flex-col gap-1 shadow-sm z-10 flex-1 h-full">
-                        <div className="flex justify-between items-center">
-                            <h2 className="text-[16pt] font-bold text-left ml-1">
-                                {isCreating ? "Create New Player" : "Search player:"}
-                            </h2>
-                            {/* Close button removed as requested */}
-                        </div>
+            <div className="flex-1 flex flex-col overflow-hidden">
 
 
-                        {!isCreating && (
-                            <div className="relative flex items-stretch gap-2" ref={searchRef}>
-                                <div className="flex-1 relative">
-                                    <input
-                                        type="text"
-                                        placeholder="Search by First/Last Name"
-                                        title="Search players"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full text-[14pt] h-[48px] p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black bg-white shadow-sm transition-all"
-                                    />
-                                    {searchQuery && (
-                                        <div className="absolute top-full left-0 w-full bg-white border-2 border-gray-200 rounded-xl mt-2 max-h-[55vh] overflow-y-auto z-50 shadow-2xl">
-                                            {searchResults.length === 0 ? (
-                                                <div className="p-4 text-center text-gray-500">No matching players</div>
-                                            ) : (
-                                                searchResults.map(p => {
-                                                    const mode = getPlayerMode(p.id);
-                                                    return (
-                                                        <button
-                                                            key={'search-' + p.id}
-                                                            onClick={() => {
-                                                                if (useDualCheckbox) {
-                                                                    setLocalPlayerSelections(prev => ({
-                                                                        ...prev,
-                                                                        [p.id]: { score: true, leaderboard: true }
-                                                                    }));
-                                                                } else {
-                                                                    setPlayerMode(p.id, 'score');
-                                                                }
-                                                                setSearchQuery('');
-                                                            }}
-                                                            className="w-full text-left p-1 border-b border-gray-100 last:border-0 hover:bg-blue-50 flex items-center justify-between"
-                                                        >
-                                                            <div className="flex flex-col">
-                                                                <span className="font-bold text-lg text-black">{p.name}</span>
-                                                                <span className="text-xs text-gray-400">{p.phone || 'No phone'}</span>
-                                                            </div>
-                                                            {mode !== 'none' ? (
-                                                                <span className="text-blue-600 text-sm font-bold bg-blue-50 px-2 py-1 rounded">
-                                                                    {mode === 'score' ? 'Score' : 'Board'}
-                                                                </span>
-                                                            ) : (
-                                                                <span className="text-green-600 text-sm font-bold bg-green-50 px-2 py-1 rounded">+ Add</span>
-                                                            )}
-                                                        </button>
-                                                    )
-                                                })
-                                            )}
-                                        </div>
+                {!isCreating && (
+                    <div className="relative flex items-stretch gap-2" ref={searchRef}>
+                        <div className="flex-1 relative">
+                            <input
+                                type="text"
+                                placeholder="Search by First/Last Name"
+                                title="Search players"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full text-[14pt] h-[48px] p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black bg-white shadow-sm transition-all"
+                            />
+                            {searchQuery && (
+                                <div className="absolute top-full left-0 w-full bg-white border-2 border-gray-200 rounded-xl mt-2 max-h-[55vh] overflow-y-auto z-50 shadow-2xl">
+                                    {searchResults.length === 0 ? (
+                                        <div className="p-4 text-center text-gray-500">No matching players</div>
+                                    ) : (
+                                        searchResults.map(p => {
+                                            const mode = getPlayerMode(p.id);
+                                            return (
+                                                <button
+                                                    key={'search-' + p.id}
+                                                    onClick={() => {
+                                                        if (useDualCheckbox) {
+                                                            setLocalPlayerSelections(prev => ({
+                                                                ...prev,
+                                                                [p.id]: { score: true, leaderboard: true }
+                                                            }));
+                                                        } else {
+                                                            setPlayerMode(p.id, 'score');
+                                                        }
+                                                        setSearchQuery('');
+                                                    }}
+                                                    className="w-full text-left p-1 border-b border-gray-100 last:border-0 hover:bg-blue-50 flex items-center justify-between"
+                                                >
+                                                    <div className="flex flex-col">
+                                                        <span className="font-bold text-lg text-black">{p.name}</span>
+                                                        <span className="text-xs text-gray-400">{p.phone || 'No phone'}</span>
+                                                    </div>
+                                                    {mode !== 'none' ? (
+                                                        <span className="text-blue-600 text-sm font-bold bg-blue-50 px-2 py-1 rounded">
+                                                            {mode === 'score' ? 'Score' : 'Board'}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-green-600 text-sm font-bold bg-green-50 px-2 py-1 rounded">+ Add</span>
+                                                    )}
+                                                </button>
+                                            )
+                                        })
                                     )}
                                 </div>
-                                <button
-                                    onClick={() => setIsCreating(true)}
-                                    className="bg-green-600 text-white font-black px-6 rounded-xl text-[14pt] shrink-0 hover:bg-green-700 transition-all shadow-md active:scale-95 h-[48px] flex items-center justify-center"
-                                >
-                                    + Guest
-                                </button>
-                            </div>
-                        )}
-
-                        <div className="flex-1 overflow-y-auto p-1 space-y-6 bg-gray-50 pb-[100px]">
-                            {isCreating ? (
-                                <div className="w-full bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-1">First Name</label>
-                                            <input
-                                                type="text"
-                                                value={newPlayer.firstName}
-                                                onChange={e => setNewPlayer({ ...newPlayer, firstName: e.target.value })}
-                                                className="w-full text-lg p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black"
-                                                placeholder="First"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-1">Last Name</label>
-                                            <input
-                                                type="text"
-                                                value={newPlayer.lastName}
-                                                onChange={e => setNewPlayer({ ...newPlayer, lastName: e.target.value })}
-                                                className="w-full text-lg p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black"
-                                                placeholder="Last"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-1">Phone <span className="text-gray-400 font-normal">(optional)</span></label>
-                                            <input
-                                                type="tel"
-                                                value={newPlayer.phone}
-                                                onChange={e => setNewPlayer({ ...newPlayer, phone: e.target.value })}
-                                                className="w-full text-lg p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black"
-                                                placeholder="504-555-1234"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-bold text-gray-700 mb-1">Handicap Index</label>
-                                            <input
-                                                type="text"
-                                                inputMode="decimal"
-                                                value={newPlayer.handicapIndex}
-                                                onChange={e => setNewPlayer({ ...newPlayer, handicapIndex: e.target.value })}
-                                                className="w-full text-lg p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black"
-                                                placeholder="0"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-1">Email <span className="text-gray-400 font-normal">(optional)</span></label>
-                                        <input
-                                            type="email"
-                                            value={newPlayer.email}
-                                            onChange={e => setNewPlayer({ ...newPlayer, email: e.target.value })}
-                                            className="w-full text-lg p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black"
-                                            placeholder="player@example.com"
-                                        />
-                                    </div>
-                                    {newPlayerError && (
-                                        <div className="p-3 bg-red-100 text-red-700 rounded-lg font-medium text-sm">{newPlayerError}</div>
-                                    )}
-                                    <div className="flex gap-3 pt-2">
-                                        <button
-                                            onClick={() => {
-                                                setIsCreating(false);
-                                                setNewPlayerError('');
-                                            }}
-                                            className="flex-1 bg-gray-200 text-gray-700 font-bold py-3 rounded-lg text-xl"
-                                        >
-                                            Back
-                                        </button>
-                                        <button
-                                            onClick={handleCreatePlayer}
-                                            disabled={isSubmitting}
-                                            className="flex-1 bg-black text-white font-bold py-3 rounded-lg text-xl disabled:opacity-50"
-                                        >
-                                            {isSubmitting ? "Creating..." : "Create Player"}
-                                        </button>
-                                    </div>
-                                </div>
-                            ) : (
-                                <>
-                                    {/* Section 1: Your Group */}
-                                    <div className="space-y-3">
-                                        {groupPlayers.length > 0 ? (
-                                            <>
-                                                <div className="flex items-center justify-between px-1">
-                                                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">Your Group</h3>
-                                                    <span className="text-[10pt] font-bold text-zinc-400">{groupPlayers.length} Players</span>
-                                                </div>
-                                                {groupPlayers.map(player => {
-                                                    const mode = getPlayerMode(player.id);
-                                                    const selection = useDualCheckbox ? getPlayerSelection(player.id) : null;
-                                                    const isSelected = useDualCheckbox ? (selection?.score || selection?.leaderboard) : (mode !== 'none');
-
-                                                    const isInRound = playersInRound.includes(player.id);
-                                                    const wasInMyGroup = useDualCheckbox
-                                                        ? !!playerSelections?.[player.id]
-                                                        : (playerModes[player.id] === 'score' || playerModes[player.id] === 'leaderboard');
-
-                                                    const isDisabled = !isAdmin && isInRound && hasMultipleGroups && !wasInMyGroup;
-
-                                                    return (
-                                                        <div
-                                                            key={player.id}
-                                                            className={`p-1 rounded-2xl border-2 transition-all shadow-sm ${isDisabled
-                                                                ? 'border-zinc-200 bg-zinc-100/50 opacity-60'
-                                                                : isSelected
-                                                                    ? 'border-blue-500 bg-white'
-                                                                    : 'border-white bg-white/50 grayscale'
-                                                                }`}
-                                                        >
-                                                            {/* Player Name Row */}
-                                                            <div className="flex items-center justify-between mb-3">
-                                                                <div className="flex items-center gap-2">
-                                                                    <span className={`text-[19pt] font-black italic uppercase tracking-tighter ${isDisabled ? 'text-zinc-400' : isSelected ? 'text-zinc-900' : 'text-zinc-500'}`}>
-                                                                        {player.name}
-                                                                    </span>
-                                                                    <div className="flex items-center gap-1">
-                                                                        {isInRound && (
-                                                                            <span className={`px-2 py-0.5 rounded-lg text-[10pt] font-black uppercase tracking-widest ${isDisabled ? 'bg-zinc-200 text-zinc-400' : 'bg-green-100 text-green-700'}`}>
-                                                                                {isDisabled ? 'Claimed' : 'Locked'}
-                                                                            </span>
-                                                                        )}
-                                                                        {/* Course Handicap */}
-                                                                        {(() => {
-                                                                            const courseHcp = getCourseHandicap(player);
-                                                                            return courseHcp !== null && (
-                                                                                <span className={`text-[14pt] font-bold ${isDisabled ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                                                                                    ({courseHcp})
-                                                                                </span>
-                                                                            );
-                                                                        })()}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="flex gap-2">
-                                                                {useDualCheckbox ? (
-                                                                    <>
-                                                                        <button
-                                                                            onClick={() => !isDisabled && toggleScore(player.id)}
-                                                                            disabled={isDisabled}
-                                                                            className={`flex-1 h-12 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${selection?.score
-                                                                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
-                                                                                : isDisabled
-                                                                                    ? 'bg-zinc-100 text-zinc-400'
-                                                                                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-                                                                                }`}
-                                                                        >
-                                                                            Score
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => !isDisabled && toggleLeaderboard(player.id)}
-                                                                            disabled={isDisabled}
-                                                                            className={`flex-1 h-12 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${selection?.leaderboard
-                                                                                ? 'bg-zinc-900 text-white shadow-lg shadow-zinc-200'
-                                                                                : isDisabled
-                                                                                    ? 'bg-zinc-100 text-zinc-400'
-                                                                                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-                                                                                }`}
-                                                                        >
-                                                                            Board
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => {
-                                                                                if (isDisabled) return;
-                                                                                setConfirmDeleteId(player.id);
-                                                                            }}
-                                                                            disabled={isDisabled}
-                                                                            className={`flex-1 h-12 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${isDisabled
-                                                                                ? 'bg-zinc-100 text-zinc-400'
-                                                                                : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-                                                                                }`}
-                                                                        >
-                                                                            Delete
-                                                                        </button>
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <button
-                                                                            onClick={() => !isDisabled && setPlayerMode(player.id, 'score')}
-                                                                            disabled={isDisabled}
-                                                                            className={`flex-1 h-12 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${mode === 'score'
-                                                                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
-                                                                                : isDisabled
-                                                                                    ? 'bg-zinc-100 text-zinc-400'
-                                                                                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-                                                                                }`}
-                                                                        >
-                                                                            Score
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => !isDisabled && setPlayerMode(player.id, 'leaderboard')}
-                                                                            disabled={isDisabled}
-                                                                            className={`flex-1 h-12 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${mode === 'leaderboard'
-                                                                                ? 'bg-zinc-900 text-white shadow-lg shadow-zinc-200'
-                                                                                : isDisabled
-                                                                                    ? 'bg-zinc-100 text-zinc-400'
-                                                                                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-                                                                                }`}
-                                                                        >
-                                                                            Board
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => {
-                                                                                if (isDisabled) return;
-                                                                                setConfirmDeleteId(player.id);
-                                                                            }}
-                                                                            disabled={isDisabled}
-                                                                            className={`flex-1 h-12 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${mode === 'none'
-                                                                                ? 'bg-red-600 text-white shadow-lg shadow-red-200'
-                                                                                : isDisabled
-                                                                                    ? 'bg-zinc-100 text-zinc-400'
-                                                                                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-                                                                                }`}
-                                                                        >
-                                                                            Delete
-                                                                        </button>
-                                                                    </>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </>
-                                        ) : (
-                                            <div className="py-12 flex flex-col items-center justify-center text-zinc-400 gap-3 border-2 border-dashed border-zinc-200 rounded-3xl">
-                                                <div className="text-4xl">🏌️‍♂️</div>
-                                                <div className="font-black uppercase tracking-widest text-xs">Search to add players</div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Section 2: Quick Suggestions */}
-                                    {suggestions.length > 0 && (
-                                        <div className="space-y-3 pb-8">
-                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400 px-1">Frequent Buddies</h3>
-                                            <div className="grid grid-cols-1 gap-2">
-                                                {suggestions.map(player => (
-                                                    <button
-                                                        key={'suggest-' + player.id}
-                                                        onClick={() => toggleScore(player.id)}
-                                                        className="flex items-center justify-between p-1 bg-white rounded-2xl border border-zinc-100 shadow-sm active:scale-[0.98] transition-all hover:border-zinc-300"
-                                                    >
-                                                        <div className="flex flex-col items-start">
-                                                            <span className="text-[14pt] font-black uppercase italic tracking-tighter text-zinc-900">{player.name}</span>
-                                                            <span className="text-[10pt] font-bold text-zinc-400">{player.phone ? player.phone.slice(-4) : 'No phone'}</span>
-                                                        </div>
-                                                        <span className="bg-zinc-100 text-zinc-900 font-black px-4 py-2 rounded-xl text-xs uppercase tracking-widest">+ Add</span>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </>
                             )}
                         </div>
+                        <button
+                            onClick={() => setIsCreating(true)}
+                            className="bg-green-600 text-white font-black px-6 rounded-xl text-[14pt] shrink-0 hover:bg-green-700 transition-all shadow-md active:scale-95 h-[48px] flex items-center justify-center"
+                        >
+                            + Guest
+                        </button>
+                    </div>
+                )}
 
-                        {!isCreating && (
-                            <div className="p-4 bg-transparent border-t border-gray-100 flex justify-between gap-3 z-10 sticky bottom-0 backdrop-blur-sm">
+                <div className="flex-1 overflow-y-auto p-1 space-y-6 bg-gray-50 pb-[100px]">
+                    {isCreating ? (
+                        <div className="w-full bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">First Name</label>
+                                    <input
+                                        type="text"
+                                        value={newPlayer.firstName}
+                                        onChange={e => setNewPlayer({ ...newPlayer, firstName: e.target.value })}
+                                        className="w-full text-lg p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black"
+                                        placeholder="First"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">Last Name</label>
+                                    <input
+                                        type="text"
+                                        value={newPlayer.lastName}
+                                        onChange={e => setNewPlayer({ ...newPlayer, lastName: e.target.value })}
+                                        className="w-full text-lg p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black"
+                                        placeholder="Last"
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">Phone <span className="text-gray-400 font-normal">(optional)</span></label>
+                                    <input
+                                        type="tel"
+                                        value={newPlayer.phone}
+                                        onChange={e => setNewPlayer({ ...newPlayer, phone: e.target.value })}
+                                        className="w-full text-lg p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black"
+                                        placeholder="504-555-1234"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">Handicap Index</label>
+                                    <input
+                                        type="text"
+                                        inputMode="decimal"
+                                        value={newPlayer.handicapIndex}
+                                        onChange={e => setNewPlayer({ ...newPlayer, handicapIndex: e.target.value })}
+                                        className="w-full text-lg p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black"
+                                        placeholder="0"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Email <span className="text-gray-400 font-normal">(optional)</span></label>
+                                <input
+                                    type="email"
+                                    value={newPlayer.email}
+                                    onChange={e => setNewPlayer({ ...newPlayer, email: e.target.value })}
+                                    className="w-full text-lg p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black"
+                                    placeholder="player@example.com"
+                                />
+                            </div>
+                            {newPlayerError && (
+                                <div className="p-3 bg-red-100 text-red-700 rounded-lg font-medium text-sm">{newPlayerError}</div>
+                            )}
+                            <div className="flex gap-3 pt-2">
                                 <button
-                                    onClick={onClose}
-                                    className="flex-1 py-4 bg-white text-black border-2 border-black rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
+                                    onClick={() => {
+                                        setIsCreating(false);
+                                        setNewPlayerError('');
+                                    }}
+                                    className="flex-1 bg-gray-200 text-gray-700 font-bold py-3 rounded-lg text-xl"
                                 >
-                                    Cancel
+                                    Back
                                 </button>
                                 <button
-                                    onClick={handleConfirm}
-                                    className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all text-white ${hasChanges ? 'bg-blue-600' : 'bg-black'
-                                        }`}
+                                    onClick={handleCreatePlayer}
+                                    disabled={isSubmitting}
+                                    className="flex-1 bg-black text-white font-bold py-3 rounded-lg text-xl disabled:opacity-50"
                                 >
-                                    Save
+                                    {isSubmitting ? "Creating..." : "Create Player"}
                                 </button>
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Section 1: Your Group */}
+                            <div className="space-y-3">
+                                {groupPlayers.length > 0 ? (
+                                    <>
+                                        <div className="flex items-center justify-between px-1">
+                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">Your Group</h3>
+                                            <span className="text-[10pt] font-bold text-zinc-400">{groupPlayers.length} Players</span>
+                                        </div>
+                                        {groupPlayers.map(player => {
+                                            const mode = getPlayerMode(player.id);
+                                            const selection = useDualCheckbox ? getPlayerSelection(player.id) : null;
+                                            const isSelected = useDualCheckbox ? (selection?.score || selection?.leaderboard) : (mode !== 'none');
+
+                                            const isInRound = playersInRound.includes(player.id);
+                                            const wasInMyGroup = useDualCheckbox
+                                                ? !!playerSelections?.[player.id]
+                                                : (playerModes[player.id] === 'score' || playerModes[player.id] === 'leaderboard');
+
+                                            const isDisabled = !isAdmin && isInRound && hasMultipleGroups && !wasInMyGroup;
+
+                                            return (
+                                                <div
+                                                    key={player.id}
+                                                    className={`p-1 rounded-2xl border-2 transition-all shadow-sm ${isDisabled
+                                                        ? 'border-zinc-200 bg-zinc-100/50 opacity-60'
+                                                        : isSelected
+                                                            ? 'border-blue-500 bg-white'
+                                                            : 'border-white bg-white/50 grayscale'
+                                                        }`}
+                                                >
+                                                    {/* Player Name Row */}
+                                                    <div className="flex items-center justify-between mb-3">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className={`text-[19pt] font-black italic uppercase tracking-tighter ${isDisabled ? 'text-zinc-400' : isSelected ? 'text-zinc-900' : 'text-zinc-500'}`}>
+                                                                {player.name}
+                                                            </span>
+                                                            <div className="flex items-center gap-1">
+                                                                {isInRound && (
+                                                                    <span className={`px-2 py-0.5 rounded-lg text-[10pt] font-black uppercase tracking-widest ${isDisabled ? 'bg-zinc-200 text-zinc-400' : 'bg-green-100 text-green-700'}`}>
+                                                                        {isDisabled ? 'Claimed' : 'Locked'}
+                                                                    </span>
+                                                                )}
+                                                                {/* Course Handicap */}
+                                                                {(() => {
+                                                                    const courseHcp = getCourseHandicap(player);
+                                                                    return courseHcp !== null && (
+                                                                        <span className={`text-[14pt] font-bold ${isDisabled ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                                                                            ({courseHcp})
+                                                                        </span>
+                                                                    );
+                                                                })()}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex gap-2">
+                                                        {useDualCheckbox ? (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => !isDisabled && toggleScore(player.id)}
+                                                                    disabled={isDisabled}
+                                                                    className={`flex-1 h-12 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${selection?.score
+                                                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
+                                                                        : isDisabled
+                                                                            ? 'bg-zinc-100 text-zinc-400'
+                                                                            : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                                                                        }`}
+                                                                >
+                                                                    Score
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => !isDisabled && toggleLeaderboard(player.id)}
+                                                                    disabled={isDisabled}
+                                                                    className={`flex-1 h-12 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${selection?.leaderboard
+                                                                        ? 'bg-zinc-900 text-white shadow-lg shadow-zinc-200'
+                                                                        : isDisabled
+                                                                            ? 'bg-zinc-100 text-zinc-400'
+                                                                            : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                                                                        }`}
+                                                                >
+                                                                    Board
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        if (isDisabled) return;
+                                                                        setConfirmDeleteId(player.id);
+                                                                    }}
+                                                                    disabled={isDisabled}
+                                                                    className={`flex-1 h-12 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${isDisabled
+                                                                        ? 'bg-zinc-100 text-zinc-400'
+                                                                        : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                                                                        }`}
+                                                                >
+                                                                    Delete
+                                                                </button>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => !isDisabled && setPlayerMode(player.id, 'score')}
+                                                                    disabled={isDisabled}
+                                                                    className={`flex-1 h-12 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${mode === 'score'
+                                                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
+                                                                        : isDisabled
+                                                                            ? 'bg-zinc-100 text-zinc-400'
+                                                                            : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                                                                        }`}
+                                                                >
+                                                                    Score
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => !isDisabled && setPlayerMode(player.id, 'leaderboard')}
+                                                                    disabled={isDisabled}
+                                                                    className={`flex-1 h-12 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${mode === 'leaderboard'
+                                                                        ? 'bg-zinc-900 text-white shadow-lg shadow-zinc-200'
+                                                                        : isDisabled
+                                                                            ? 'bg-zinc-100 text-zinc-400'
+                                                                            : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                                                                        }`}
+                                                                >
+                                                                    Board
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        if (isDisabled) return;
+                                                                        setConfirmDeleteId(player.id);
+                                                                    }}
+                                                                    disabled={isDisabled}
+                                                                    className={`flex-1 h-12 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${mode === 'none'
+                                                                        ? 'bg-red-600 text-white shadow-lg shadow-red-200'
+                                                                        : isDisabled
+                                                                            ? 'bg-zinc-100 text-zinc-400'
+                                                                            : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                                                                        }`}
+                                                                >
+                                                                    Delete
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </>
+                                ) : (
+                                    <div className="py-12 flex flex-col items-center justify-center text-zinc-400 gap-3 border-2 border-dashed border-zinc-200 rounded-3xl">
+                                        <div className="text-4xl">🏌️‍♂️</div>
+                                        <div className="font-black uppercase tracking-widest text-xs">Search to add players</div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Section 2: Quick Suggestions */}
+                            {suggestions.length > 0 && (
+                                <div className="space-y-3 pb-8">
+                                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400 px-1">Frequent Buddies</h3>
+                                    <div className="grid grid-cols-1 gap-2">
+                                        {suggestions.map(player => (
+                                            <button
+                                                key={'suggest-' + player.id}
+                                                onClick={() => toggleScore(player.id)}
+                                                className="flex items-center justify-between p-1 bg-white rounded-2xl border border-zinc-100 shadow-sm active:scale-[0.98] transition-all hover:border-zinc-300"
+                                            >
+                                                <div className="flex flex-col items-start">
+                                                    <span className="text-[14pt] font-black uppercase italic tracking-tighter text-zinc-900">{player.name}</span>
+                                                    <span className="text-[10pt] font-bold text-zinc-400">{player.phone ? player.phone.slice(-4) : 'No phone'}</span>
+                                                </div>
+                                                <span className="bg-zinc-100 text-zinc-900 font-black px-4 py-2 rounded-xl text-xs uppercase tracking-widest">+ Add</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
+
+                {!isCreating && (
+                    <div className="p-4 border-t border-gray-100 sticky bottom-0 bg-white z-20">
+                        <div className="w-full mx-auto flex gap-3">
+                            <button
+                                onClick={onClose}
+                                className="flex-1 py-4 bg-black text-white rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleConfirm}
+                                className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all text-white ${hasChanges ? 'bg-blue-600' : 'bg-black'}`}
+                            >
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
+
             {/* Confirmation Modal */}
             {confirmDeleteId && (
                 <ConfirmModal

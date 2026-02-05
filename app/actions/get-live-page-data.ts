@@ -85,7 +85,7 @@ export async function getInitialLivePageData(todayStr: string) {
         if (!session) return { error: "No session" };
         const sessionUserId = session.id;
 
-        // Try to find the user's recent rounds to find the active one
+        // 1. Fetch user's rounds to find active/recent state
         const userRPs = await prisma.liveRoundPlayer.findMany({
             where: { playerId: sessionUserId },
             include: {
@@ -96,43 +96,33 @@ export async function getInitialLivePageData(todayStr: string) {
                         course: {
                             select: {
                                 id: true,
-                                holes: { select: { id: true, holeNumber: true } }
+                                holes: { select: { holeNumber: true } }
                             }
                         }
                     }
                 },
-                scores: { select: { id: true } }
+                scores: { select: { hole: { select: { holeNumber: true } } } }
             },
-            take: 5
+            orderBy: { liveRound: { date: 'desc' } },
+            take: 10
         });
 
-        const validRPs = userRPs.filter(rp => {
-            if (!rp.liveRound) return false;
-            const roundDate = rp.liveRound.date;
-            const isToday = roundDate === todayStr;
-            const holeCount = rp.liveRound.course?.holes?.length || 18;
-            const scoreCount = rp.scores?.length || 0;
-            return isToday || scoreCount >= holeCount;
-        });
-
-        const sortedRPs = validRPs.sort((a, b) => {
-            const dateA = a.liveRound?.date || '';
-            const dateB = b.liveRound?.date || '';
-            return dateB.localeCompare(dateA);
-        });
+        // Identify active or most recent round
+        // Active = Today, or any incomplete round (but usually we focus on today)
+        const candidates = userRPs.filter(rp => !!rp.liveRound);
+        const activeRP = candidates.find(rp => rp.liveRound.date === todayStr) || candidates[0];
 
         let activeRound = null;
         let lastUsedCourseId = null;
         let lastUsedTeeBoxId = null;
 
-        if (sortedRPs.length > 0) {
-            const lastRP = sortedRPs[0];
-            activeRound = await getLiveRoundData(lastRP.liveRoundId);
+        if (activeRP) {
+            activeRound = await getLiveRoundData(activeRP.liveRoundId);
             lastUsedCourseId = activeRound?.courseId;
-            lastUsedTeeBoxId = lastRP.teeBoxId;
+            lastUsedTeeBoxId = activeRP.teeBoxId;
         }
 
-        // if no active round found in LiveRounds, try to at least find last used course/tee from legacy rounds
+        // if no active round found in LiveRounds, try legacy history for course/tee defaults
         if (!lastUsedCourseId) {
             try {
                 const lastLegacyRP = await prisma.roundPlayer.findFirst({
@@ -145,41 +135,47 @@ export async function getInitialLivePageData(todayStr: string) {
                     lastUsedTeeBoxId = lastLegacyRP.teeBoxId;
                 }
             } catch (e) {
-                console.error("Legacy round lookup failed:", e);
+                console.error("Legacy lookup fallback failed:", e);
             }
         }
 
-        // Dropdown Rounds - only select what we need
+        // 2. Dropdown Rounds Logic: Show Today's rounds (Discovery) OR User's History (Archive)
         const rawRounds = await prisma.liveRound.findMany({
             where: {
-                players: { some: { playerId: sessionUserId } }
+                OR: [
+                    { date: todayStr },
+                    { players: { some: { playerId: sessionUserId } } }
+                ]
             },
-            take: 15,
+            take: 30,
             orderBy: { date: 'desc' },
             select: { id: true, name: true, date: true, courseName: true }
         });
 
         const allLiveRounds = rawRounds.map(r => {
             try {
-                const date = new Date((r.date || new Date().toISOString().split('T')[0]) + 'T12:00:00');
-                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                // Safeguard against invalid date strings
+                const datePart = r.date || todayStr;
+                const date = new Date(datePart + 'T12:00:00');
+                const dayName = isNaN(date.getTime()) ? '' : date.toLocaleDateString('en-US', { weekday: 'short' });
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 const day = String(date.getDate()).padStart(2, '0');
                 const courseSlug = (r.courseName || 'round').replace(/New Orleans/gi, '').trim().toLowerCase().replace(/\s+/g, '-');
-                return { id: r.id, name: `${dayName}-${month}-${day}-${courseSlug}` };
+                const name = dayName ? `${dayName}-${month}-${day}-${courseSlug}` : (r.name || 'Round');
+                return { id: r.id, name };
             } catch (e) {
                 return { id: r.id, name: r.name || 'Round' };
             }
         });
 
-        return JSON.parse(JSON.stringify({
+        return {
             activeRound,
             allLiveRounds,
             lastUsedCourseId,
             lastUsedTeeBoxId
-        }));
-    } catch (e) {
+        };
+    } catch (e: any) {
         console.error("getInitialLivePageData failed:", e);
-        return { error: "Failed to fetch initial page data" };
+        return { error: String(e.message || e) };
     }
 }
