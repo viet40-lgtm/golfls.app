@@ -16,7 +16,6 @@ export const metadata = {
 import { ensureRoundHasShortId } from '@/app/actions/ensure-short-id';
 
 async function LiveScorePageContent(props: { searchParams: Promise<{ roundId?: string }> }) {
-    console.log("BUILD_TRACE: Page render triggered at 2026-02-05 12:27");
     const resolvedSearchParams = await props.searchParams;
     const roundIdFromUrl = resolvedSearchParams.roundId;
 
@@ -29,11 +28,22 @@ async function LiveScorePageContent(props: { searchParams: Promise<{ roundId?: s
         redirect('/');
     }
 
-    // Check if user is admin
     const isAdmin = cookieStore.get('admin_session')?.value === 'true';
 
+    // Fetch ONLY the player name for the welcome message (very light)
+    let currentUserName = 'Player';
+    try {
+        const profile = await prisma.player.findUnique({
+            where: { id: sessionUserId },
+            select: { name: true }
+        });
+        if (profile?.name) currentUserName = profile.name;
+    } catch (e) {
+        console.error("Minimal profile fetch failed:", e);
+    }
+
     // Resolve Today's Date (Chicago)
-    let todayStr = new Date().toISOString().split('T')[0]; // Default Fallback (UTC)
+    let todayStr = new Date().toISOString().split('T')[0];
     try {
         const formatter = new Intl.DateTimeFormat('en-CA', {
             timeZone: 'America/Chicago',
@@ -42,195 +52,22 @@ async function LiveScorePageContent(props: { searchParams: Promise<{ roundId?: s
             day: '2-digit'
         });
         todayStr = formatter.format(new Date());
-    } catch (e) {
-        console.error("Date formatting failed:", e);
-    }
-
-    let activeRound: any = null;
-    let defaultCourse: any = null;
-    let lastUsedCourseId = null;
-    let lastUsedTeeBoxId = null;
-
-    // STEP 1: Find user's last round (with course + players included)
-    try {
-        if (roundIdFromUrl) {
-            // Load specific round from URL
-            activeRound = await prisma.liveRound.findUnique({
-                where: { id: roundIdFromUrl },
-                include: {
-                    course: {
-                        include: {
-                            teeBoxes: true,
-                            holes: { include: { elements: true }, orderBy: { holeNumber: 'asc' } }
-                        }
-                    },
-                    players: {
-                        include: {
-                            player: true,
-                            scores: { include: { hole: true } }
-                        }
-                    }
-                }
-            });
-            if (activeRound?.course) {
-                defaultCourse = activeRound.course;
-                lastUsedCourseId = activeRound.courseId;
-            }
-        } else {
-            // Find user's last rounds to pick the most recent one
-            const userRPs = await prisma.liveRoundPlayer.findMany({
-                where: { playerId: sessionUserId },
-                include: {
-                    liveRound: {
-                        include: {
-                            course: {
-                                include: {
-                                    holes: true
-                                }
-                            }
-                        }
-                    },
-                    scores: true
-                },
-                take: 10 // Limit search to last 10 rounds to avoid timeout
-            });
-
-            // NO MUTATION IN RENDER (Cleanup removed per Next.js best practices)
-            const validRPs = userRPs.filter(rp => {
-                const roundDate = rp.liveRound?.date;
-                const isToday = roundDate === todayStr;
-                const holeCount = rp.liveRound?.course?.holes?.length || 18;
-                const scoreCount = rp.scores?.length || 0;
-                // Allow today's rounds or complete rounds
-                return isToday || scoreCount >= holeCount;
-            });
-
-            const sortedRPs = validRPs.sort((a, b) => {
-                const dateA = a.liveRound?.date || '';
-                const dateB = b.liveRound?.date || '';
-                return dateB.localeCompare(dateA);
-            });
-
-            if (sortedRPs.length > 0) {
-                const lastUserRoundPlayer = sortedRPs[0];
-                activeRound = await prisma.liveRound.findUnique({
-                    where: { id: lastUserRoundPlayer.liveRoundId },
-                    include: {
-                        course: {
-                            include: {
-                                teeBoxes: true,
-                                holes: { include: { elements: true }, orderBy: { holeNumber: 'asc' } }
-                            }
-                        },
-                        players: {
-                            include: {
-                                player: true,
-                                scores: { include: { hole: true } }
-                            }
-                        }
-                    }
-                });
-
-                if (activeRound?.course) {
-                    defaultCourse = activeRound.course;
-                    lastUsedCourseId = activeRound.courseId;
-                    lastUsedTeeBoxId = lastUserRoundPlayer.teeBoxId;
-                }
-            }
-        }
-    } catch (e) {
-        console.error("PAGE FETCH STEP 1 FAILED:", e);
-    }
-
-    // AUTO-HEAL: Ensure active round has a shortId
-    try {
-        if (activeRound && !activeRound.shortId) {
-            const newShortId = await ensureRoundHasShortId(activeRound.id);
-            if (newShortId) {
-                activeRound.shortId = newShortId;
-            }
-        }
-    } catch (e) {
-        console.error("Failed to ensure shortId:", e);
-    }
-
-    // STEP 2: Get rounds for dropdown (Admin: All recent; User: Their last 10)
-    let rawRoundsForDropdown: any[] = [];
-
-    if (isAdmin) {
-        rawRoundsForDropdown = await prisma.liveRound.findMany({
-            orderBy: { createdAt: 'desc' },
-            take: 50
-        });
-    } else {
-        const userRoundPlayers = await prisma.liveRoundPlayer.findMany({
-            where: { playerId: sessionUserId },
-            include: {
-                liveRound: true
-            }
-        });
-
-        const sortedRPs = userRoundPlayers.sort((a, b) => {
-            const dateA = a.liveRound?.date || '';
-            const dateB = b.liveRound?.date || '';
-            return dateB.localeCompare(dateA);
-        }).slice(0, 10);
-
-        rawRoundsForDropdown = sortedRPs.map(rp => rp.liveRound).filter(r => r !== null);
-    }
-
-    const seenRoundIds = new Set();
-    const allLiveRounds = rawRoundsForDropdown
-        .filter(r => {
-            if (!r || seenRoundIds.has(r.id)) return false;
-            seenRoundIds.add(r.id);
-            return true;
-        })
-        .map(r => {
-            // Format date as "Sat-02/01"
-            let dateStr = r.date;
-            try {
-                // Determine valid date string
-                if (!dateStr) dateStr = new Date().toISOString().split('T')[0];
-            } catch (e) {
-                dateStr = new Date().toISOString().split('T')[0];
-            }
-
-            const date = new Date(dateStr + 'T12:00:00');
-            const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            // Clean up course name (remove "New Orleans" if present) and slugify
-            const rawName = r.courseName || 'Unknown Course';
-            const courseName = rawName
-                .replace(/New Orleans/gi, '')
-                .trim()
-                .toLowerCase()
-                .replace(/\s+/g, '-');
-
-            const displayName = `${dayName}-${month}-${day}-${courseName}`;
-            return { id: r.id, name: displayName };
-        });
-
-    // ALL PLAYERS & ALL COURSES are now lazy-loaded in LiveScoreClient to prevent RSC timeout
-    const currentPlayerProfile = await prisma.player.findUnique({
-        where: { id: sessionUserId },
-        select: { name: true }
-    });
+    } catch (e) { }
 
     return (
         <LiveScoreClient
-            allPlayers={[]} // Lazy loaded on client
-            defaultCourse={defaultCourse ? JSON.parse(JSON.stringify(defaultCourse)) : null}
-            allCourses={[]} // Lazy loaded on client
-            initialRound={activeRound ? JSON.parse(JSON.stringify(activeRound)) : null}
+            allPlayers={[]}
+            defaultCourse={null}
+            allCourses={[]}
+            initialRound={null} // Feched by client
             todayStr={todayStr}
-            allLiveRounds={allLiveRounds}
+            allLiveRounds={[]} // Fetched by client
             isAdmin={isAdmin}
             currentUserId={sessionUserId}
-            currentUserName={currentPlayerProfile?.name || 'Player'}
-            lastUsedCourseId={lastUsedCourseId}
-            lastUsedTeeBoxId={lastUsedTeeBoxId}
+            currentUserName={currentUserName}
+            lastUsedCourseId={null}
+            lastUsedTeeBoxId={null}
+            roundIdFromUrl={roundIdFromUrl}
         />
     );
 }

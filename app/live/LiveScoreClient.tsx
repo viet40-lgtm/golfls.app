@@ -23,6 +23,7 @@ import { deleteUserLiveRound } from '../actions/delete-user-round';
 import { logout } from '../actions/auth';
 import { getAllCourses } from '@/app/actions/get-all-courses';
 import { getAllPlayers } from '@/app/actions/get-players';
+import { getLiveRoundData, getInitialLivePageData } from '../actions/get-live-page-data';
 
 
 interface Player {
@@ -93,53 +94,106 @@ interface LiveScoreClientProps {
     currentUserName?: string;
     lastUsedCourseId?: string | null;
     lastUsedTeeBoxId?: string | null;
+    roundIdFromUrl?: string; // Passed from server searchParams
 }
 
 export default function LiveScoreClient({
     allPlayers: initialAllPlayers,
     defaultCourse,
-    initialRound,
+    initialRound: initialRoundProp,
     todayStr,
-    allLiveRounds,
+    allLiveRounds: initialAllLiveRounds,
     allCourses: initialAllCourses,
     isAdmin: isAdminProp,
     currentUserId,
     currentUserName,
-    lastUsedCourseId,
-    lastUsedTeeBoxId,
-}: LiveScoreClientProps) {
+    lastUsedCourseId: initialLastUsedCourseId,
+    lastUsedTeeBoxId: initialLastUsedTeeBoxId,
+    roundIdFromUrl,
+}: LiveScoreClientProps & { roundIdFromUrl?: string }) {
     const router = useRouter();
 
     // State for lazy-loaded data
     const [allPlayers, setAllPlayers] = useState<Player[]>(initialAllPlayers || []);
     const [allCourses, setAllCourses] = useState<Course[]>(initialAllCourses || []);
+    const [currentRound, setCurrentRound] = useState<any>(initialRoundProp || null);
+    const [liveRoundsForDropdown, setLiveRoundsForDropdown] = useState<{ id: string, name: string }[]>(initialAllLiveRounds || []);
+    const [lastUsedCourseId, setLastUsedCourseId] = useState(initialLastUsedCourseId);
+    const [lastUsedTeeBoxId, setLastUsedTeeBoxId] = useState(initialLastUsedTeeBoxId);
     const [isLoadingLazyData, setIsLoadingLazyData] = useState(false);
 
-    useEffect(() => {
-        const loadHeavyData = async () => {
-            // Only fetch if initial data is empty (prevents redundant fetches if server actually succeeded)
-            if (allPlayers.length > 0 && allCourses.length > 0) return;
+    // Bridge for existing code that expects initialRound / allLiveRounds
+    const initialRound = currentRound;
+    const allLiveRounds = liveRoundsForDropdown;
 
+    useEffect(() => {
+        const loadEverything = async () => {
             setIsLoadingLazyData(true);
             try {
+                // 1. Fetch Players & Courses
                 const [players, courses] = await Promise.all([
-                    allPlayers.length === 0 ? getAllPlayers() : Promise.resolve(allPlayers),
-                    allCourses.length === 0 ? getAllCourses() : Promise.resolve(allCourses)
+                    getAllPlayers(),
+                    getAllCourses()
                 ]);
                 setAllPlayers(players);
                 setAllCourses(courses);
+
+                // 2. Fetch Round Data if none provided or for initial load
+                let pageData;
+                if (roundIdFromUrl) {
+                    const round = await getLiveRoundData(roundIdFromUrl);
+                    pageData = { activeRound: round };
+                } else {
+                    pageData = await getInitialLivePageData(todayStr);
+                }
+
+                if (pageData) {
+                    if (pageData.activeRound) {
+                        setCurrentRound(pageData.activeRound);
+                        setLiveRoundId(pageData.activeRound.id);
+                        if (pageData.activeRound.course) {
+                            setLastUsedCourseId(pageData.activeRound.courseId);
+                        }
+                    }
+                    if (pageData.allLiveRounds) {
+                        setLiveRoundsForDropdown(pageData.allLiveRounds);
+                    }
+                    if (pageData.lastUsedTeeBoxId) {
+                        setLastUsedTeeBoxId(pageData.lastUsedTeeBoxId);
+                    }
+                }
             } catch (error) {
-                console.error("Failed to lazy load page data:", error);
+                console.error("Critical lazy load failed:", error);
             } finally {
                 setIsLoadingLazyData(false);
             }
         };
-        loadHeavyData();
-    }, []);
+        loadEverything();
+    }, [roundIdFromUrl, todayStr]);
 
-    const [liveRoundId, setLiveRoundId] = useState<string | null>(initialRound?.id || null);
+    const [liveRoundId, setLiveRoundId] = useState<string | null>(initialRoundProp?.id || null);
 
     const [isAdmin, setIsAdmin] = useState(isAdminProp); // Initialize with server-side value
+
+    // START: LOADING UI
+    if (isLoadingLazyData && !currentRound) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-white">
+                <div className="flex flex-col items-center gap-6 p-8 border-4 border-black rounded-3xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white max-w-sm w-full mx-4">
+                    <Bird className="w-16 h-16 animate-bounce text-blue-500" />
+                    <div className="space-y-2 text-center">
+                        <h2 className="text-2xl font-black italic uppercase tracking-tighter">Syncing Round...</h2>
+                        <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-[0.2em]">Connecting to GolfLS Server</p>
+                    </div>
+                    <div className="w-full h-3 bg-zinc-100 rounded-full overflow-hidden border-2 border-black">
+                        <div className="h-full bg-blue-500 animate-pulse w-[60%]" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+    // END: LOADING UI
+
     // Start with empty selection - each device manages its own group
     const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
     const [playerSelections, setPlayerSelections] = useState<Record<string, PlayerSelection>>({});
