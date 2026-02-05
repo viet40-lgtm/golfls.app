@@ -103,12 +103,13 @@ export async function getInitialLivePageData(todayStr: string) {
                 },
                 scores: { select: { hole: { select: { holeNumber: true } } } }
             },
-            orderBy: { liveRound: { date: 'desc' } },
-            take: 10
+            take: 20
         });
 
+        // Manual sort by date descending (to avoid Prisma orderBy relation issues)
+        userRPs.sort((a, b) => (b.liveRound?.date || '').localeCompare(a.liveRound?.date || ''));
+
         // Identify active or most recent round
-        // Active = Today, or any incomplete round (but usually we focus on today)
         const candidates = userRPs.filter(rp => !!rp.liveRound);
         const activeRP = candidates.find(rp => rp.liveRound.date === todayStr) || candidates[0];
 
@@ -118,7 +119,7 @@ export async function getInitialLivePageData(todayStr: string) {
 
         if (activeRP) {
             activeRound = await getLiveRoundData(activeRP.liveRoundId);
-            lastUsedCourseId = activeRound?.courseId;
+            lastUsedCourseId = activeRound?.courseId || activeRP.liveRound.course?.id;
             lastUsedTeeBoxId = activeRP.teeBoxId;
         }
 
@@ -147,14 +148,13 @@ export async function getInitialLivePageData(todayStr: string) {
                     { players: { some: { playerId: sessionUserId } } }
                 ]
             },
-            take: 30,
+            take: 40,
             orderBy: { date: 'desc' },
             select: { id: true, name: true, date: true, courseName: true }
         });
 
         const allLiveRounds = rawRounds.map(r => {
             try {
-                // Safeguard against invalid date strings
                 const datePart = r.date || todayStr;
                 const date = new Date(datePart + 'T12:00:00');
                 const dayName = isNaN(date.getTime()) ? '' : date.toLocaleDateString('en-US', { weekday: 'short' });
@@ -168,12 +168,13 @@ export async function getInitialLivePageData(todayStr: string) {
             }
         });
 
-        return {
+        // CRITICAL: Ensure absolute serialization for Server Action return
+        return JSON.parse(JSON.stringify({
             activeRound,
             allLiveRounds,
             lastUsedCourseId,
             lastUsedTeeBoxId
-        };
+        }));
     } catch (e: any) {
         console.error("getInitialLivePageData failed:", e);
         return { error: String(e.message || e) };

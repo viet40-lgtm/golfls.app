@@ -21,9 +21,7 @@ export async function getAllCourses() {
                     select: {
                         holeNumber: true,
                         par: true,
-                        difficulty: true,
-                        latitude: true,
-                        longitude: true
+                        difficulty: true
                     },
                     orderBy: { holeNumber: 'asc' }
                 }
@@ -31,6 +29,7 @@ export async function getAllCourses() {
             orderBy: { name: 'asc' }
         });
 
+        // Use a safer serialization approach for Server Actions
         return JSON.parse(JSON.stringify(courses));
     } catch (error) {
         console.error('getAllCourses Server Action Failed:', error);

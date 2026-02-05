@@ -131,18 +131,10 @@ export default function LiveScoreClient({
         const loadEverything = async () => {
             setIsLoadingLazyData(true);
             try {
-                // 1. Cleanup old incomplete rounds (Rule #4)
+                // 1. Cleanup old incomplete rounds (Rule #4) - Background task
                 cleanupIncompleteRounds(todayStr).catch(err => console.error("Cleanup error:", err));
 
-                // 2. Fetch Players & Courses
-                const [players, courses] = await Promise.all([
-                    getAllPlayers(),
-                    getAllCourses()
-                ]);
-                setAllPlayers(players);
-                setAllCourses(courses);
-
-                // 2. Fetch Round Data if none provided or for initial load
+                // 2. Fetch Round Data (Highest Priority)
                 let pageData;
                 if (roundIdFromUrl) {
                     const round = await getLiveRoundData(roundIdFromUrl);
@@ -151,7 +143,7 @@ export default function LiveScoreClient({
                     pageData = await getInitialLivePageData(todayStr);
                 }
 
-                if (pageData) {
+                if (pageData && !pageData.error) {
                     if (pageData.activeRound) {
                         setCurrentRound(pageData.activeRound);
                         setLiveRoundId(pageData.activeRound.id);
@@ -162,13 +154,17 @@ export default function LiveScoreClient({
                     if (pageData.allLiveRounds) {
                         setLiveRoundsForDropdown(pageData.allLiveRounds);
                     }
-                    if (pageData.lastUsedCourseId) {
-                        setLastUsedCourseId(pageData.lastUsedCourseId);
-                    }
-                    if (pageData.lastUsedTeeBoxId) {
-                        setLastUsedTeeBoxId(pageData.lastUsedTeeBoxId);
-                    }
+                    if (pageData.lastUsedCourseId) setLastUsedCourseId(pageData.lastUsedCourseId);
+                    if (pageData.lastUsedTeeBoxId) setLastUsedTeeBoxId(pageData.lastUsedTeeBoxId);
                 }
+
+                // 3. Sequential Fetch for Players & Courses (Prevents connection spike)
+                const players = await getAllPlayers();
+                setAllPlayers(players);
+
+                const courses = await getAllCourses();
+                setAllCourses(courses);
+
             } catch (error) {
                 console.error("Critical lazy load failed:", error);
             } finally {
