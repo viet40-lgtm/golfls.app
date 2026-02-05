@@ -36,7 +36,7 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                     setSuccessMessage(result.message || 'Check your email for reset instructions.')
                     setLoading(false)
                 } else {
-                    window.location.href = '/live'
+                    window.location.href = '/live2'
                 }
             } else {
                 setError('An unexpected response occurred.')
