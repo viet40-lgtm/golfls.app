@@ -208,8 +208,7 @@ export default function LiveScoreClient({
     const [isRoundSelectModalOpen, setIsRoundSelectModalOpen] = useState(false);
     const [lazyLoadedCourses, setLazyLoadedCourses] = useState<Course[]>([]);
     const [isLoadingCourses, setIsLoadingCourses] = useState(false);
-    const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
-    const [joinRoundId, setJoinRoundId] = useState('');
+
 
 
     const [birdiePlayers, setBirdiePlayers] = useState<Array<{ name: string; totalBirdies: number }>>([]);
@@ -1566,11 +1565,7 @@ export default function LiveScoreClient({
                                         return r.name;
                                     })()}
                                 </span>
-                                {initialRound?.shortId && (
-                                    <span className="text-zinc-500 font-black text-sm uppercase tracking-widest pointer-events-none">
-                                        ID: {initialRound.shortId}
-                                    </span>
-                                )}
+
                                 <span className="text-xs ml-1">▼</span>
                             </button>
 
@@ -2775,64 +2770,7 @@ export default function LiveScoreClient({
                 )
             }
 
-            {
-                isGroupModalOpen && (
-                    <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/70 p-4">
-                        <div className="bg-white rounded-2xl w-full shadow-2xl p-6 space-y-4 border-4 border-black">
-                            <h2 className="text-2xl font-black italic uppercase tracking-tighter">Join Group</h2>
-                            {initialRound?.shortId && (
-                                <div className="bg-green-50 border border-green-200 rounded-xl p-2 flex flex-col items-center">
-                                    <span className="text-[10pt] font-black text-green-600 uppercase tracking-widest leading-none">Your Current ID</span>
-                                    <span className="text-3xl font-black text-green-600 leading-tight">{initialRound.shortId}</span>
-                                </div>
-                            )}
-                            <p className="text-zinc-600 font-bold uppercase text-xs tracking-widest">Enter a different Round ID to join another group onto the leaderboard.</p>
 
-                            <input
-                                type="text"
-                                value={joinRoundId}
-                                onChange={(e) => setJoinRoundId(e.target.value.toUpperCase())}
-                                placeholder="E.G. V123"
-                                className="w-full bg-zinc-100 border-2 border-zinc-200 rounded-xl px-4 py-3 text-2xl font-black text-center focus:border-black outline-none transition-all placeholder:text-zinc-300"
-                                maxLength={4}
-                                autoFocus
-                            />
-
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => setIsGroupModalOpen(false)}
-                                    className="flex-1 bg-zinc-100 text-zinc-500 rounded-xl py-3 font-black uppercase tracking-widest active:scale-95 transition-all"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={async () => {
-                                        if (!joinRoundId || !currentUserId) return;
-
-                                        try {
-                                            const result = await joinLiveRoundByShortId(joinRoundId, currentUserId);
-                                            if (result.success) {
-                                                setIsGroupModalOpen(false);
-                                                setJoinRoundId('');
-                                                // Hard reload to load the new round context
-                                                window.location.href = `/live?roundId=${result.liveRoundId}`;
-                                            } else {
-                                                showAlert('Error', result.error || 'Failed to join round');
-                                            }
-                                        } catch (err) {
-                                            console.error('Join error:', err);
-                                            showAlert('Error', 'Connection error joining round');
-                                        }
-                                    }}
-                                    className="flex-1 bg-black text-white rounded-xl py-3 font-black uppercase tracking-widest active:scale-95 transition-all shadow-lg"
-                                >
-                                    Join
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
 
             {
                 confirmConfig && (

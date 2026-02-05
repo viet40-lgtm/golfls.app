@@ -5,29 +5,6 @@ import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/auth';
 
 /**
- * Generates a unique 4-character shortId: [Initial][3 random numbers]
- */
-async function generateUniqueShortId(initial: string) {
-    let shortId = '';
-    let isUnique = false;
-    let attempts = 0;
-    const cleanInitial = (initial[0] || 'R').toUpperCase();
-
-    // DISABLED: shortId column missing in prod
-    // while (!isUnique && attempts < 15) { ... }
-    return '0000';
-}
-
-/**
- * Fallback to derive initial from session or creator name
- */
-function getInitialFromName(session?: any, creatorName?: string) {
-    if (session?.name) return session.name[0];
-    if (creatorName) return creatorName[0];
-    return 'R';
-}
-
-/**
  * Creates a new live round in the LiveRound table
  */
 export async function createLiveRound(data: {
@@ -42,7 +19,6 @@ export async function createLiveRound(data: {
     console.log('SERVER ACTION: createLiveRound starting...', data.name);
     try {
         const session = await getSession();
-        const shortId = await generateUniqueShortId(getInitialFromName(session));
 
         const liveRound = await prisma.liveRound.create({
             data: {
@@ -56,7 +32,7 @@ export async function createLiveRound(data: {
                 slope: data.slope
             }
         });
-        console.log('SERVER ACTION: createLiveRound SUCCESS:', liveRound.id, 'shortId:', shortId);
+        console.log('SERVER ACTION: createLiveRound SUCCESS:', liveRound.id);
         revalidatePath('/');
         return { success: true, liveRoundId: liveRound.id };
     } catch (error) {
@@ -130,13 +106,10 @@ export async function createDefaultLiveRound(date: string, creatorName?: string,
             }
         }
 
-        // Generate shortId: [First initial][3 random numbers]
-        const shortId = await generateUniqueShortId(getInitialFromName(session, creatorName));
-
         const newRound = await prisma.liveRound.create({
             data: {
                 name: roundName,
-                // shortId: shortId, // DISABLED: Schema mismatch in prod
+                // shortId: shortId, // DISABLED: Schema mismatch
                 date: date,
                 courseId: defaultCourse.id,
                 courseName: defaultCourse.name,
