@@ -5,9 +5,18 @@ import { prisma } from '@/lib/prisma'
 export async function getAllCourses() {
     try {
         const courses = await prisma.course.findMany({
-            include: {
+            select: {
+                id: true,
+                name: true,
                 teeBoxes: true,
-                holes: { include: { elements: true }, orderBy: { holeNumber: 'asc' } },
+                holes: {
+                    select: {
+                        holeNumber: true,
+                        par: true,
+                        difficulty: true
+                    },
+                    orderBy: { holeNumber: 'asc' }
+                },
                 _count: {
                     select: {
                         rounds: true,

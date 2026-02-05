@@ -229,7 +229,17 @@ async function LiveScorePageContent(props: { searchParams: Promise<{ roundId?: s
         });
 
     // Fetch ALL players for the selection modal
+    // OPTIMIZED: Select only needed fields to keep payload under Vercel limits
     const allDbPlayers = await prisma.player.findMany({
+        select: {
+            id: true,
+            name: true,
+            handicapIndex: true,
+            preferredTeeBox: true,
+            phone: true,
+            playerId: true,
+            email: true
+        },
         orderBy: { name: 'asc' }
     });
 
@@ -290,6 +300,10 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
     try {
         return await LiveScorePageContent(props);
     } catch (e: any) {
+        // ESSENTIAL: Re-throw redirect errors so Next.js can handle them
+        if (e.digest?.startsWith('NEXT_REDIRECT') || e.message?.includes('NEXT_REDIRECT')) throw e;
+        if (e.digest?.startsWith('NEXT_NOT_FOUND')) throw e;
+
         console.error("CRITICAL LIVE PAGE ERROR:", e);
         return (
             <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-white text-black">
@@ -297,7 +311,8 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
                 <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded w-full max-w-lg mb-6 overflow-auto font-mono text-xs">
                     <p className="font-bold mb-2">System Message:</p>
                     {e.message || "Unknown Error"}
-                    {e.digest && <p className="mt-2 text-gray-500">Digest: {e.digest}</p>}
+                    {e.digest && <p className="mt-2 text-zinc-400 mt-2">Digest: {e.digest}</p>}
+                    <p className="mt-4 text-zinc-500 italic">This error usually happens when data payload is too large or data is malformed.</p>
                 </div>
                 <a href="/" className="px-8 py-4 bg-black text-white rounded-full font-black uppercase tracking-widest text-sm hover:scale-105 transition-transform">
                     Return Home
