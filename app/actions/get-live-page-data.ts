@@ -4,20 +4,60 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 
 export async function getLiveRoundData(roundId: string) {
+    if (!roundId) return null;
     try {
         const round = await prisma.liveRound.findUnique({
             where: { id: roundId },
-            include: {
+            select: {
+                id: true,
+                name: true,
+                date: true,
+                shortId: true,
+                par: true,
+                rating: true,
+                slope: true,
+                courseId: true,
+                courseName: true,
                 course: {
-                    include: {
+                    select: {
+                        id: true,
+                        name: true,
                         teeBoxes: true,
-                        holes: { orderBy: { holeNumber: 'asc' } } // Exclude elements to save payload
+                        holes: {
+                            select: {
+                                holeNumber: true,
+                                par: true,
+                                difficulty: true,
+                                latitude: true,
+                                longitude: true
+                            },
+                            orderBy: { holeNumber: 'asc' }
+                        }
                     }
                 },
                 players: {
-                    include: {
-                        player: true,
-                        scores: { include: { hole: true } }
+                    select: {
+                        id: true,
+                        guestName: true,
+                        isGuest: true,
+                        indexAtTime: true,
+                        teeBoxName: true,
+                        courseHandicap: true,
+                        scorerId: true,
+                        player: {
+                            select: {
+                                id: true,
+                                name: true,
+                                handicapIndex: true,
+                                preferredTeeBox: true
+                            }
+                        },
+                        scores: {
+                            select: {
+                                strokes: true,
+                                hole: { select: { holeNumber: true } }
+                            }
+                        }
                     }
                 }
             }
@@ -34,27 +74,34 @@ export async function getLiveRoundData(roundId: string) {
 export async function getInitialLivePageData(todayStr: string) {
     try {
         const session = await getSession();
-        if (!session) return null;
+        if (!session) return { error: "No session" };
         const sessionUserId = session.id;
 
-        // Try to find last round
+        // Try to find the user's recent rounds to find the active one
         const userRPs = await prisma.liveRoundPlayer.findMany({
             where: { playerId: sessionUserId },
             include: {
                 liveRound: {
-                    include: {
-                        course: { include: { holes: true, teeBoxes: true } }
+                    select: {
+                        id: true,
+                        date: true,
+                        course: {
+                            select: {
+                                holes: { select: { holeNumber: true } }
+                            }
+                        }
                     }
                 },
-                scores: true
+                scores: { select: { id: true } }
             },
-            take: 10
+            take: 5
         });
 
         const validRPs = userRPs.filter(rp => {
-            const roundDate = rp.liveRound?.date;
+            if (!rp.liveRound) return false;
+            const roundDate = rp.liveRound.date;
             const isToday = roundDate === todayStr;
-            const holeCount = rp.liveRound?.course?.holes?.length || 18;
+            const holeCount = rp.liveRound.course?.holes?.length || 18;
             const scoreCount = rp.scores?.length || 0;
             return isToday || scoreCount >= holeCount;
         });
@@ -76,12 +123,12 @@ export async function getInitialLivePageData(todayStr: string) {
             lastUsedTeeBoxId = lastRP.teeBoxId;
         }
 
-        // Dropdown Rounds
+        // Dropdown Rounds - only select what we need
         const rawRounds = await prisma.liveRound.findMany({
             where: {
                 players: { some: { playerId: sessionUserId } }
             },
-            take: 20,
+            take: 15,
             orderBy: { date: 'desc' },
             select: { id: true, name: true, date: true, courseName: true }
         });
@@ -95,7 +142,7 @@ export async function getInitialLivePageData(todayStr: string) {
                 const courseSlug = (r.courseName || 'round').replace(/New Orleans/gi, '').trim().toLowerCase().replace(/\s+/g, '-');
                 return { id: r.id, name: `${dayName}-${month}-${day}-${courseSlug}` };
             } catch (e) {
-                return { id: r.id, name: r.name };
+                return { id: r.id, name: r.name || 'Round' };
             }
         });
 
@@ -107,6 +154,6 @@ export async function getInitialLivePageData(todayStr: string) {
         }));
     } catch (e) {
         console.error("getInitialLivePageData failed:", e);
-        return null;
+        return { error: "Failed to fetch initial page data" };
     }
 }

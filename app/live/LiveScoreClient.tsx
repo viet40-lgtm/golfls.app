@@ -175,24 +175,6 @@ export default function LiveScoreClient({
 
     const [isAdmin, setIsAdmin] = useState(isAdminProp); // Initialize with server-side value
 
-    // START: LOADING UI
-    if (isLoadingLazyData && !currentRound) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-white">
-                <div className="flex flex-col items-center gap-6 p-8 border-4 border-black rounded-3xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white max-w-sm w-full mx-4">
-                    <Bird className="w-16 h-16 animate-bounce text-blue-500" />
-                    <div className="space-y-2 text-center">
-                        <h2 className="text-2xl font-black italic uppercase tracking-tighter">Syncing Round...</h2>
-                        <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-[0.2em]">Connecting to GolfLS Server</p>
-                    </div>
-                    <div className="w-full h-3 bg-zinc-100 rounded-full overflow-hidden border-2 border-black">
-                        <div className="h-full bg-blue-500 animate-pulse w-[60%]" />
-                    </div>
-                </div>
-            </div>
-        );
-    }
-    // END: LOADING UI
 
     // Start with empty selection - each device manages its own group
     const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
@@ -267,16 +249,17 @@ export default function LiveScoreClient({
             // 1. Extract Guest Players from Server Data
             const guestsFromDb: Player[] = [];
             initialRound.players?.forEach((p: any) => {
-                if (p.is_guest || p.isGuest || !p.player) {
+                const isGuest = p.isGuest || p.is_guest || !p.player;
+                if (isGuest) {
                     guestsFromDb.push({
                         id: p.id,
-                        name: p.guest_name || p.name || 'Guest',
-                        index: p.index_at_time || 0,
+                        name: p.guestName || p.guest_name || p.name || 'Guest',
+                        index: p.indexAtTime || p.index_at_time || 0,
                         preferred_tee_box: null,
                         isGuest: true,
                         liveRoundData: {
-                            tee_box_name: p.tee_box_name,
-                            course_hcp: p.course_handicap
+                            tee_box_name: p.teeBoxName || p.tee_box_name,
+                            course_hcp: p.courseHandicap || p.course_handicap
                         }
                     });
                 }
@@ -304,8 +287,8 @@ export default function LiveScoreClient({
 
             // Sync selections with server truth (Leaderboard status)
             initialRound.players?.forEach((p: any) => {
-                const pid = (p.is_guest || p.isGuest || !p.player) ? p.id : p.player?.id;
-                const sid = p.scorer_id || p.scorerId;
+                const pid = (p.is_guest || p.isGuest || !p.player) ? p.id : (p.player?.id || p.playerId);
+                const sid = p.scorerId || p.scorer_id;
                 const isMyScoree = (sid === clientScorerId && sid !== null) || (isAdmin && !!sid);
 
                 if (!finalSelections[pid]) {
@@ -1295,19 +1278,20 @@ export default function LiveScoreClient({
         const summaryPlayersMap = new Map<string, Player>();
         if (initialRound?.players) {
             initialRound.players.forEach((p: any) => {
-                if (p.is_guest) {
-                    // Handle guest players
+                const isGuest = p.isGuest || p.is_guest || !p.player;
+                if (isGuest) {
+                    // Handle guests
                     summaryPlayersMap.set(p.id, {
                         id: p.id,
-                        name: p.guest_name || 'Guest',
-                        index: p.index_at_time,
+                        name: p.guestName || p.guest_name || 'Guest',
+                        index: p.indexAtTime || p.index_at_time,
                         preferred_tee_box: null,
                         isGuest: true,
-                        liveRoundPlayerId: p.id, // For guests, the ID is already the LiveRoundPlayer ID
-                        scorerId: p.scorer_id, // Store the scorer ID
+                        liveRoundPlayerId: p.id,
+                        scorerId: p.scorerId || p.scorer_id,
                         liveRoundData: {
-                            tee_box_name: p.tee_box_name,
-                            course_hcp: p.course_handicap
+                            tee_box_name: p.teeBoxName || p.tee_box_name,
+                            course_hcp: p.courseHandicap || p.course_handicap
                         }
                     });
                 } else if (p.player) {
@@ -1315,13 +1299,13 @@ export default function LiveScoreClient({
                     summaryPlayersMap.set(p.player.id, {
                         id: p.player.id,
                         name: p.player.name,
-                        index: p.player.index,
-                        preferred_tee_box: p.player.preferred_tee_box,
-                        liveRoundPlayerId: p.id, // Store the LiveRoundPlayer ID
-                        scorerId: p.scorer_id, // Store the scorer ID
+                        index: p.player.handicapIndex || p.player.index,
+                        preferred_tee_box: p.player.preferredTeeBox || p.player.preferred_tee_box,
+                        liveRoundPlayerId: p.id,
+                        scorerId: p.scorerId || p.scorer_id,
                         liveRoundData: {
-                            tee_box_name: p.tee_box_name,
-                            course_hcp: p.course_handicap
+                            tee_box_name: p.teeBoxName || p.tee_box_name,
+                            course_hcp: p.courseHandicap || p.course_handicap
                         }
                     });
                 }
@@ -1463,6 +1447,25 @@ export default function LiveScoreClient({
     const eagleLeaders = playerStats.filter(p => p.eagleCount > 0).sort((a, b) => b.eagleCount - a.eagleCount);
 
     const isToday = initialRound?.date === todayStr;
+
+    // START: LOADING UI
+    if (isLoadingLazyData && !currentRound) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-white">
+                <div className="flex flex-col items-center gap-6 p-8 border-4 border-black rounded-3xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white max-w-sm w-full mx-4">
+                    <Bird className="w-16 h-16 animate-bounce text-blue-500" />
+                    <div className="space-y-2 text-center">
+                        <h2 className="text-2xl font-black italic uppercase tracking-tighter">Syncing Round...</h2>
+                        <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-[0.2em]">Connecting to GolfLS Server</p>
+                    </div>
+                    <div className="w-full h-3 bg-zinc-100 rounded-full overflow-hidden border-2 border-black">
+                        <div className="h-full bg-blue-500 animate-pulse w-[60%]" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+    // END: LOADING UI
 
 
     return (
