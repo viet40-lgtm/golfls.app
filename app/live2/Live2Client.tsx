@@ -25,9 +25,9 @@ export default function Live2Client() {
             const dateStr = new Date().toISOString().split('T')[0];
             const result = await createDefaultLiveRound(dateStr, "Test User");
             if (result.success) {
-                setStatus('Success! ID: ' + result.liveRoundId);
+                setStatus('Success! ID: ' + result.roundId);
                 // Optionally redirect
-                // router.push('/live?roundId=' + result.liveRoundId);
+                // router.push('/live?roundId=' + result.roundId);
             } else {
                 setStatus('Error: ' + result.error);
             }
