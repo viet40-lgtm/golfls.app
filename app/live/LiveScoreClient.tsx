@@ -1082,8 +1082,7 @@ export default function LiveScoreClient({
             const result = await saveLiveScore({
                 liveRoundId,
                 holeNumber,
-                playerScores: [{ playerId, strokes: numericValue }],
-                scorerId: isAdmin ? undefined : clientScorerId
+                playerScores: [{ playerId, strokes: numericValue }]
             });
 
             if (!result.success || result.partialFailure) {
@@ -1189,28 +1188,10 @@ export default function LiveScoreClient({
     // AUTO-UNSELECT ON OWNERSHIP LOSS:
     // If a player we have selected is now owned by someone else on the server, we lost the claim.
     // Unselect them locally to prevent "2 devices keeping score".
+    // Live syncing logic removed - no device locking
     useEffect(() => {
-        if (!liveRoundId || !initialRound?.players || selectedPlayers.length === 0 || isAdmin) return;
-
-        const lostPlayers = selectedPlayers.filter(p => {
-            if (p.isGuest) return false;
-            // Find the server record
-            const lrPlayer = initialRound.players.find((rp: any) => rp.player?.id === p.id);
-            // If exists, but scorer_id is NOT us (and not null), we lost it.
-            if (lrPlayer && lrPlayer.scorer_id && lrPlayer.scorer_id !== clientScorerId) {
-                return true;
-            }
-            return false;
-        });
-
-        if (lostPlayers.length > 0) {
-            console.log("Ownership lost for players (Stolen by another device):", lostPlayers.map(p => p.name));
-            // Remove them from local selection
-            setSelectedPlayers(prev => prev.filter(p => !lostPlayers.some(lp => lp.id === p.id)));
-            // Optional: User feedback
-            // alert(`The following players were claimed by another device: ${lostPlayers.map(p => p.name).join(', ')}`);
-        }
-    }, [initialRound, selectedPlayers, clientScorerId, isAdmin, liveRoundId]);
+        // No-op for removed device locking logic
+    }, []);
     // AUTO-SELECT CURRENT USER:
     // If no players are selected for scoring locally, but the current user is a participant 
     // in the round, auto-select them.
@@ -1984,8 +1965,7 @@ export default function LiveScoreClient({
                                                                 const retryResult = await saveLiveScore({
                                                                     liveRoundId,
                                                                     holeNumber: currentHole,
-                                                                    playerScores: updates,
-                                                                    scorerId: clientScorerId
+                                                                    playerScores: updates
                                                                 });
 
                                                                 if (retryResult.success && !retryResult.partialFailure) {
@@ -2042,8 +2022,7 @@ export default function LiveScoreClient({
                                                                 const finalResult = await saveLiveScore({
                                                                     liveRoundId,
                                                                     holeNumber: holeNum,
-                                                                    playerScores: playerScores,
-                                                                    scorerId: clientScorerId
+                                                                    playerScores: playerScores
                                                                 });
 
                                                                 if (!finalResult.success || finalResult.partialFailure) {
