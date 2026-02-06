@@ -1773,7 +1773,7 @@ export default function LiveScoreClient({
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-9 border-b border-black overflow-hidden first:rounded-t-xl last:rounded-b-xl">
+                            <div className="grid grid-cols-9 gap-1 pb-1">
                                 {defaultCourse?.holes.map((hole, idx) => {
                                     // Use selected group if available, otherwise check all players in the round
                                     const playersForStatus = selectedPlayers.length > 0 ? selectedPlayers : rankedPlayers;
@@ -1787,22 +1787,18 @@ export default function LiveScoreClient({
                                     const isMissing = playersForStatus.length > 0 && !isActive && !isSaved && hole.holeNumber < activeHole;
 
                                     // Determine styling
-                                    let btnClass = "bg-white text-black";
+                                    let btnClass = "bg-white text-black border-zinc-200";
 
                                     if (isActive) {
                                         // Active hole: white text on green
-                                        btnClass = "bg-green-600 text-white z-10 scale-[1.02] shadow-md ring-2 ring-inset ring-black";
+                                        btnClass = "bg-green-600 text-white z-10 scale-[1.02] shadow-md ring-2 ring-inset ring-black border-transparent";
                                     } else if (isMissing) {
                                         // Missing/Failed: white text on red
-                                        btnClass = "bg-red-600 text-white";
+                                        btnClass = "bg-red-600 text-white border-transparent";
                                     } else if (isSaved) {
                                         // Saved: white text on black
-                                        btnClass = "bg-black text-white";
+                                        btnClass = "bg-black text-white border-transparent";
                                     }
-
-                                    const isDark = isSaved || isActive || isMissing;
-                                    const borderColor = isDark ? "border-white/50" : "border-black";
-                                    const isLastInRow = (idx + 1) % 9 === 0;
 
                                     return (
                                         <button
@@ -1816,10 +1812,8 @@ export default function LiveScoreClient({
                                                 setActiveHole(hole.holeNumber);
                                             }}
                                             className={`
-                                            flex items-center justify-center h-14 w-full transition-all duration-300
-                                            border-l border-t ${borderColor}
-                                            ${isLastInRow ? `border-r ${borderColor}` : ''}
-                                            ${idx >= 9 ? `border-b ${borderColor}` : ''}
+                                            flex items-center justify-center min-h-[3.5rem] py-2 w-full transition-all duration-300
+                                            border rounded-xl
                                             ${btnClass}
                                         `}
                                             title={`Hole ${hole.holeNumber}`}
@@ -2086,7 +2080,7 @@ export default function LiveScoreClient({
                                                 // Blue if: has unsaved changes OR hole is not yet scored
                                                 // Black if: hole is scored AND no unsaved changes
                                                 return (hasUnsavedChanges || !isHoleScored) ? 'bg-green-600 text-white shadow-lg' : 'bg-zinc-100 text-zinc-500';
-                                            })()} ml-auto italic uppercase tracking-tighter text-2xl font-black p-1 rounded-xl shadow-xl transition-all active:scale-[0.98] disabled:opacity-50`}
+                                            })()} ml-auto italic uppercase tracking-tighter text-3xl font-black p-1 rounded-xl shadow-xl transition-all active:scale-[0.98] disabled:opacity-50`}
                                             title={`Save Hole: ${activeHole}`}
                                         >
                                             <div className="relative">
@@ -2160,7 +2154,7 @@ export default function LiveScoreClient({
                                                 <div className="flex items-center gap-1">
                                                     <div className="flex flex-col items-start leading-tight">
                                                         <div className="flex items-center gap-1">
-                                                            <div className="font-black text-zinc-900 text-xl italic uppercase tracking-tighter">{splitName(player.name).first}</div>
+                                                            <div className="font-black text-zinc-900 text-3xl italic uppercase tracking-tighter">{splitName(player.name).first}</div>
                                                             {(() => {
                                                                 const tee = getPlayerTee(player);
                                                                 if (!tee) return null;
@@ -2173,13 +2167,13 @@ export default function LiveScoreClient({
                                                                         : 'bg-zinc-500 text-white';
 
                                                                 return (
-                                                                    <span className={`text-[10px] font-black px-1 py-0.5 rounded-md ${colorClass} uppercase tracking-widest`}>
+                                                                    <span className={`text-xl font-black px-1 py-0.5 rounded-md ${colorClass} uppercase tracking-widest`}>
                                                                         {letter}
                                                                     </span>
                                                                 );
                                                             })()}
                                                         </div>
-                                                        <div className="text-zinc-500 text-2xl font-black uppercase tracking-widest">{splitName(player.name).last}</div>
+                                                        <div className="text-zinc-500 text-xl font-black uppercase tracking-widest">{splitName(player.name).last}</div>
                                                     </div>
                                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <button
@@ -2212,17 +2206,17 @@ export default function LiveScoreClient({
                                                 <div className="flex items-center gap-1">
                                                     <button
                                                         onClick={() => updateScore(player.id, false)}
-                                                        className="w-12 h-12 rounded-full bg-white border-[4px] border-green-600 text-green-600 flex items-center justify-center font-black active:scale-90 transition-all hover:bg-green-50 text-[40px]"
+                                                        className="w-14 h-14 rounded-full bg-white border-[4px] border-green-600 text-green-600 flex items-center justify-center font-black active:scale-90 transition-all hover:bg-green-50 text-[48px]"
                                                         title="Decrease Score"
                                                     >
                                                         -
                                                     </button>
-                                                    <div className="w-12 text-center font-black text-[40px] italic tracking-tighter text-zinc-900">
+                                                    <div className="w-14 text-center font-black text-[48px] italic tracking-tighter text-zinc-900">
                                                         {score || activeHolePar}
                                                     </div>
                                                     <button
                                                         onClick={() => updateScore(player.id, true)}
-                                                        className="w-12 h-12 rounded-full bg-white border-[4px] border-red-600 text-red-600 flex items-center justify-center font-black active:scale-90 transition-all hover:bg-red-50 text-[40px]"
+                                                        className="w-14 h-14 rounded-full bg-white border-[4px] border-red-600 text-red-600 flex items-center justify-center font-black active:scale-90 transition-all hover:bg-red-50 text-[48px]"
                                                         title="Increase Score"
                                                     >
                                                         +
