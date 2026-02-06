@@ -13,6 +13,8 @@ export const metadata = {
     },
 };
 
+// build-trigger: 2026-02-05-18:19
+
 export default async function LiveScorePage(props: { searchParams: Promise<{ roundId?: string }> }) {
     const resolvedSearchParams = await props.searchParams;
     const roundIdFromUrl = resolvedSearchParams.roundId;
