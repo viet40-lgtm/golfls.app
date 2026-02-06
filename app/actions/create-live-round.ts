@@ -472,50 +472,6 @@ export async function saveLiveScore(data: {
                     continue;
                 }
 
-                // ENFORCE OWNERSHIP
-                if (data.scorerId) {
-                    let isLocked = false;
-                    if (liveRoundPlayer.scorerId && liveRoundPlayer.scorerId !== data.scorerId) {
-                        isLocked = true;
-
-                        // OVERRIDE: If the user is authenticated and matches the player, allow takeover
-                        // We need to fetch session first - doing it lazily inside loop might be slow if many players, 
-                        // but usually it's just 1-4. Ideally fetch once at top.
-                        // For now we assume fetch at top of function.
-                        if (session && session.id && liveRoundPlayer.playerId === session.id) {
-                            console.log(`LOCK OVERRIDE: Player ${session.id} reclaiming scoring control.`);
-                            isLocked = false;
-                            // Update scorerId to the new one
-                            await prisma.liveRoundPlayer.update({
-                                where: { id: liveRoundPlayer.id },
-                                data: { scorerId: data.scorerId }
-                            });
-                        }
-                    }
-
-                    if (isLocked) {
-                        console.warn(`Scoring locked by another device for ${liveRoundPlayer.guestName || liveRoundPlayer.playerId}`);
-                        results.push({
-                            playerId: ps.playerId,
-                            success: false,
-                            error: `Locked by another device`
-                        });
-                        continue;
-                    }
-
-                    // Implicit Claim: If no scorer set, or if we just reclaimed it (implicit in the update above, but safe to repeat check logic)
-                    if (!liveRoundPlayer.scorerId || liveRoundPlayer.scorerId === data.scorerId) { // Added check to avoid redundant update if we just updated it
-                        if (!liveRoundPlayer.scorerId) {
-                            await prisma.liveRoundPlayer.update({
-                                where: { id: liveRoundPlayer.id },
-                                data: {
-                                    scorerId: data.scorerId
-                                }
-                            });
-                        }
-                    }
-                }
-
                 // Save or update the score
                 const existingScore = await prisma.liveScore.findFirst({
                     where: {
