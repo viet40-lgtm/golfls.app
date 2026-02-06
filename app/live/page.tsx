@@ -119,7 +119,7 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
     const allLiveRounds = userRoundPlayers
         .map(rp => rp.liveRound)
         .filter(r => {
-            if (seenRoundIds.has(r.id)) return false;
+            if (!r || seenRoundIds.has(r.id)) return false;
             seenRoundIds.add(r.id);
             return true;
         })
