@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import ConfirmModal from './ConfirmModal';
@@ -58,7 +58,7 @@ export function GuestPlayerModal({ isOpen, onClose, onAdd, onUpdate, onDelete, r
 
             const { rating, slope, par } = roundData;
 
-            // Course Handicap formula: (Index × Slope / 113) + (Rating - Par)
+            // Course Handicap formula: (Index Ã— Slope / 113) + (Rating - Par)
             const calculatedHandicap = Math.round((indexNum * slope / 113) + (rating - par));
             setCourseHandicap(calculatedHandicap.toString());
         }
@@ -92,28 +92,28 @@ export function GuestPlayerModal({ isOpen, onClose, onAdd, onUpdate, onDelete, r
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2">
-            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4">
-                <h2 className="text-[16pt] font-bold mb-4 text-gray-800">
+        <div className="fixed inset-0 bg-white z-[250] p-1">
+            <div className="bg-white rounded-none shadow-none w-full h-full p-1 flex flex-col">
+                <h2 className="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">
                     {editingGuest ? 'Edit Guest Player' : 'Add Guest Player'}
                 </h2>
 
-                <div className="space-y-4">
+                <div className="space-y-4 flex-1 overflow-y-auto">
                     <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label className="block text-2xl font-semibold text-gray-700 mb-2">
                             Name
                         </label>
                         <input
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg text-black bg-white"
+                            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-2xl text-black bg-white"
                             placeholder="Guest Name"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label className="block text-2xl font-semibold text-gray-700 mb-2">
                             Handicap Index
                         </label>
                         <input
@@ -121,14 +121,14 @@ export function GuestPlayerModal({ isOpen, onClose, onAdd, onUpdate, onDelete, r
                             step="0.1"
                             value={index}
                             onChange={(e) => setIndex(e.target.value)}
-                            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg text-black bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-2xl text-black bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             placeholder="0.0"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Course Handicap {roundData && !editingGuest && !manuallyEditedHandicap && <span className="text-xs text-gray-500">(Auto-calculated)</span>}
+                        <label className="block text-2xl font-semibold text-gray-700 mb-2">
+                            Course Handicap {roundData && !editingGuest && !manuallyEditedHandicap && <span className="text-xl text-gray-500">(Auto-calculated)</span>}
                         </label>
                         <input
                             type="number"
@@ -137,11 +137,11 @@ export function GuestPlayerModal({ isOpen, onClose, onAdd, onUpdate, onDelete, r
                                 setCourseHandicap(e.target.value);
                                 setManuallyEditedHandicap(true);
                             }}
-                            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg text-black bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-2xl text-black bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             placeholder="0"
                         />
                         {roundData && !editingGuest && (
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xl text-gray-500 mt-1">
                                 Based on Rating: {roundData.rating}, Slope: {roundData.slope}, Par: {roundData.par}
                             </p>
                         )}
@@ -170,20 +170,20 @@ export function GuestPlayerModal({ isOpen, onClose, onAdd, onUpdate, onDelete, r
                                     }
                                 });
                             }}
-                            className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-all text-[15pt]"
+                            className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-all text-xl"
                         >
                             Delete
                         </button>
                     )}
                     <button
                         onClick={onClose}
-                        className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300 transition-all text-[15pt]"
+                        className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300 transition-all text-xl"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleSubmit}
-                        className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all text-[15pt]"
+                        className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all text-xl"
                     >
                         {editingGuest ? 'Update Guest' : 'Add Guest'}
                     </button>
@@ -202,3 +202,6 @@ export function GuestPlayerModal({ isOpen, onClose, onAdd, onUpdate, onDelete, r
         </div>
     );
 }
+
+
+

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -94,7 +94,7 @@ export default function SettingsPage() {
             <main className="max-w-xl mx-auto p-4 space-y-6">
                 {/* Account Section */}
                 <section className="space-y-3">
-                    <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Account</h2>
+                    <h2 className="text-xl font-black text-gray-400 uppercase tracking-widest ml-1">Account</h2>
                     <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
                         <SettingsItem
                             icon={<User className="w-5 h-5" />}
@@ -106,7 +106,7 @@ export default function SettingsPage() {
 
                 {/* 1st Section: GPS Setting */}
                 <section className="space-y-3">
-                    <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Location Services</h2>
+                    <h2 className="text-xl font-black text-gray-400 uppercase tracking-widest ml-1">Location Services</h2>
                     <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
@@ -114,8 +114,8 @@ export default function SettingsPage() {
                                     <Smartphone className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-lg leading-tight">Turn on GPS setting</h3>
-                                    <p className="text-sm text-gray-400 font-medium">Enable real-time distances on mobile</p>
+                                    <h3 className="font-bold text-2xl leading-tight">Turn on GPS setting</h3>
+                                    <p className="text-2xl text-gray-400 font-medium">Enable real-time distances on mobile</p>
                                 </div>
                             </div>
                             <button
@@ -133,7 +133,7 @@ export default function SettingsPage() {
                                     toggleGPS();
                                     navigator.geolocation.getCurrentPosition(() => { }, () => { });
                                 }}
-                                className="w-full bg-black text-white py-3 rounded-xl font-black uppercase tracking-widest text-sm shadow-md active:scale-95 transition-all"
+                                className="w-full bg-black text-white py-3 rounded-xl font-black uppercase tracking-widest text-2xl shadow-md active:scale-95 transition-all"
                             >
                                 Confirm & Activate GPS
                             </button>
@@ -142,7 +142,7 @@ export default function SettingsPage() {
                         {isGPSEnabled && (
                             <div className="bg-green-50 p-3 rounded-xl border border-green-100 flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
                                 <Navigation className="w-5 h-5 text-green-600 mt-0.5" />
-                                <div className="text-xs text-green-800 font-bold leading-relaxed">
+                                <div className="text-xl text-green-800 font-bold leading-relaxed">
                                     GPS is ready. Please ensure your phone's system location is ALSO active and you've granted browser permissions.
                                 </div>
                             </div>
@@ -152,7 +152,7 @@ export default function SettingsPage() {
 
                 {/* Other Sections */}
                 <section className="space-y-3">
-                    <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">App Preferences</h2>
+                    <h2 className="text-xl font-black text-gray-400 uppercase tracking-widest ml-1">App Preferences</h2>
                     <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
                         <SettingsItem icon={<Bell className="w-5 h-5" />} label="Notifications" />
                         <SettingsItem icon={<Shield className="w-5 h-5" />} label="Privacy & Security" />
@@ -162,28 +162,28 @@ export default function SettingsPage() {
 
                 {/* App Installation Section */}
                 <section className="space-y-3">
-                    <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Install App</h2>
+                    <h2 className="text-xl font-black text-gray-400 uppercase tracking-widest ml-1">Install App</h2>
                     <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
                         <div className="flex items-center gap-4 mb-4">
                             <div className="bg-purple-50 p-3 rounded-2xl text-purple-600">
                                 <Smartphone className="w-6 h-6" />
                             </div>
                             <div>
-                                <h3 className="font-bold text-lg leading-tight">Install GolfLS</h3>
-                                <p className="text-sm text-gray-400 font-medium italic leading-tight mt-0.5">Add to Home Screen for the best experience</p>
+                                <h3 className="font-bold text-2xl leading-tight">Install GolfLS</h3>
+                                <p className="text-2xl text-gray-400 font-medium italic leading-tight mt-0.5">Add to Home Screen for the best experience</p>
                             </div>
                         </div>
 
                         {deferredPrompt ? (
                             <button
                                 onClick={handleInstallClick}
-                                className="w-full bg-black text-white py-3 rounded-xl font-black uppercase tracking-widest text-sm shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
+                                className="w-full bg-black text-white py-3 rounded-xl font-black uppercase tracking-widest text-2xl shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
                             >
                                 Install App
                             </button>
                         ) : (
                             <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 text-center">
-                                <p className="text-xs text-gray-500 font-bold">
+                                <p className="text-xl text-gray-500 font-bold">
                                     App is already installed or check your browser's menu to "Add to Home Screen".
                                 </p>
                             </div>
@@ -193,7 +193,7 @@ export default function SettingsPage() {
 
                 {/* Metadata Section */}
                 <section className="space-y-3">
-                    <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Administration</h2>
+                    <h2 className="text-xl font-black text-gray-400 uppercase tracking-widest ml-1">Administration</h2>
                     <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
                         <SettingsItem
                             icon={<Tag className="w-5 h-5" />}
@@ -205,7 +205,7 @@ export default function SettingsPage() {
 
                 {/* Data Management Section */}
                 <section className="space-y-3">
-                    <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Data Management</h2>
+                    <h2 className="text-xl font-black text-gray-400 uppercase tracking-widest ml-1">Data Management</h2>
                     <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
@@ -213,15 +213,15 @@ export default function SettingsPage() {
                                     <RefreshCw className={`w-6 h-6 ${isRecalculating ? 'animate-spin' : ''}`} />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-lg leading-tight">Recalculate index and handicap</h3>
-                                    <p className="text-sm text-gray-400 font-medium italic leading-tight mt-0.5">Sync your Handicap Index from round history</p>
+                                    <h3 className="font-bold text-2xl leading-tight">Recalculate index and handicap</h3>
+                                    <p className="text-2xl text-gray-400 font-medium italic leading-tight mt-0.5">Sync your Handicap Index from round history</p>
                                 </div>
                             </div>
                         </div>
                         <button
                             onClick={handleRecalculate}
                             disabled={isRecalculating}
-                            className="w-full mt-4 bg-black text-white py-3 rounded-xl font-black uppercase tracking-widest text-sm shadow-md active:scale-95 transition-all disabled:opacity-50"
+                            className="w-full mt-4 bg-black text-white py-3 rounded-xl font-black uppercase tracking-widest text-2xl shadow-md active:scale-95 transition-all disabled:opacity-50"
                         >
                             {isRecalculating ? 'Recalculating...' : 'Force Recalculation'}
                         </button>
@@ -307,7 +307,7 @@ function PlayerProfileModal({ initialData, onClose, onSave }: { initialData: any
                 <button onClick={onClose} className="p-2 hover:bg-gray-50 rounded-full transition-colors" title="Close">
                     <X className="w-6 h-6" />
                 </button>
-                <h2 className="text-lg font-black italic uppercase tracking-tighter">Edit Profile</h2>
+                <h2 className="text-2xl font-black italic uppercase tracking-tighter">Edit Profile</h2>
                 <div className="w-10"></div> {/* Spacer */}
             </div>
 
@@ -363,13 +363,13 @@ function PlayerProfileModal({ initialData, onClose, onSave }: { initialData: any
                             />
                         </div>
                         <div className="flex items-start gap-2 px-1 text-zinc-400 italic">
-                            <p className="text-[12pt] font-medium leading-tight">After 5 recorded rounds, your index and handicap will automatically follow official USGA rules.</p>
+                            <p className="text-xl font-medium leading-tight">After 5 recorded rounds, your index and handicap will automatically follow official USGA rules.</p>
                         </div>
                         <div className="space-y-1.5">
-                            <label htmlFor="pref-tee-box" className="text-[10pt] font-black text-gray-400 uppercase tracking-widest ml-1">Prefer Tee Box</label>
+                            <label htmlFor="pref-tee-box" className="text-2xl font-black text-gray-400 uppercase tracking-widest ml-1">Prefer Tee Box</label>
                             <select
                                 id="pref-tee-box"
-                                className="w-full px-4 py-4 bg-gray-50 border-transparent focus:bg-white focus:border-black rounded-2xl transition-all outline-none font-bold text-lg"
+                                className="w-full px-4 py-4 bg-gray-50 border-transparent focus:bg-white focus:border-black rounded-2xl transition-all outline-none font-bold text-2xl"
                                 value={formData.preferredTeeBox}
                                 onChange={e => setFormData({ ...formData, preferredTeeBox: e.target.value })}
                                 title="Preferred Tee Box"
@@ -471,7 +471,7 @@ function MetadataModal({ initialData, onClose, onSave }: { initialData: any, onC
                 <button onClick={onClose} className="p-2 hover:bg-gray-50 rounded-full transition-colors" title="Close">
                     <X className="w-6 h-6" />
                 </button>
-                <h2 className="text-lg font-black italic uppercase tracking-tighter">Edit Metadata</h2>
+                <h2 className="text-2xl font-black italic uppercase tracking-tighter">Edit Metadata</h2>
                 <div className="w-10"></div> {/* Spacer */}
             </div>
 
@@ -491,7 +491,7 @@ function MetadataModal({ initialData, onClose, onSave }: { initialData: any, onC
                                 value={formData.description}
                                 onChange={e => setFormData({ ...formData, description: e.target.value })}
                                 placeholder="Site description for SEO..."
-                                className="w-full px-4 py-4 bg-gray-50 border-transparent focus:bg-white focus:border-black rounded-2xl transition-all outline-none font-bold text-lg min-h-[120px]"
+                                className="w-full px-4 py-4 bg-gray-50 border-transparent focus:bg-white focus:border-black rounded-2xl transition-all outline-none font-bold text-2xl min-h-[120px]"
                                 required
                             />
                         </div>
@@ -541,7 +541,7 @@ function ProfileInput({ label, value, onChange, type = "text", placeholder, requ
                 value={value}
                 onChange={e => onChange(e.target.value)}
                 placeholder={placeholder}
-                className="w-full px-4 py-4 bg-gray-50 border-transparent focus:bg-white focus:border-black rounded-2xl transition-all outline-none font-bold text-lg"
+                className="w-full px-4 py-4 bg-gray-50 border-transparent focus:bg-white focus:border-black rounded-2xl transition-all outline-none font-bold text-2xl"
                 title={label}
             />
         </div>
@@ -558,7 +558,7 @@ function SettingsItem({ icon, label, onClick, hideArrow }: { icon: React.ReactNo
                 <div className="text-gray-400">
                     {icon}
                 </div>
-                <span className="font-bold text-gray-700 text-lg">{label}</span>
+                <span className="font-bold text-gray-700 text-2xl">{label}</span>
             </div>
             {!hideArrow && (
                 <div className="text-gray-300">
@@ -568,3 +568,6 @@ function SettingsItem({ icon, label, onClick, hideArrow }: { icon: React.ReactNo
         </div>
     );
 }
+
+
+

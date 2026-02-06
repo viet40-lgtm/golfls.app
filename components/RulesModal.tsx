@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { X } from 'lucide-react';
 
@@ -35,7 +35,7 @@ export default function RulesModal({ isOpen, onClose, title, content }: RulesMod
 
                 {/* Body */}
                 <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 scrollbar-thin scrollbar-thumb-gray-200">
-                    <div className="text-sm text-gray-600 leading-relaxed font-medium">
+                    <div className="text-2xl text-gray-600 leading-relaxed font-medium">
                         {content}
                     </div>
                 </div>
@@ -53,3 +53,6 @@ export default function RulesModal({ isOpen, onClose, title, content }: RulesMod
         </div>
     );
 }
+
+
+

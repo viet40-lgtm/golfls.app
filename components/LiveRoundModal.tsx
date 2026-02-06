@@ -207,10 +207,10 @@ export function LiveRoundModal({
     };
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm px-2">
-            <div className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-[200] bg-white p-1">
+            <div className="bg-white w-full h-full flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
                 {/* Header */}
-                <div className="px-4 py-3 bg-black text-white flex justify-between items-center">
+                <div className="p-1 bg-black text-white flex justify-between items-center shrink-0">
                     <h2 className="text-[16pt] font-bold text-left ml-1">{existingRound ? 'Edit Live Round' : 'New Live Round'}</h2>
                     <button onClick={onClose} className="hover:opacity-70 transition-opacity bg-white text-black text-[13pt] font-bold px-3 py-1 rounded-full">
                         Close
@@ -218,7 +218,7 @@ export function LiveRoundModal({
                 </div>
 
                 {/* Body */}
-                <div className="p-4 space-y-3">
+                <div className="p-1 space-y-3 flex-1 overflow-y-auto">
                     <div>
                         <label htmlFor="round-date" className="block text-[12pt] font-bold text-gray-700 mb-1">Date</label>
                         <input
@@ -336,7 +336,7 @@ export function LiveRoundModal({
                 </div>
 
                 {/* Footer */}
-                <div className="px-4 py-3 bg-gray-50 flex justify-end gap-2 mt-1">
+                <div className="p-1 bg-gray-50 flex justify-end gap-2 mt-1 shrink-0">
                     <button
                         onClick={onClose}
                         disabled={isSaving}

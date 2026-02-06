@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 
@@ -67,13 +67,13 @@ const NineHoleSection = ({
                         {/* Header Row (Hole #) */}
                         <tr className="border-b border-gray-100">
                             {holes.map(h => (
-                                <td key={h.id} className="px-1 py-2 w-10 font-bold text-[14pt] text-black">{h.hole_number}</td>
+                                <td key={h.id} className="px-1 py-2 w-10 font-bold text-2xl text-black">{h.hole_number}</td>
                             ))}
                         </tr>
                         {/* Par Row */}
                         <tr className="border-b border-gray-100">
                             {holes.map(h => (
-                                <td key={h.id} className="px-1 py-2 w-10 text-[14pt] text-gray-500">{h.par}</td>
+                                <td key={h.id} className="px-1 py-2 w-10 text-2xl text-gray-500">{h.par}</td>
                             ))}
                         </tr>
                         {/* Score Row */}
@@ -82,9 +82,10 @@ const NineHoleSection = ({
                                 const scoreIdx = startIdx + idx;
                                 const score = scores[scoreIdx];
                                 return (
-                                    <td key={h.id} className={`p-1 w-10 font-black text-[14pt] ${getScoreClass(score, h.par)}`}>
+                                    <td key={h.id} className={`p-1 w-10 font-black text-2xl ${getScoreClass(score, h.par)}`}>
                                         <input
                                             id={`hole-input-${scoreIdx}`}
+                                            aria-label={`Score for hole ${h.hole_number}`}
                                             type="number"
                                             min="0"
                                             max="15"
@@ -104,7 +105,7 @@ const NineHoleSection = ({
                                                     }
                                                 }
                                             }}
-                                            className="w-full h-full text-center bg-transparent border-none outline-none font-black text-[14pt] focus:ring-2 focus:ring-inset focus:ring-blue-600 focus:bg-blue-50 rounded-md caret-black"
+                                            className="w-full h-full text-center bg-transparent border-none outline-none font-black text-2xl focus:ring-2 focus:ring-inset focus:ring-blue-600 focus:bg-blue-50 rounded-md caret-black"
                                         />
                                     </td>
                                 );
@@ -113,7 +114,7 @@ const NineHoleSection = ({
                         {/* Hardness Row */}
                         <tr>
                             {holes.map(h => (
-                                <td key={h.id} className="px-1 py-2 w-10 text-[14pt] text-gray-400">{h.difficulty || '-'}</td>
+                                <td key={h.id} className="px-1 py-2 w-10 text-2xl text-gray-400">{h.difficulty || '-'}</td>
                             ))}
                         </tr>
                     </tbody>
@@ -127,19 +128,19 @@ const NineHoleSection = ({
                     <tbody>
                         {/* Row 1: Header (Empty) */}
                         <tr className="border-b border-gray-100">
-                            <td className="px-1 py-2 text-[14pt] font-bold text-transparent">&nbsp;</td>
+                            <td className="px-1 py-2 text-2xl font-bold text-transparent">&nbsp;</td>
                         </tr>
                         {/* Row 2: Total Par */}
                         <tr className="border-b border-gray-100">
-                            <td className="px-1 py-2 text-[14pt] font-bold text-gray-400">{totalPar}</td>
+                            <td className="px-1 py-2 text-2xl font-bold text-gray-400">{totalPar}</td>
                         </tr>
                         {/* Row 3: Total Score */}
                         <tr className="border-b border-gray-100">
-                            <td className="px-1 py-2 text-[14pt] font-black text-black">{totalScore || '-'}</td>
+                            <td className="px-1 py-2 text-2xl font-black text-black">{totalScore || '-'}</td>
                         </tr>
                         {/* Row 4: Hardness (Empty) */}
                         <tr>
-                            <td className="px-1 py-2 text-[14pt] text-transparent">&nbsp;</td>
+                            <td className="px-1 py-2 text-2xl text-transparent">&nbsp;</td>
                         </tr>
                     </tbody>
                 </table>
@@ -302,10 +303,10 @@ export default function ScoreEntryModal({
 
                 {/* Header Actions */}
                 <div className="flex justify-between items-center px-1 py-3 bg-white border-b border-gray-100">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Scorecard</span>
+                    <span className="text-xl font-bold text-gray-400 uppercase tracking-widest">Scorecard</span>
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 bg-black text-white rounded-full text-[15pt] font-bold hover:bg-gray-800 transition-colors"
+                        className="px-4 py-2 bg-black text-white rounded-full text-xl font-bold hover:bg-gray-800 transition-colors"
                     >
                         Close
                     </button>
@@ -316,7 +317,7 @@ export default function ScoreEntryModal({
                 ) : holes.length === 0 ? (
                     <div className="p-12 text-center">
                         <p className="text-gray-500 font-medium">No hole data found for this course.</p>
-                        <p className="text-sm text-gray-400 mt-2">Please add hole information in the database first.</p>
+                        <p className="text-2xl text-gray-400 mt-2">Please add hole information in the database first.</p>
                     </div>
                 ) : (
                     <>
@@ -328,15 +329,15 @@ export default function ScoreEntryModal({
 
                                 {/* Course and Tee Box Info */}
                                 <div className="mt-3 space-y-1">
-                                    <p className="text-[14pt] font-bold text-gray-700">{courseName}</p>
+                                    <p className="text-2xl font-bold text-gray-700">{courseName}</p>
                                     {teeBox && (
-                                        <div className="flex justify-center items-center gap-3 text-[14pt] text-gray-600">
+                                        <div className="flex justify-center items-center gap-3 text-2xl text-gray-600">
                                             <span className="font-bold">Tee: {teeBox.name}</span>
-                                            <span>•</span>
+                                            <span>â€¢</span>
                                             <span>Par: {totalPar}</span>
-                                            <span>•</span>
+                                            <span>â€¢</span>
                                             <span>Rating: {teeBox.rating}</span>
-                                            <span>•</span>
+                                            <span>â€¢</span>
                                             <span>Slope: {teeBox.slope}</span>
                                         </div>
                                     )}
@@ -375,40 +376,40 @@ export default function ScoreEntryModal({
                             <div className="flex flex-wrap justify-center gap-3 mt-8">
                                 <div className="flex items-center gap-1.5">
                                     <span className="w-3 h-3 bg-blue-200 border border-blue-300 rounded-sm"></span>
-                                    <span className="text-[14pt] font-bold text-gray-500 uppercase">Eagle+</span>
+                                    <span className="text-2xl font-bold text-gray-500 uppercase">Eagle+</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                     <span className="w-3 h-3 bg-emerald-200 border border-emerald-300 rounded-sm"></span>
-                                    <span className="text-[14pt] font-bold text-gray-500 uppercase">Birdie</span>
+                                    <span className="text-2xl font-bold text-gray-500 uppercase">Birdie</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                     <span className="w-3 h-3 bg-white border border-gray-200 rounded-sm"></span>
-                                    <span className="text-[14pt] font-bold text-gray-500 uppercase">Par</span>
+                                    <span className="text-2xl font-bold text-gray-500 uppercase">Par</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                     <span className="w-3 h-3 bg-amber-100 border border-amber-200 rounded-sm"></span>
-                                    <span className="text-[14pt] font-bold text-gray-500 uppercase">Bogey</span>
+                                    <span className="text-2xl font-bold text-gray-500 uppercase">Bogey</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                     <span className="w-3 h-3 bg-rose-200 border border-rose-300 rounded-sm"></span>
-                                    <span className="text-[14pt] font-bold text-gray-500 uppercase">Double+</span>
+                                    <span className="text-2xl font-bold text-gray-500 uppercase">Double+</span>
                                 </div>
                             </div>
 
                             {/* Big Stats Row */}
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mt-8 flex justify-around items-center text-center">
                                 <div>
-                                    <span className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">GRS</span>
+                                    <span className="text-[10px] sm:text-xl font-bold text-gray-400 uppercase tracking-wider block mb-1">GRS</span>
                                     <span className="text-3xl sm:text-4xl font-black text-black">{grossTotal || '-'}</span>
                                 </div>
                                 <div className="w-px h-10 bg-gray-100 mx-1"></div>
                                 <div>
-                                    <span className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">HCP</span>
+                                    <span className="text-[10px] sm:text-xl font-bold text-gray-400 uppercase tracking-wider block mb-1">HCP</span>
                                     <span className="text-3xl sm:text-4xl font-black text-black">{courseHcp}</span>
                                 </div>
                                 <div className="w-px h-10 bg-gray-100 mx-1"></div>
                                 <div>
-                                    <span className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">NET</span>
+                                    <span className="text-[10px] sm:text-xl font-bold text-gray-400 uppercase tracking-wider block mb-1">NET</span>
                                     <span className="text-3xl sm:text-4xl font-black text-black">{netScore || '-'}</span>
                                 </div>
                             </div>
@@ -420,13 +421,13 @@ export default function ScoreEntryModal({
                             <button
                                 onClick={handleSave}
                                 disabled={isSaving || grossTotal === 0}
-                                className="flex-1 bg-gray-700 hover:bg-gray-800 text-white font-bold px-4 py-2 text-[15pt] rounded-lg disabled:opacity-50 transition-colors"
+                                className="flex-1 bg-gray-700 hover:bg-gray-800 text-white font-bold px-4 py-2 text-xl rounded-lg disabled:opacity-50 transition-colors"
                             >
                                 {isSaving ? 'Saving...' : 'Save Score'}
                             </button>
                             <button
                                 onClick={onClose}
-                                className="px-4 py-2 border border-gray-300 rounded-lg text-[15pt] font-bold hover:bg-gray-50 transition-colors"
+                                className="px-4 py-2 border border-gray-300 rounded-lg text-xl font-bold hover:bg-gray-50 transition-colors"
                             >
                                 Cancel
                             </button>
@@ -437,3 +438,6 @@ export default function ScoreEntryModal({
         </div >
     );
 }
+
+
+

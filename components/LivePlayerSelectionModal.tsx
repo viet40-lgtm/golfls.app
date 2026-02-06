@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { createPlayer } from '@/app/actions';
@@ -190,11 +190,11 @@ export function LivePlayerSelectionModal({
     };
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="bg-white w-full h-full flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-[200] bg-white p-1">
+            <div className="bg-white w-full h-full flex flex-col shadow-none overflow-hidden animate-in fade-in zoom-in duration-200">
 
                 {/* Header */}
-                <div className="px-3 py-2 bg-white flex flex-col gap-1 shadow-sm z-10">
+                <div className="p-1 bg-white flex flex-col gap-1 shadow-sm z-10">
                     <div className="flex justify-between items-center">
                         <h2 className="text-[16pt] font-bold text-left ml-1">
                             {isCreating ? "Create New Player" : "Select Players to Score For"}
@@ -310,21 +310,21 @@ export function LivePlayerSelectionModal({
                         <div className="max-w-lg mx-auto bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">First Name</label>
+                                    <label className="block text-2xl font-bold text-gray-700 mb-1">First Name</label>
                                     <input
                                         type="text"
                                         title="First Name"
-                                        className="w-full border-2 border-gray-300 p-3 rounded-lg text-lg text-black bg-white"
+                                        className="w-full border-2 border-gray-300 p-3 rounded-lg text-2xl text-black bg-white"
                                         value={newPlayer.firstName}
                                         onChange={e => setNewPlayer({ ...newPlayer, firstName: e.target.value })}
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-1">Last Name</label>
+                                    <label className="block text-2xl font-bold text-gray-700 mb-1">Last Name</label>
                                     <input
                                         type="text"
                                         title="Last Name"
-                                        className="w-full border-2 border-gray-300 p-3 rounded-lg text-lg text-black bg-white"
+                                        className="w-full border-2 border-gray-300 p-3 rounded-lg text-2xl text-black bg-white"
                                         value={newPlayer.lastName}
                                         onChange={e => setNewPlayer({ ...newPlayer, lastName: e.target.value })}
                                     />
@@ -332,34 +332,34 @@ export function LivePlayerSelectionModal({
                             </div>
 
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1">Email</label>
+                                <label className="block text-2xl font-bold text-gray-700 mb-1">Email</label>
                                 <input
                                     type="email"
                                     title="Email Address"
-                                    className="w-full border-2 border-gray-300 p-3 rounded-lg text-lg text-black bg-white"
+                                    className="w-full border-2 border-gray-300 p-3 rounded-lg text-2xl text-black bg-white"
                                     value={newPlayer.email}
                                     onChange={e => setNewPlayer({ ...newPlayer, email: e.target.value })}
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1">Mobile Phone (Use for ID)</label>
+                                <label className="block text-2xl font-bold text-gray-700 mb-1">Mobile Phone (Use for ID)</label>
                                 <input
                                     type="tel"
                                     title="Mobile Phone"
-                                    className="w-full border-2 border-gray-300 p-3 rounded-lg text-lg text-black bg-white"
+                                    className="w-full border-2 border-gray-300 p-3 rounded-lg text-2xl text-black bg-white"
                                     value={newPlayer.phone}
                                     onChange={e => setNewPlayer({ ...newPlayer, phone: e.target.value })}
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1">Handicap Index (Optional)</label>
+                                <label className="block text-2xl font-bold text-gray-700 mb-1">Handicap Index (Optional)</label>
                                 <input
                                     type="number"
                                     step="0.1"
                                     title="Handicap Index"
-                                    className="w-full border-2 border-gray-300 p-3 rounded-lg text-lg text-black bg-white"
+                                    className="w-full border-2 border-gray-300 p-3 rounded-lg text-2xl text-black bg-white"
                                     value={newPlayer.handicapIndex}
                                     onChange={e => setNewPlayer({ ...newPlayer, handicapIndex: e.target.value })}
                                     placeholder="0.0"
@@ -398,7 +398,7 @@ export function LivePlayerSelectionModal({
                                     <div>Try a different search or create a new player.</div>
                                     <button
                                         onClick={() => setIsCreating(true)}
-                                        className="mt-6 bg-green-600 text-white font-bold px-6 py-3 rounded-full text-lg shadow-md"
+                                        className="mt-6 bg-green-600 text-white font-bold px-6 py-3 rounded-full text-2xl shadow-md"
                                     >
                                         Create New Player
                                     </button>
@@ -507,3 +507,6 @@ export function LivePlayerSelectionModal({
         </div>
     );
 }
+
+
+

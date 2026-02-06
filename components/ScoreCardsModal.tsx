@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 
@@ -122,10 +122,10 @@ export default function ScoreCardsModal({ isOpen, onClose, roundPlayers, holes, 
             {/* Header */}
             <div className="bg-white shadow-sm sticky top-0 z-10 px-1 py-3 border-b border-gray-200">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-[18pt] font-bold text-gray-900 tracking-tight text-left ml-3">ScoreCards</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight text-left ml-3">ScoreCards</h1>
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 bg-black text-white rounded-full text-[15pt] font-bold hover:bg-gray-800 transition-colors mr-3"
+                        className="px-4 py-2 bg-black text-white rounded-full text-xl font-bold hover:bg-gray-800 transition-colors mr-3"
                     >
                         Close
                     </button>
@@ -152,14 +152,14 @@ export default function ScoreCardsModal({ isOpen, onClose, roundPlayers, holes, 
                     if (p.thru >= 18) {
                         if (allPlayersFinished) {
                             if (i === 0) {
-                                displayRankInSummary = "🏆";
-                                showRankIconInSummary = "🏆";
+                                displayRankInSummary = "ðŸ†";
+                                showRankIconInSummary = "ðŸ†";
                             } else if (i === 1) {
-                                displayRankInSummary = "🥈";
-                                showRankIconInSummary = "🥈";
+                                displayRankInSummary = "ðŸ¥ˆ";
+                                showRankIconInSummary = "ðŸ¥ˆ";
                             } else if (i === 2) {
-                                displayRankInSummary = "🥉";
-                                showRankIconInSummary = "🥉";
+                                displayRankInSummary = "ðŸ¥‰";
+                                showRankIconInSummary = "ðŸ¥‰";
                             } else {
                                 showFlagInSummary = true;
                             }
@@ -175,8 +175,8 @@ export default function ScoreCardsModal({ isOpen, onClose, roundPlayers, holes, 
                                 <div className="flex justify-between items-center">
                                     <div className="flex items-center gap-3">
                                         <div className="flex flex-col">
-                                            <div className="font-bold text-[16pt] leading-tight">{splitName(p.player.name).first}</div>
-                                            <div className="text-[13pt] leading-tight opacity-90">{splitName(p.player.name).last}</div>
+                                            <div className="font-bold text-xl leading-tight">{splitName(p.player.name).first}</div>
+                                            <div className="text-2xl leading-tight opacity-90">{splitName(p.player.name).last}</div>
                                         </div>
                                         <div className="flex items-center">
                                             {/* Icons removed per request */}
@@ -184,12 +184,12 @@ export default function ScoreCardsModal({ isOpen, onClose, roundPlayers, holes, 
                                     </div>
 
                                     <div className="flex gap-4 items-center">
-                                        <div className={`bg-white font-bold rounded px-2 h-8 flex items-center justify-center text-[15pt] min-w-[3rem] ${toParClass}`}>
+                                        <div className={`bg-white font-bold rounded px-2 h-8 flex items-center justify-center text-xl min-w-[3rem] ${toParClass}`}>
                                             {toParStr}
                                         </div>
                                         <div className="text-left">
-                                            <div className="text-[15pt] opacity-80 font-bold tracking-wider">GRS</div>
-                                            <div className="text-[15pt] font-bold leading-none">
+                                            <div className="text-xl opacity-80 font-bold tracking-wider">GRS</div>
+                                            <div className="text-xl font-bold leading-none">
                                                 {p.front9 > 0 || p.back9 > 0 ? (
                                                     <>{p.front9}+{p.back9}={p.totalGross}</>
                                                 ) : (
@@ -198,12 +198,12 @@ export default function ScoreCardsModal({ isOpen, onClose, roundPlayers, holes, 
                                             </div>
                                         </div>
                                         <div>
-                                            <div className="text-[15pt] opacity-80 font-bold tracking-wider">HCP</div>
-                                            <div className="text-[15pt] font-bold leading-none">{p.strokesReceivedSoFar}/{p.courseHcp}</div>
+                                            <div className="text-xl opacity-80 font-bold tracking-wider">HCP</div>
+                                            <div className="text-xl font-bold leading-none">{p.strokesReceivedSoFar}/{p.courseHcp}</div>
                                         </div>
                                         <div>
-                                            <div className="text-[15pt] opacity-80 font-bold tracking-wider">NET</div>
-                                            <div className="text-[15pt] font-bold leading-none">{p.totalNet}</div>
+                                            <div className="text-xl opacity-80 font-bold tracking-wider">NET</div>
+                                            <div className="text-xl font-bold leading-none">{p.totalNet}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -232,10 +232,10 @@ export default function ScoreCardsModal({ isOpen, onClose, roundPlayers, holes, 
                                         return (
                                             <div key={num} className="flex flex-col items-center justify-center h-16 border-r border-black last:border-r-0 relative bg-white">
                                                 <div className="absolute top-1 inset-x-0 flex justify-center px-1.5 text-gray-900 items-baseline gap-0.5">
-                                                    <span className="text-[13pt] font-bold">{num}</span>
-                                                    <span className="text-[12pt] font-normal opacity-80">/{holePar}</span>
+                                                    <span className="text-2xl font-bold">{num}</span>
+                                                    <span className="text-xl font-normal opacity-80">/{holePar}</span>
                                                 </div>
-                                                <div className={`text-[16pt] font-bold px-2 py-0.5 rounded mt-7 ${bgClass} ${score !== null ? 'text-gray-900' : 'text-transparent'}`}>
+                                                <div className={`text-xl font-bold px-2 py-0.5 rounded mt-7 ${bgClass} ${score !== null ? 'text-gray-900' : 'text-transparent'}`}>
                                                     {score || '-'}
                                                 </div>
                                             </div>
@@ -263,10 +263,10 @@ export default function ScoreCardsModal({ isOpen, onClose, roundPlayers, holes, 
                                         return (
                                             <div key={num} className="flex flex-col items-center justify-center h-16 border-r border-black last:border-r-0 relative bg-white">
                                                 <div className="absolute top-1 inset-x-0 flex justify-center px-1.5 text-gray-900 items-baseline gap-0.5">
-                                                    <span className="text-[13pt] font-bold">{num}</span>
-                                                    <span className="text-[12pt] font-normal opacity-80">/{holePar}</span>
+                                                    <span className="text-2xl font-bold">{num}</span>
+                                                    <span className="text-xl font-normal opacity-80">/{holePar}</span>
                                                 </div>
-                                                <div className={`text-[16pt] font-bold px-2 py-0.5 rounded mt-7 ${bgClass} ${score !== null ? 'text-gray-900' : 'text-transparent'}`}>
+                                                <div className={`text-xl font-bold px-2 py-0.5 rounded mt-7 ${bgClass} ${score !== null ? 'text-gray-900' : 'text-transparent'}`}>
                                                     {score || '-'}
                                                 </div>
                                             </div>
@@ -280,7 +280,7 @@ export default function ScoreCardsModal({ isOpen, onClose, roundPlayers, holes, 
             </div>
 
             {/* Score Legend */}
-            <div className="bg-white rounded-xl shadow-lg p-1 m-1 flex flex-wrap gap-1 items-center justify-center text-[15pt]">
+            <div className="bg-white rounded-xl shadow-lg p-1 m-1 flex flex-wrap gap-1 items-center justify-center text-xl">
                 <div className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-yellow-300"></div>Eagle (-2)</div>
                 <div className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-green-300"></div>Birdie (-1)</div>
                 <div className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-white border border-gray-300"></div>Par (E)</div>
@@ -290,3 +290,6 @@ export default function ScoreCardsModal({ isOpen, onClose, roundPlayers, holes, 
         </div>
     );
 }
+
+
+

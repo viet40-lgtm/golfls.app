@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 
 interface Player {
@@ -122,14 +122,14 @@ export const LiveLeaderboardCard = ({
                                     );
                                 })()}
                             </div>
-                            <div className="text-zinc-500 text-xs font-black uppercase tracking-widest mt-1">{splitName(p.name).last}</div>
+                            <div className="text-zinc-500 text-2xl font-black uppercase tracking-widest mt-1">{splitName(p.name).last}</div>
                         </div>
                     </div>
 
                     {/* Center: To Par Score */}
                     <div className="justify-self-center">
                         <div className="bg-black text-white rounded-md px-3 py-1 min-w-[3.5rem] text-center shadow-md">
-                            <div className="text-[21pt] font-black italic tracking-tighter leading-none">
+                            <div className="text-3xl font-black italic tracking-tighter leading-none">
                                 {toParStr}
                             </div>
                         </div>
@@ -138,7 +138,7 @@ export const LiveLeaderboardCard = ({
                     {/* Right: Stats */}
                     <div className="flex gap-2 items-end justify-self-end">
                         <div className="flex flex-col items-center gap-0">
-                            <div className="text-[11pt] text-zinc-500 font-black tracking-widest uppercase">GRS</div>
+                            <div className="text-xl text-zinc-500 font-black tracking-widest uppercase">GRS</div>
                             <div className={`text-xl font-black italic tracking-tighter leading-none ${p.toPar < 0 ? 'text-red-600' : p.toPar > 0 ? 'text-zinc-900' : 'text-green-600'}`}>
                                 {p.front9 > 0 || p.back9 > 0 ? (
                                     <>{p.front9}+{p.back9}={p.totalGross}</>
@@ -148,11 +148,11 @@ export const LiveLeaderboardCard = ({
                             </div>
                         </div>
                         <div className="flex flex-col items-center gap-0">
-                            <div className="text-[11pt] text-zinc-500 font-black tracking-widest uppercase">HCP</div>
+                            <div className="text-xl text-zinc-500 font-black tracking-widest uppercase">HCP</div>
                             <div className={`text-xl font-black italic tracking-tighter leading-none ${p.toPar < 0 ? 'text-red-600' : p.toPar > 0 ? 'text-zinc-900' : 'text-green-600'}`}>{isNaN(p.courseHcp) ? 0 : p.courseHcp}</div>
                         </div>
                         <div className="flex flex-col items-center gap-0">
-                            <div className="text-[11pt] text-zinc-500 font-black tracking-widest uppercase">NET</div>
+                            <div className="text-xl text-zinc-500 font-black tracking-widest uppercase">NET</div>
                             <div className={`text-xl font-black italic tracking-tighter leading-none ${p.toPar < 0 ? 'text-red-600' : p.toPar > 0 ? 'text-zinc-900' : 'text-green-600'}`}>{isNaN(p.totalNet) ? 0 : p.totalNet}</div>
                         </div>
                     </div>
@@ -169,17 +169,17 @@ export const LiveLeaderboardCard = ({
                         const hole = defaultCourse?.holes.find((h: any) => h.holeNumber === num);
                         const holePar = hole?.par || 4;
 
-                        let shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black italic tracking-tighter text-black";
+                        let shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black italic tracking-tighter text-black";
                         // Active hole still gets a subtle green background if no score
                         let bgColor = isActive ? "bg-green-600/10" : "bg-transparent";
 
                         if (score !== null) {
                             const diff = score - holePar;
-                            if (diff <= -2) shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black text-black bg-yellow-300 rounded"; // Eagle
-                            else if (diff === -1) shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black text-black bg-green-300 rounded"; // Birdie
-                            else if (diff === 0) { shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black text-black"; } // Par
-                            else if (diff === 1) shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black text-black bg-orange-300 rounded"; // Bogey
-                            else if (diff >= 2) shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black text-black bg-red-300 rounded"; // Double Bogey
+                            if (diff <= -2) shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black text-black bg-yellow-300 rounded"; // Eagle
+                            else if (diff === -1) shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black text-black bg-green-300 rounded"; // Birdie
+                            else if (diff === 0) { shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black text-black"; } // Par
+                            else if (diff === 1) shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black text-black bg-orange-300 rounded"; // Bogey
+                            else if (diff >= 2) shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black text-black bg-red-300 rounded"; // Double Bogey
                         }
 
                         return (
@@ -194,8 +194,8 @@ export const LiveLeaderboardCard = ({
                                 ${isAdmin ? 'cursor-pointer hover:bg-zinc-100' : ''}
                             `}>
                                 <div className="absolute top-0.5 inset-x-0 flex justify-center items-baseline px-1 leading-none gap-0.5">
-                                    <span className="text-[11pt] font-black text-zinc-900">{num}</span>
-                                    <span className="text-[10pt] font-medium text-zinc-500">/{holePar}</span>
+                                    <span className="text-2xl font-black text-black">{num}</span>
+                                    <span className="text-2xl font-black text-black">/{holePar}</span>
                                 </div>
                                 {isAdmin && summaryEditCell?.playerId === p.id && summaryEditCell?.holeNumber === num ? (
                                     <input
@@ -203,7 +203,7 @@ export const LiveLeaderboardCard = ({
                                         aria-label={`Score for hole ${num}`}
                                         inputMode="numeric"
                                         autoFocus
-                                        className="w-full text-center bg-white text-zinc-900 font-black text-lg focus:outline-none border-none"
+                                        className="w-full text-center bg-white text-zinc-900 font-black text-2xl focus:outline-none border-none"
                                         defaultValue={score || ''}
                                         onFocus={(e) => e.target.select()}
                                         onKeyDown={(e) => {
@@ -235,17 +235,17 @@ export const LiveLeaderboardCard = ({
                         const hole = defaultCourse?.holes.find((h: any) => h.holeNumber === num);
                         const holePar = hole?.par || 4;
 
-                        let shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black italic tracking-tighter text-black";
+                        let shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black italic tracking-tighter text-black";
                         // Active hole still gets a subtle green background if no score
                         let bgColor = isActive ? "bg-green-600/10" : "bg-transparent";
 
                         if (score !== null) {
                             const diff = score - holePar;
-                            if (diff <= -2) shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black text-black bg-yellow-300 rounded"; // Eagle
-                            else if (diff === -1) shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black text-black bg-green-300 rounded"; // Birdie
-                            else if (diff === 0) { shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black text-black"; } // Par
-                            else if (diff === 1) shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black text-black bg-orange-300 rounded"; // Bogey
-                            else if (diff >= 2) shapeClass = "w-7 h-7 flex items-center justify-center text-sm font-black text-black bg-red-300 rounded"; // Double Bogey
+                            if (diff <= -2) shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black text-black bg-yellow-300 rounded"; // Eagle
+                            else if (diff === -1) shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black text-black bg-green-300 rounded"; // Birdie
+                            else if (diff === 0) { shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black text-black"; } // Par
+                            else if (diff === 1) shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black text-black bg-orange-300 rounded"; // Bogey
+                            else if (diff >= 2) shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black text-black bg-red-300 rounded"; // Double Bogey
                         }
 
                         return (
@@ -260,8 +260,8 @@ export const LiveLeaderboardCard = ({
                                 ${isAdmin ? 'cursor-pointer hover:bg-zinc-100' : ''}
                             `}>
                                 <div className="absolute top-0.5 inset-x-0 flex justify-center items-baseline px-1 leading-none gap-0.5">
-                                    <span className="text-[11pt] font-black text-zinc-900">{num}</span>
-                                    <span className="text-[10pt] font-medium text-zinc-500">/{holePar}</span>
+                                    <span className="text-2xl font-black text-black">{num}</span>
+                                    <span className="text-2xl font-black text-black">/{holePar}</span>
                                 </div>
                                 {isAdmin && summaryEditCell?.playerId === p.id && summaryEditCell?.holeNumber === num ? (
                                     <input
@@ -269,7 +269,7 @@ export const LiveLeaderboardCard = ({
                                         aria-label={`Score for hole ${num}`}
                                         inputMode="numeric"
                                         autoFocus
-                                        className="w-full text-center bg-white text-zinc-900 font-black text-lg focus:outline-none border-none"
+                                        className="w-full text-center bg-white text-zinc-900 font-black text-2xl focus:outline-none border-none"
                                         defaultValue={score || ''}
                                         onFocus={(e) => e.target.select()}
                                         onKeyDown={(e) => {
@@ -297,3 +297,6 @@ export const LiveLeaderboardCard = ({
         </div>
     );
 };
+
+
+

@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+// Force rebuild
 
 const config: Config = {
     content: [
@@ -20,6 +21,10 @@ const config: Config = {
                     gold: "#d4af37",
                     silver: "#c0c0c0",
                 }
+            },
+            fontFamily: {
+                sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+                mono: ["var(--font-jetbrains-mono)", "monospace"],
             },
         },
     },

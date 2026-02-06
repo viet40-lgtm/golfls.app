@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -30,13 +30,13 @@ export default function FAQClient({ players }: { players: Player[] }) {
                     <div className="space-y-1"><p className="font-bold text-gray-800 underline">1. Tees</p><p>Club Members will play ALL tournaments from the White Tees. Over 70 play the Gold, unless started the year from White.</p></div>
                     <div className="space-y-1"><p className="font-bold text-gray-800 underline">2. Putting</p><p>Sink ALL putts. No pickups on green.</p></div>
                     <div className="space-y-1"><p className="font-bold text-gray-800 underline">3. Out of Bounds</p><p>All roads, and fences - penalty one stroke and distance.</p></div>
-                    <div className="space-y-1"><p className="font-bold text-gray-800 underline">4. Lost Ball</p><p>Play as Lateral Hazard – penalty one stroke. Drop ball in area where ball was lost.</p></div>
+                    <div className="space-y-1"><p className="font-bold text-gray-800 underline">4. Lost Ball</p><p>Play as Lateral Hazard â€“ penalty one stroke. Drop ball in area where ball was lost.</p></div>
                     <div className="space-y-1"><p className="font-bold text-gray-800 underline">5. Water Hazards</p><p>If not indicated by yellow stakes and/or yellow lines, the margin shall be defined as 1 club length from the edge, drop 2 club lengths from point ball crossed edge of hazard not nearer hole - penalty one stroke.</p></div>
                     <div className="space-y-1"><p className="font-bold text-gray-800 underline">6. Lateral Water Hazard</p><p>If not indicated by red stakes and or red lines, the margin shall be defined as 1 club length from the edge, drop 2 club lengths from point ball crossed edge of hazard not nearer hole - penalty one stroke.</p></div>
                     <div className="space-y-1"><p className="font-bold text-gray-800 underline">7. Obstructions</p><p>Ball near pipes, bridges, benches, shelters, hydrants, sprinkler heads, etc, drop one club length from obstruction not nearer hole - no penalty.</p></div>
                     <div className="space-y-1"><p className="font-bold text-gray-800 underline">8. Casual Water</p><p>Ball in casual water, drop the required distance to improve the lie and the player's footing not nearer hole - no penalty.</p></div>
                     <div className="space-y-1"><p className="font-bold text-gray-800 underline">9. Ground Under Repair</p><p>Ball on ground under repair, drop 1 club length from the area not nearer hole - no penalty.</p></div>
-                    <div className="space-y-1"><p className="font-bold text-gray-800 underline">10. Through the Green</p><p>a. Improve lie with the club head the length of a scorecard, including balls near trees, not nearer hole - no penalty.</p><p>b. Change ball in fairway or green – no penalty.</p></div>
+                    <div className="space-y-1"><p className="font-bold text-gray-800 underline">10. Through the Green</p><p>a. Improve lie with the club head the length of a scorecard, including balls near trees, not nearer hole - no penalty.</p><p>b. Change ball in fairway or green â€“ no penalty.</p></div>
                     <div className="space-y-1"><p className="font-bold text-gray-800 underline">11. Balls and Clubs</p><p>a. All USGA approved Balls and Clubs may be used. Balls should be clearly marked with a unique identifier.</p><p>b. Fourteen (14) club limit shall not be exceeded.</p></div>
                     <div className="space-y-1"><p className="font-bold text-gray-800 underline">12. Sand Traps</p><p>Balls that come to rest in an unnatural depression in the sand trap shall be allowed to smooth out trap and drop ball. Ball lies in its own pitch-mark shall be allowed no relief. Ball lands in grass in bunker you may ground your club, but not improve your lie.</p></div>
                     <div className="space-y-1"><p className="font-bold text-gray-800 underline">13. Cart Path/Drainage</p><p>Ball lands on cart path or in drainage ditch you may obtain relief, the nearest point of relief not nearer hole and drop within one club length - no penalty.</p></div>
@@ -52,9 +52,9 @@ export default function FAQClient({ players }: { players: Player[] }) {
                     <p><span className="font-bold underline">Hole #3:</span> Ball past to right of white stakes play as out of bounds. Penalty, one stroke and distance.</p>
                     <p><span className="font-bold underline">Hole #7:</span> Ball in or over water to left, play as lateral water hazard. May drop on right side of cart path. Penalty one stroke.</p>
                     <p><span className="font-bold underline">Hole #8:</span> Ball in or over water to left, play as lateral water hazard. Penalty one stroke.</p>
-                    <p><span className="font-bold underline">Hole #10:</span> Ball past farthest edge of cart path on Hole #18, or on road to left, play as OB. – Penalty, one stroke and distance.</p>
+                    <p><span className="font-bold underline">Hole #10:</span> Ball past farthest edge of cart path on Hole #18, or on road to left, play as OB. â€“ Penalty, one stroke and distance.</p>
                     <p><span className="font-bold underline">Hole #11:</span> Ball on or over road to left, play as OB. - Penalty, one stroke and distance.</p>
-                    <p><span className="font-bold underline">Hole #18:</span> Ball past farthest edge of cart path and canal right side of cart path. – Penalty, one stroke, and distance.</p>
+                    <p><span className="font-bold underline">Hole #18:</span> Ball past farthest edge of cart path and canal right side of cart path. â€“ Penalty, one stroke, and distance.</p>
                 </div>
             </section>
 
@@ -131,7 +131,7 @@ export default function FAQClient({ players }: { players: Player[] }) {
                 <h3 className="text-[14pt] font-black text-gray-900 mb-3 border-b-2 border-green-500 inline-block">Tournament Payouts</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="bg-black text-white py-3 px-1 rounded-2xl shadow-xl relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-2 opacity-10"><span className="text-[14pt]">⛳</span></div>
+                        <div className="absolute top-0 right-0 p-2 opacity-10"><span className="text-[14pt]">â›³</span></div>
                         <p className="text-[14pt] font-black uppercase text-gray-500 mb-3 tracking-widest text-center">One Round ($150 Total)</p>
                         <div className="space-y-1 font-black text-[14pt]">
                             <div className="flex justify-between border-b border-gray-800 py-2"><span>1st Place</span> <span className="text-green-400">$35</span></div>
@@ -141,7 +141,7 @@ export default function FAQClient({ players }: { players: Player[] }) {
                         <p className="text-[8px] text-gray-500 mt-3 text-center italic">* Payouts per flight ($75 per flight)</p>
                     </div>
                     <div className="bg-black text-white py-3 px-1 rounded-2xl shadow-xl relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-2 opacity-10"><span className="text-[14pt]">🏆</span></div>
+                        <div className="absolute top-0 right-0 p-2 opacity-10"><span className="text-[14pt]">ðŸ†</span></div>
                         <p className="text-[14pt] font-black uppercase text-gray-500 mb-3 tracking-widest text-center">Multi Round ($180 Total)</p>
                         <div className="space-y-1 font-black text-[14pt]">
                             <div className="flex justify-between border-b border-gray-800 py-2"><span>1st Place</span> <span className="text-green-400">$40</span></div>
@@ -300,7 +300,7 @@ export default function FAQClient({ players }: { players: Player[] }) {
                         In January 2024, the USGA added a critical piece to the formula to make it more <strong>"equitable"</strong> when comparing players across different tee boxes.
                     </p>
                     <div className="bg-gray-100 p-4 rounded-xl border-l-4 border-green-500 font-mono text-[14pt] font-bold text-center">
-                        Course HCP = (Index × Slope / 113) + (Rating - Par)
+                        Course HCP = (Index Ã— Slope / 113) + (Rating - Par)
                     </div>
                     <p className="text-gray-600">
                         <strong>Before 2024:</strong> A scratch golfer (0 index) playing a difficult course (Rating 75, Par 72) had a handicap of 0. They had to shoot a 75 to "play to their handicap."
@@ -335,25 +335,25 @@ export default function FAQClient({ players }: { players: Player[] }) {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 text-gray-700">
-                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">-3</td><td className="py-1.5 border-l border-gray-100">0.8 — 1.9</td></tr>
-                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">-2</td><td className="py-1.5 border-l border-gray-100">2.0 — 3.0</td></tr>
-                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">-1</td><td className="py-1.5 border-l border-gray-100">3.1 — 4.1</td></tr>
-                            <tr className="even:bg-gray-50 border-t-2 border-gray-200"><td className="py-1.5 font-black text-green-600 text-[15pt]">0</td><td className="py-1.5 border-l border-gray-100 font-bold text-gray-900 bg-green-50">4.2 — 5.3</td></tr>
-                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">1</td><td className="py-1.5 border-l border-gray-100">5.4 — 6.4</td></tr>
-                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">2</td><td className="py-1.5 border-l border-gray-100">6.5 — 7.5</td></tr>
-                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">3</td><td className="py-1.5 border-l border-gray-100">7.6 — 8.7</td></tr>
-                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">4</td><td className="py-1.5 border-l border-gray-100">8.8 — 9.8</td></tr>
-                            <tr className="even:bg-gray-50 border-t-2 border-gray-200"><td className="py-1.5 font-black text-green-600 text-[15pt]">5</td><td className="py-1.5 border-l border-gray-100 font-bold text-gray-900 bg-green-50">9.9 — 10.9</td></tr>
-                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">6</td><td className="py-1.5 border-l border-gray-100">11.0 — 12.0</td></tr>
-                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">7</td><td className="py-1.5 border-l border-gray-100">12.1 — 13.2</td></tr>
-                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">8</td><td className="py-1.5 border-l border-gray-100">13.3 — 14.3</td></tr>
-                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">9</td><td className="py-1.5 border-l border-gray-100">14.4 — 15.4</td></tr>
-                            <tr className="even:bg-gray-50 border-t-2 border-gray-200"><td className="py-1.5 font-black text-green-600 text-[15pt]">10</td><td className="py-1.5 border-l border-gray-100 font-bold text-gray-900 bg-green-50">15.5 — 16.6</td></tr>
-                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">11</td><td className="py-1.5 border-l border-gray-100">16.7 — 17.7</td></tr>
-                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">12</td><td className="py-1.5 border-l border-gray-100">17.8 — 18.8</td></tr>
-                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">13</td><td className="py-1.5 border-l border-gray-100">18.9 — 20.0</td></tr>
-                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">14</td><td className="py-1.5 border-l border-gray-100">20.1 — 21.1</td></tr>
-                            <tr className="even:bg-gray-50 border-t-2 border-gray-200"><td className="py-1.5 font-black text-green-600 text-[15pt]">15</td><td className="py-1.5 border-l border-gray-100 font-bold text-gray-900 bg-green-50">21.2 — 22.2</td></tr>
+                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">-3</td><td className="py-1.5 border-l border-gray-100">0.8 â€” 1.9</td></tr>
+                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">-2</td><td className="py-1.5 border-l border-gray-100">2.0 â€” 3.0</td></tr>
+                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">-1</td><td className="py-1.5 border-l border-gray-100">3.1 â€” 4.1</td></tr>
+                            <tr className="even:bg-gray-50 border-t-2 border-gray-200"><td className="py-1.5 font-black text-green-600 text-[15pt]">0</td><td className="py-1.5 border-l border-gray-100 font-bold text-gray-900 bg-green-50">4.2 â€” 5.3</td></tr>
+                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">1</td><td className="py-1.5 border-l border-gray-100">5.4 â€” 6.4</td></tr>
+                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">2</td><td className="py-1.5 border-l border-gray-100">6.5 â€” 7.5</td></tr>
+                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">3</td><td className="py-1.5 border-l border-gray-100">7.6 â€” 8.7</td></tr>
+                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">4</td><td className="py-1.5 border-l border-gray-100">8.8 â€” 9.8</td></tr>
+                            <tr className="even:bg-gray-50 border-t-2 border-gray-200"><td className="py-1.5 font-black text-green-600 text-[15pt]">5</td><td className="py-1.5 border-l border-gray-100 font-bold text-gray-900 bg-green-50">9.9 â€” 10.9</td></tr>
+                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">6</td><td className="py-1.5 border-l border-gray-100">11.0 â€” 12.0</td></tr>
+                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">7</td><td className="py-1.5 border-l border-gray-100">12.1 â€” 13.2</td></tr>
+                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">8</td><td className="py-1.5 border-l border-gray-100">13.3 â€” 14.3</td></tr>
+                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">9</td><td className="py-1.5 border-l border-gray-100">14.4 â€” 15.4</td></tr>
+                            <tr className="even:bg-gray-50 border-t-2 border-gray-200"><td className="py-1.5 font-black text-green-600 text-[15pt]">10</td><td className="py-1.5 border-l border-gray-100 font-bold text-gray-900 bg-green-50">15.5 â€” 16.6</td></tr>
+                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">11</td><td className="py-1.5 border-l border-gray-100">16.7 â€” 17.7</td></tr>
+                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">12</td><td className="py-1.5 border-l border-gray-100">17.8 â€” 18.8</td></tr>
+                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">13</td><td className="py-1.5 border-l border-gray-100">18.9 â€” 20.0</td></tr>
+                            <tr className="even:bg-gray-50"><td className="py-1.5 font-black text-black">14</td><td className="py-1.5 border-l border-gray-100">20.1 â€” 21.1</td></tr>
+                            <tr className="even:bg-gray-50 border-t-2 border-gray-200"><td className="py-1.5 font-black text-green-600 text-[15pt]">15</td><td className="py-1.5 border-l border-gray-100 font-bold text-gray-900 bg-green-50">21.2 â€” 22.2</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -371,24 +371,24 @@ export default function FAQClient({ players }: { players: Player[] }) {
                             {/* 1. Ball Movement */}
                             <div className="bg-white/5 p-4 rounded-xl backdrop-blur-sm border border-white/10">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <span className="text-2xl">⚠️</span>
+                                    <span className="text-2xl">âš ï¸</span>
                                     <h5 className="font-black text-[15pt]">Ball Movement</h5>
                                 </div>
                                 <ul className="space-y-1 text-[13pt] text-gray-300 font-medium leading-snug">
-                                    <li>• <span className="text-white font-bold">1 stroke, not 2</span>, for unknowingly moving ball.</li>
-                                    <li>• No more harsh penalties.</li>
+                                    <li>â€¢ <span className="text-white font-bold">1 stroke, not 2</span>, for unknowingly moving ball.</li>
+                                    <li>â€¢ No more harsh penalties.</li>
                                 </ul>
                             </div>
 
                             {/* 2. Embedded Ball */}
                             <div className="bg-white/5 p-4 rounded-xl backdrop-blur-sm border border-white/10">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <span className="text-2xl">⛳</span>
+                                    <span className="text-2xl">â›³</span>
                                     <h5 className="font-black text-[15pt]">Embedded Ball</h5>
                                 </div>
                                 <ul className="space-y-1 text-[13pt] text-gray-300 font-medium leading-snug">
-                                    <li>• <span className="text-white font-bold">Free relief</span> from any pitch mark.</li>
-                                    <li>• Removes guesswork.</li>
+                                    <li>â€¢ <span className="text-white font-bold">Free relief</span> from any pitch mark.</li>
+                                    <li>â€¢ Removes guesswork.</li>
                                 </ul>
                             </div>
                         </div>
@@ -397,24 +397,24 @@ export default function FAQClient({ players }: { players: Player[] }) {
                             {/* 3. Internal O.B. */}
                             <div className="bg-white/5 p-4 rounded-xl backdrop-blur-sm border border-white/10">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <span className="text-2xl">⛔</span>
+                                    <span className="text-2xl">â›”</span>
                                     <h5 className="font-black text-[15pt]">Internal O.B.</h5>
                                 </div>
                                 <ul className="space-y-1 text-[13pt] text-gray-300 font-medium leading-snug">
-                                    <li>• O.B. only for tee shots.</li>
-                                    <li>• No unfair limits on recovery.</li>
+                                    <li>â€¢ O.B. only for tee shots.</li>
+                                    <li>â€¢ No unfair limits on recovery.</li>
                                 </ul>
                             </div>
 
                             {/* 4. Obstructions */}
                             <div className="bg-white/5 p-4 rounded-xl backdrop-blur-sm border border-white/10">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <span className="text-2xl">🚿</span>
+                                    <span className="text-2xl">ðŸš¿</span>
                                     <h5 className="font-black text-[15pt]">Obstructions</h5>
                                 </div>
                                 <ul className="space-y-1 text-[13pt] text-gray-300 font-medium leading-snug">
-                                    <li>• Relief beyond sprinkler heads.</li>
-                                    <li>• Includes mic holes.</li>
+                                    <li>â€¢ Relief beyond sprinkler heads.</li>
+                                    <li>â€¢ Includes mic holes.</li>
                                 </ul>
                             </div>
                         </div>
@@ -423,29 +423,29 @@ export default function FAQClient({ players }: { players: Player[] }) {
                             {/* 5. Broken Clubs */}
                             <div className="bg-white/5 p-4 rounded-xl backdrop-blur-sm border border-white/10">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <span className="text-2xl">🛠️</span>
+                                    <span className="text-2xl">ðŸ› ï¸</span>
                                     <h5 className="font-black text-[15pt]">Broken Clubs</h5>
                                 </div>
                                 <ul className="space-y-1 text-[13pt] text-gray-300 font-medium leading-snug">
-                                    <li>• Repair with parts from bag.</li>
-                                    <li>• Practical mid-round fixes.</li>
+                                    <li>â€¢ Repair with parts from bag.</li>
+                                    <li>â€¢ Practical mid-round fixes.</li>
                                 </ul>
                             </div>
 
                             {/* 6. Preferred Lies */}
                             <div className="bg-white/5 p-4 rounded-xl backdrop-blur-sm border border-white/10">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <span className="text-2xl">📏</span>
+                                    <span className="text-2xl">ðŸ“</span>
                                     <h5 className="font-black text-[15pt]">Preferred Lies</h5>
                                 </div>
                                 <ul className="space-y-1 text-[13pt] text-gray-300 font-medium leading-snug">
-                                    <li>• Relief reduced to scorecard.</li>
-                                    <li>• Fairer placements.</li>
+                                    <li>â€¢ Relief reduced to scorecard.</li>
+                                    <li>â€¢ Fairer placements.</li>
                                 </ul>
                             </div>
                         </div>
                     </div>
-                    <p className="text-center mt-6 text-[11pt] text-gray-500 font-bold uppercase tracking-widest italic border-t border-gray-800 pt-3">Designed to reward skill — not technicalities.</p>
+                    <p className="text-center mt-6 text-[11pt] text-gray-500 font-bold uppercase tracking-widest italic border-t border-gray-800 pt-3">Designed to reward skill â€” not technicalities.</p>
                 </div>
             </section>
 
@@ -453,7 +453,7 @@ export default function FAQClient({ players }: { players: Player[] }) {
             <section>
                 <div className="bg-amber-50 rounded-xl p-5 border border-amber-200 mb-6">
                     <p className="font-black text-amber-900 mb-2 italic flex items-center gap-2 text-[14pt] uppercase">
-                        <span>⚠️</span> Important: Use FULL Course Handicap
+                        <span>âš ï¸</span> Important: Use FULL Course Handicap
                     </p>
                     <p className="text-[14pt] text-amber-800 leading-relaxed font-semibold">
                         Players receive strokes based on their FULL course handicap, NOT half.
@@ -510,16 +510,16 @@ export default function FAQClient({ players }: { players: Player[] }) {
                     </div>
 
                     <div className="space-y-1 text-[14pt] text-gray-500 font-bold px-1 italic">
-                        <p className="text-green-600">✓ Hole 1 & 3: Hardness ≤ 10 → Get 1 stroke</p>
-                        <p className="text-red-500">✗ Hole 2: Hardness &gt; 10 → No stroke</p>
+                        <p className="text-green-600">âœ“ Hole 1 & 3: Hardness â‰¤ 10 â†’ Get 1 stroke</p>
+                        <p className="text-red-500">âœ— Hole 2: Hardness &gt; 10 â†’ No stroke</p>
                     </div>
 
                     <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-[14pt] text-blue-900 leading-relaxed shadow-sm">
                         <p className="font-black uppercase tracking-wider mb-2">For Front 9 and Back 9 Competitions:</p>
                         <p className="font-bold underline text-blue-700 italic mb-2">Use the SAME stroke allocation method - do NOT divide by 2!</p>
                         <ul className="list-disc pl-1 space-y-1">
-                            <li>Front 9: strokes where hardness ≤ total course handicap</li>
-                            <li>Back 9: strokes where hardness ≤ total course handicap</li>
+                            <li>Front 9: strokes where hardness â‰¤ total course handicap</li>
+                            <li>Back 9: strokes where hardness â‰¤ total course handicap</li>
                         </ul>
                         <p className="mt-2 text-blue-700 opacity-80 italic">Ex: A 10-hcp player might get 6 strokes on front 9 and 4 on back 9, depending on where the 10 hardest holes are.</p>
                     </div>
@@ -531,16 +531,16 @@ export default function FAQClient({ players }: { players: Player[] }) {
                 <div className="grid grid-cols-1 gap-4">
                     <div className="bg-zinc-900 text-white p-5 rounded-2xl shadow-lg border-l-4 border-green-500">
                         <p className="text-[9px] font-black text-gray-500 uppercase mb-2 tracking-widest">Score Differential</p>
-                        <p className="text-[14pt] font-mono text-green-400 italic mb-2 leading-tight">(Adj Gross - Rating) × 113 / Slope</p>
-                        <p className="text-[14pt] text-gray-400 leading-tight">Ex (White): (85 - 63.8) × 113 / 100 = <span className="text-white font-bold underline">23.96 → 24.0 Diff</span></p>
+                        <p className="text-[14pt] font-mono text-green-400 italic mb-2 leading-tight">(Adj Gross - Rating) Ã— 113 / Slope</p>
+                        <p className="text-[14pt] text-gray-400 leading-tight">Ex (White): (85 - 63.8) Ã— 113 / 100 = <span className="text-white font-bold underline">23.96 â†’ 24.0 Diff</span></p>
                     </div>
 
                     <div className="bg-zinc-900 text-white p-5 rounded-2xl shadow-lg border-l-4 border-blue-500">
                         <p className="text-[9px] font-black text-gray-500 uppercase mb-2 tracking-widest">Course Handicap</p>
-                        <p className="text-[14pt] font-mono text-blue-400 italic mb-2 leading-tight">(Index × Slope / 113) + (Rating - Par)</p>
+                        <p className="text-[14pt] font-mono text-blue-400 italic mb-2 leading-tight">(Index Ã— Slope / 113) + (Rating - Par)</p>
                         <div className="space-y-1 text-[14pt] text-gray-400">
-                            <p>Ex (White): (15.0 × 100 / 113) + (63.8 - 68) = 13.3 - 4.2 = <span className="text-white font-bold underline">9 HCP</span></p>
-                            <p>Ex (Gold): (15.0 × 92 / 113) + (61.3 - 68) = 12.2 - 6.7 = <span className="text-white font-bold underline">6 HCP</span></p>
+                            <p>Ex (White): (15.0 Ã— 100 / 113) + (63.8 - 68) = 13.3 - 4.2 = <span className="text-white font-bold underline">9 HCP</span></p>
+                            <p>Ex (Gold): (15.0 Ã— 92 / 113) + (61.3 - 68) = 12.2 - 6.7 = <span className="text-white font-bold underline">6 HCP</span></p>
                         </div>
                     </div>
                 </div>
@@ -565,7 +565,7 @@ export default function FAQClient({ players }: { players: Player[] }) {
                             <tr className="bg-gray-50 font-black"><td className="px-1 py-2 text-gray-900 border-l-4 border-black">19 - 20+</td><td className="px-1 py-2 text-right text-black">Lowest 8</td></tr>
                         </tbody>
                     </table>
-                    <p className="p-3 text-center text-[14pt] font-black italic bg-gray-900 text-white shadow-inner underline decoration-green-500 underline-offset-4">Index = Average of Best Differentials × 0.96</p>
+                    <p className="p-3 text-center text-[14pt] font-black italic bg-gray-900 text-white shadow-inner underline decoration-green-500 underline-offset-4">Index = Average of Best Differentials Ã— 0.96</p>
                 </div>
             </section>
 
@@ -577,8 +577,8 @@ export default function FAQClient({ players }: { players: Player[] }) {
                     <p className="font-black text-[14pt] mb-1 uppercase text-red-600">NET DOUBLE BOGEY (Adjusted Gross)</p>
                     <p className="text-[14pt] text-gray-500 mb-2 italic">Max Score = Par + 2 + Handicap Strokes on That Hole</p>
                     <div className="space-y-1 text-[14pt] text-gray-600 leading-tight">
-                        <p>• Hole #1 (Par 4, strokes 1): 4 + 2 + 1 = <span className="font-bold underline">7 Max</span></p>
-                        <p>• Hole #2 (Par 4, strokes 0): 4 + 2 + 0 = <span className="font-bold underline">6 Max</span></p>
+                        <p>â€¢ Hole #1 (Par 4, strokes 1): 4 + 2 + 1 = <span className="font-bold underline">7 Max</span></p>
+                        <p>â€¢ Hole #2 (Par 4, strokes 0): 4 + 2 + 0 = <span className="font-bold underline">6 Max</span></p>
                         <p className="opacity-80 italic pt-1">If you shoot 9 on Hole #1, it counts as 7 for handicap calculation.</p>
                     </div>
                 </div>
@@ -586,12 +586,12 @@ export default function FAQClient({ players }: { players: Player[] }) {
                 <div className="bg-white p-5 border border-gray-100 rounded-xl shadow-sm space-y-3">
                     <div className="flex justify-between items-center"><p className="font-black text-[14pt] uppercase">Soft Cap (3.0 Protection)</p> <span className="bg-green-100 text-green-700 px-1 py-0.5 rounded text-[8px] font-black tracking-tighter">50% REDUCTION</span></div>
                     <ul className="text-[14pt] text-gray-500 leading-relaxed space-y-1">
-                        <li>• Increases up to 3.0 strokes are applied fully</li>
-                        <li>• Increases beyond 3.0 are <span className="font-bold underline text-black">reduced by 50%</span></li>
+                        <li>â€¢ Increases up to 3.0 strokes are applied fully</li>
+                        <li>â€¢ Increases beyond 3.0 are <span className="font-bold underline text-black">reduced by 50%</span></li>
                     </ul>
                     <div className="bg-zinc-50 p-3 rounded-lg text-[14pt] text-gray-600 space-y-0.5 font-medium">
                         <p>Ex: Low Index: 10.0, Calculated Index: 14.5 (Increase: 4.5)</p>
-                        <p>→ First 3.0 + (1.5 × 50% = 0.75)</p>
+                        <p>â†’ First 3.0 + (1.5 Ã— 50% = 0.75)</p>
                         <p className="font-black text-black">Final Index: 13.75</p>
                     </div>
                 </div>
@@ -613,7 +613,7 @@ export default function FAQClient({ players }: { players: Player[] }) {
                     <p className="text-[14pt] text-gray-400 italic font-medium leading-tight">Trigger: Lowest differential is 7.0+ below current index.</p>
                     <div className="bg-zinc-800 p-3 rounded-lg text-[14pt] text-zinc-400 space-y-0.5">
                         <p>Ex: Index 16.5, Amazing round diff: 8.9 (Diff is 7.6 below index)</p>
-                        <p className="font-black text-green-400 uppercase tracking-widest text-[8px]">✓ Triggered! Reduction applied.</p>
+                        <p className="font-black text-green-400 uppercase tracking-widest text-[8px]">âœ“ Triggered! Reduction applied.</p>
                         <p className="font-black text-white">New Index: 15.5</p>
                     </div>
                 </div>
@@ -630,13 +630,13 @@ export default function FAQClient({ players }: { players: Player[] }) {
             {/* Live Score Page Section */}
             <section className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border-2 border-blue-200 shadow-lg">
                 <h3 className="text-[16pt] font-black text-blue-900 mb-4 flex items-center gap-2">
-                    <span className="text-[20pt]">📱</span> Live Score Page - Button Guide
+                    <span className="text-[20pt]">ðŸ“±</span> Live Score Page - Button Guide
                 </h3>
 
                 {/* FYI Notice */}
                 <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-4 rounded-xl border-2 border-amber-300 shadow-md mb-4">
                     <h4 className="text-[14pt] font-black text-amber-900 mb-2 flex items-center gap-2">
-                        <span className="text-[16pt]">ℹ️</span> FYI:
+                        <span className="text-[16pt]">â„¹ï¸</span> FYI:
                     </h4>
                     <div className="space-y-2 text-gray-800 leading-relaxed text-[13pt]">
                         <p className="font-bold">
@@ -664,7 +664,7 @@ export default function FAQClient({ players }: { players: Player[] }) {
                             <li>Adjust Par, Rating, and Slope values</li>
                             <li>Update round name and date</li>
                         </ul>
-                        <p className="text-amber-700 font-bold mt-2 italic">⚠️ Hidden after hole 3 is completed or when all players finish</p>
+                        <p className="text-amber-700 font-bold mt-2 italic">âš ï¸ Hidden after hole 3 is completed or when all players finish</p>
                     </div>
 
                     {/* Players Button */}
@@ -680,7 +680,7 @@ export default function FAQClient({ players }: { players: Player[] }) {
                             <li>Your selection is saved locally for this device</li>
                             <li>Each device can track their own group</li>
                         </ul>
-                        <p className="text-amber-700 font-bold mt-2 italic">⚠️ Hidden after hole 3 is completed</p>
+                        <p className="text-amber-700 font-bold mt-2 italic">âš ï¸ Hidden after hole 3 is completed</p>
                     </div>
 
                     {/* Guest Button */}
@@ -695,8 +695,8 @@ export default function FAQClient({ players }: { players: Player[] }) {
                             <li>Handicap Index</li>
                             <li>Course Handicap (auto-calculated or manual entry)</li>
                         </ul>
-                        <p className="text-blue-700 font-bold mt-2">✓ Guest data is saved to the database and visible on all devices</p>
-                        <p className="text-amber-700 font-bold mt-1 italic">⚠️ Hidden after hole 3 is completed</p>
+                        <p className="text-blue-700 font-bold mt-2">âœ“ Guest data is saved to the database and visible on all devices</p>
+                        <p className="text-amber-700 font-bold mt-1 italic">âš ï¸ Hidden after hole 3 is completed</p>
                     </div>
                 </div>
             </section>
@@ -708,7 +708,7 @@ export default function FAQClient({ players }: { players: Player[] }) {
             {/* Tie Breaker Section */}
             <section>
                 <h3 className="text-[14pt] font-bold text-blue-800 mb-6 border-b border-blue-100 pb-2">
-                    🏆 Tie Breaker Rules
+                    ðŸ† Tie Breaker Rules
                 </h3>
                 <div className="space-y-6 pl-1">
                     <p className="leading-relaxed text-[14pt]">
@@ -730,7 +730,7 @@ export default function FAQClient({ players }: { players: Player[] }) {
                         Tom and Charlie both shoot Net 71.<br />
                         - Hole #18 is Rank 1 (Hardest). Both make Net 5. (Still Tied)<br />
                         - Hole #9 is Rank 2. Tom makes 5, Charlie makes 6.<br />
-                        ✅ <strong className="text-[14pt] text-blue-900">Tom Wins</strong> the tie-breaker.
+                        âœ… <strong className="text-[14pt] text-blue-900">Tom Wins</strong> the tie-breaker.
                     </div>
 
                     <div className="space-y-6 pt-6">
@@ -751,7 +751,7 @@ export default function FAQClient({ players }: { players: Player[] }) {
             {/* Handicap Section */}
             <section>
                 <h3 className="text-[14pt] font-bold text-green-800 mb-6 border-b border-green-100 pb-2">
-                    ⛳ Handicap & Hardness
+                    â›³ Handicap & Hardness
                 </h3>
                 <div className="space-y-6 pl-1">
                     <p className="text-[14pt]">
@@ -773,7 +773,7 @@ export default function FAQClient({ players }: { players: Player[] }) {
             {/* Pool Logic Section */}
             <section>
                 <h3 className="text-[14pt] font-bold text-amber-800 mb-6 border-b border-amber-100 pb-2">
-                    💰 The $5 Pool
+                    ðŸ’° The $5 Pool
                 </h3>
                 <div className="space-y-6 pl-1">
                     <p className="text-[14pt]">
@@ -802,7 +802,7 @@ export default function FAQClient({ players }: { players: Player[] }) {
             {/* Points & YTD Section */}
             <section>
                 <h3 className="text-[14pt] font-bold text-purple-800 mb-6 border-b border-purple-100 pb-2">
-                    📈 Points & YTD
+                    ðŸ“ˆ Points & YTD
                 </h3>
                 <div className="space-y-6 pl-1">
                     <p className="text-[14pt]">
@@ -835,20 +835,20 @@ export default function FAQClient({ players }: { players: Player[] }) {
             {/* WHS Calculations & Caps Section */}
             <section className="pt-8 border-t-2 border-gray-100 space-y-8">
                 <h3 className="text-[14pt] font-bold text-gray-900 mb-6 border-b border-gray-200 pb-2">
-                    📐 WHS Calculations & Caps
+                    ðŸ“ WHS Calculations & Caps
                 </h3>
 
                 {/* Differential & Index Calc */}
                 <div className="space-y-6">
                     <div className="bg-zinc-900 text-white p-6 rounded-2xl shadow-lg border-l-8 border-green-500">
                         <p className="text-[14pt] font-black text-gray-400 uppercase mb-2 tracking-widest">Score Differential</p>
-                        <p className="text-[14pt] font-mono text-green-400 italic mb-3 leading-tight">(Adj Gross - Rating) × 113 / Slope</p>
-                        <p className="text-[14pt] text-gray-300 leading-tight">Ex (White): (85 - 63.8) × 113 / 100 = <span className="text-white font-bold underline">23.96 → 24.0 Diff</span></p>
+                        <p className="text-[14pt] font-mono text-green-400 italic mb-3 leading-tight">(Adj Gross - Rating) Ã— 113 / Slope</p>
+                        <p className="text-[14pt] text-gray-300 leading-tight">Ex (White): (85 - 63.8) Ã— 113 / 100 = <span className="text-white font-bold underline">23.96 â†’ 24.0 Diff</span></p>
                     </div>
 
                     <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
-                        <p className="bg-gray-50 px-1 py-4 font-black text-lg text-gray-500 uppercase tracking-widest border-b border-gray-100">Handicap Index Calculation</p>
-                        <table className="w-full text-lg font-bold">
+                        <p className="bg-gray-50 px-1 py-4 font-black text-2xl text-gray-500 uppercase tracking-widest border-b border-gray-100">Handicap Index Calculation</p>
+                        <table className="w-full text-2xl font-bold">
                             <thead className="bg-gray-50/50 text-gray-400">
                                 <tr>
                                     <th className="px-1 py-3 text-left">Rounds Played</th>
@@ -875,31 +875,31 @@ export default function FAQClient({ players }: { players: Player[] }) {
                     <h4 className="font-black text-gray-900 text-2xl uppercase">Caps & Protections</h4>
 
                     <div className="bg-white p-6 border border-gray-100 rounded-xl shadow-sm">
-                        <p className="font-black text-lg mb-2 uppercase text-red-600">NET DOUBLE BOGEY (Adjusted Gross)</p>
+                        <p className="font-black text-2xl mb-2 uppercase text-red-600">NET DOUBLE BOGEY (Adjusted Gross)</p>
                         <p className="text-xl text-gray-500 mb-3 italic">Max Score = Par + 2 + Handicap Strokes on That Hole</p>
-                        <div className="space-y-2 text-lg text-gray-600 leading-tight">
-                            <p>• Hole #1 (Par 4, strokes 1): 4 + 2 + 1 = <span className="font-bold underline">7 Max</span></p>
-                            <p>• Hole #2 (Par 4, strokes 0): 4 + 2 + 0 = <span className="font-bold underline">6 Max</span></p>
+                        <div className="space-y-2 text-2xl text-gray-600 leading-tight">
+                            <p>â€¢ Hole #1 (Par 4, strokes 1): 4 + 2 + 1 = <span className="font-bold underline">7 Max</span></p>
+                            <p>â€¢ Hole #2 (Par 4, strokes 0): 4 + 2 + 0 = <span className="font-bold underline">6 Max</span></p>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="bg-white p-6 border border-gray-100 rounded-xl shadow-sm space-y-4">
-                            <div className="flex justify-between items-center"><p className="font-black text-xl uppercase">Soft Cap</p> <span className="bg-green-100 text-green-700 px-1 py-1 rounded-lg text-xs font-black tracking-tighter">50% REDUCTION</span></div>
-                            <p className="text-lg text-gray-500">If Index increases &gt; 3.0 above Low Index, the excess is reduced by 50%.</p>
+                            <div className="flex justify-between items-center"><p className="font-black text-xl uppercase">Soft Cap</p> <span className="bg-green-100 text-green-700 px-1 py-1 rounded-lg text-xl font-black tracking-tighter">50% REDUCTION</span></div>
+                            <p className="text-2xl text-gray-500">If Index increases &gt; 3.0 above Low Index, the excess is reduced by 50%.</p>
                         </div>
                         <div className="bg-white p-6 border border-gray-100 rounded-xl shadow-sm space-y-4">
-                            <div className="flex justify-between items-center"><p className="font-black text-xl uppercase">Hard Cap</p> <span className="bg-red-100 text-red-700 px-1 py-1 rounded-lg text-xs font-black tracking-tighter">MAX +5.0</span></div>
-                            <p className="text-lg text-gray-500">Index CANNOT increase &gt; 5.0 above Low Index within 12 months.</p>
+                            <div className="flex justify-between items-center"><p className="font-black text-xl uppercase">Hard Cap</p> <span className="bg-red-100 text-red-700 px-1 py-1 rounded-lg text-xl font-black tracking-tighter">MAX +5.0</span></div>
+                            <p className="text-2xl text-gray-500">Index CANNOT increase &gt; 5.0 above Low Index within 12 months.</p>
                         </div>
                     </div>
 
                     <div className="bg-black text-white p-6 rounded-xl border border-green-500/30 shadow-2xl space-y-4">
                         <div className="flex justify-between items-center">
                             <p className="font-black text-xl text-green-400">ESR (EXCEPTIONAL SCORE)</p>
-                            <span className="bg-green-500 text-black px-1 py-1 rounded-lg text-xs font-black uppercase tracking-tighter">-1.0 REDUCTION</span>
+                            <span className="bg-green-500 text-black px-1 py-1 rounded-lg text-xl font-black uppercase tracking-tighter">-1.0 REDUCTION</span>
                         </div>
-                        <p className="text-lg text-gray-400 italic">Trigger: Round is 7.0+ strokes better than Index.</p>
+                        <p className="text-2xl text-gray-400 italic">Trigger: Round is 7.0+ strokes better than Index.</p>
                     </div>
                 </div>
             </section>
@@ -918,7 +918,7 @@ export default function FAQClient({ players }: { players: Player[] }) {
             <main className="max-w-7xl mx-auto px-1 py-3">
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3 px-1">
-                    <button onClick={() => openModal('App Instructions', appInstructions)} className="bg-blue-600 text-white py-2 px-1 rounded-full font-black text-[14pt] shadow-lg hover:bg-blue-700 transition-all active:scale-95 border-b-2 border-blue-800">📱 App Instructions</button>
+                    <button onClick={() => openModal('App Instructions', appInstructions)} className="bg-blue-600 text-white py-2 px-1 rounded-full font-black text-[14pt] shadow-lg hover:bg-blue-700 transition-all active:scale-95 border-b-2 border-blue-800">ðŸ“± App Instructions</button>
                     <button onClick={() => openModal('Club Rules', clubRules)} className="bg-gray-900 text-white py-2 px-1 rounded-full font-black text-[14pt] shadow-lg hover:bg-black transition-all active:scale-95 border-b-2 border-gray-700">Club Rules</button>
                     <button onClick={() => openModal('Handicap Rules', handicapRules)} className="bg-gray-900 text-white py-2 px-1 rounded-full font-black text-[14pt] shadow-lg hover:bg-black transition-all active:scale-95 border-b-2 border-gray-700">Handicap Rules</button>
                     <Link href="#" className="bg-gray-900 text-white py-2 px-1 rounded-full font-black text-center text-[14pt] shadow-lg hover:bg-black transition-all active:scale-95 flex items-center justify-center border-b-2 border-gray-700">Download Member App</Link>
@@ -938,3 +938,6 @@ export default function FAQClient({ players }: { players: Player[] }) {
         </div>
     );
 }
+
+
+

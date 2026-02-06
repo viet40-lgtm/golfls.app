@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { UserCircle, Eye, ChevronRight } from 'lucide-react';
 
@@ -18,7 +18,7 @@ export function RoleSelectorModal({ isOpen, onClose, onSelectRole, courseName }:
                 <div className="p-8 space-y-8">
                     <div className="text-center space-y-2">
                         <h2 className="text-3xl font-black text-black italic uppercase tracking-tighter leading-none">Choose Your Role</h2>
-                        <p className="text-zinc-500 font-bold text-sm uppercase tracking-widest">{courseName || 'Live Round'}</p>
+                        <p className="text-zinc-500 font-bold text-lg uppercase tracking-widest">{courseName || 'Live Round'}</p>
                     </div>
 
                     <div className="space-y-4">
@@ -32,7 +32,7 @@ export function RoleSelectorModal({ isOpen, onClose, onSelectRole, courseName }:
                             </div>
                             <div className="text-left flex-1">
                                 <div className="text-xl font-black italic uppercase tracking-tighter">Scorer</div>
-                                <div className="text-white/50 text-xs font-bold uppercase tracking-wide">Enter scores & manage group</div>
+                                <div className="text-white/50 text-base font-bold uppercase tracking-wide">Enter scores & manage group</div>
                             </div>
                             <ChevronRight className="text-white/30 group-hover:text-white transition-colors" />
                         </button>
@@ -47,7 +47,7 @@ export function RoleSelectorModal({ isOpen, onClose, onSelectRole, courseName }:
                             </div>
                             <div className="text-left flex-1">
                                 <div className="text-xl font-black italic uppercase tracking-tighter">Viewer</div>
-                                <div className="text-zinc-400 text-xs font-bold uppercase tracking-wide">Watch live leaderboard only</div>
+                                <div className="text-zinc-400 text-base font-bold uppercase tracking-wide">Watch live leaderboard only</div>
                             </div>
                             <ChevronRight className="text-zinc-200 group-hover:text-zinc-400 transition-colors" />
                         </button>
@@ -61,3 +61,5 @@ export function RoleSelectorModal({ isOpen, onClose, onSelectRole, courseName }:
         </div>
     );
 }
+
+

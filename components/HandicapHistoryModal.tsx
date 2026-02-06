@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState } from 'react';
 import { getHandicapHistory, HandicapHistoryResponse } from '@/app/actions/get-handicap-history';
@@ -204,10 +204,10 @@ export function HandicapHistoryModal({ playerId, isOpen, onClose }: HandicapHist
                                 <div className="mb-1">
                                     Handicap Index: <span className="text-black text-[14pt]">{data.player.currentIndex.toFixed(1)}</span>
                                 </div>
-                                <div className="text-gray-500 text-sm">
+                                <div className="text-gray-500 text-2xl">
                                     Low Index (12-mo): <span className="text-gray-900 font-bold">{data.player.lowIndex !== null ? data.player.lowIndex.toFixed(1) : 'N/A'}</span>
                                     {data.player.lowIndex !== null && (
-                                        <span className="text-xs ml-2 text-gray-400">
+                                        <span className="text-xl ml-2 text-gray-400">
                                             (Soft Cap: {(data.player.lowIndex + 3).toFixed(1)}, Hard Cap: {(data.player.lowIndex + 5).toFixed(1)})
                                         </span>
                                     )}
@@ -237,7 +237,7 @@ export function HandicapHistoryModal({ playerId, isOpen, onClose }: HandicapHist
                         {/* Recent Scoring Record Header */}
                         <div className="px-1">
                             <h3 className="font-bold text-gray-900 text-[14pt]">Recent Scoring Record</h3>
-                            <p className="text-sm text-gray-500 mt-1">Showing {Math.min(visibleRounds, data.history.length)} of {data.history.length} rounds (Best 8 count toward Index)</p>
+                            <p className="text-2xl text-gray-500 mt-1">Showing {Math.min(visibleRounds, data.history.length)} of {data.history.length} rounds (Best 8 count toward Index)</p>
                         </div>
 
                         {/* List - Show visible rounds */}
@@ -288,7 +288,7 @@ export function HandicapHistoryModal({ playerId, isOpen, onClose }: HandicapHist
                                         )}
                                         {item.rating && (
                                             <div className="text-[14pt] text-gray-400">
-                                                Par {item.par} • Rating {item.rating} • Slope {item.slope} • {item.teeColor || 'Est'}
+                                                Par {item.par} â€¢ Rating {item.rating} â€¢ Slope {item.slope} â€¢ {item.teeColor || 'Est'}
                                             </div>
                                         )}
                                     </div>
@@ -322,7 +322,7 @@ export function HandicapHistoryModal({ playerId, isOpen, onClose }: HandicapHist
                                             <span className="font-bold text-gray-500">Idx:</span>
                                             <div className="flex items-center gap-1 flex-wrap">
                                                 <span className="text-gray-400">{item.indexBefore.toFixed(1)}</span>
-                                                <span className="text-gray-300">→</span>
+                                                <span className="text-gray-300">â†’</span>
                                                 <span className={`font-bold ${item.indexAfter === item.indexBefore ? 'text-gray-900' :
                                                     item.indexAfter > item.indexBefore ? 'text-green-600' : 'text-red-600'
                                                     }`}>{item.indexAfter.toFixed(1)}</span>
@@ -351,7 +351,7 @@ export function HandicapHistoryModal({ playerId, isOpen, onClose }: HandicapHist
                                     onClick={() => setVisibleRounds(prev => prev + 20)}
                                     className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 font-bold px-4 py-2 rounded-full text-[15pt] shadow-sm transition-all active:scale-95"
                                 >
-                                    Load More History ↓
+                                    Load More History â†“
                                 </button>
                             </div>
                         )}
@@ -382,3 +382,6 @@ function TeeLine({ tee, index, par }: { tee: { name: string, rating: number, slo
         </div>
     );
 }
+
+
+

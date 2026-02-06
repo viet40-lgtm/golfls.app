@@ -1,12 +1,5 @@
 @import "tailwindcss";
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: #101828;
-  --color-primary-foreground: #ffffff;
-}
-
 :root {
   --background: #ffffff;
   --foreground: #000000;
@@ -25,7 +18,7 @@
   --accent-foreground: #000000;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: #e2e8f0;
+  --border: #000000;
   --input: #e2e8f0;
   --ring: #000000;
   --radius: 0.75rem;
@@ -41,33 +34,57 @@ body {
   font-feature-settings: "rlig" 1, "calt" 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-osx-font-smoothing: grayscale;
-  font-size: 17pt;
-  font-weight: 500;
-  /* Default to a solid weight, not thin */
 }
 
-/* Enforce "No Gray" on common text utilities if they rely on opacity or lighter colors */
-.text-gray-500,
-.text-gray-400,
-.text-gray-600,
-.text-zinc-400,
-.text-zinc-500 {
-  color: #000000 !important;
-}
+@layer utilities {
+  .type-h1 {
+    font-family: var(--font-inter), sans-serif;
+    @apply font-bold text-3xl sm:text-4xl tracking-tight;
+  }
 
-/* Secondary font size preference */
-.text-sm,
-.text-xs,
-small {
-  font-size: 15pt !important;
-}
+  .type-h2 {
+    font-family: var(--font-inter), sans-serif;
+    @apply font-bold text-2xl sm:text-3xl tracking-tight;
+  }
 
-.text-lg {
-  font-size: 19pt !important;
-}
+  .type-h3 {
+    font-family: var(--font-inter), sans-serif;
+    @apply font-semibold text-xl sm:text-2xl;
+  }
 
-.text-xl {
-  font-size: 21pt !important;
+  .type-h4 {
+    font-family: var(--font-inter), sans-serif;
+    @apply font-semibold text-lg sm:text-xl;
+  }
+
+  .type-body {
+    font-family: var(--font-inter), sans-serif;
+    @apply text-base leading-relaxed;
+    color: var(--foreground);
+  }
+
+  .type-small {
+    font-family: var(--font-inter), sans-serif;
+    @apply text-sm;
+    color: var(--foreground);
+    opacity: 0.8;
+  }
+
+  .type-label {
+    font-family: var(--font-inter), sans-serif;
+    @apply text-xs font-semibold uppercase tracking-wide;
+    color: var(--muted-foreground);
+  }
+
+  .type-code {
+    font-family: var(--font-jetbrains-mono), monospace;
+    @apply text-sm rounded px-1 py-0.5;
+    background-color: var(--muted);
+  }
+
+  .type-muted {
+    color: var(--muted-foreground);
+  }
 }
 
 /* Base interactive styles */
@@ -76,7 +93,7 @@ select,
 textarea {
   background-color: #ffffff !important;
   color: #0f172a !important;
-  border: 1px solid #e2e8f0 !important;
+  border: 1px solid #000000 !important;
   border-radius: var(--radius);
   padding: 0.625rem 0.875rem;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);

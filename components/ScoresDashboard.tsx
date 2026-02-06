@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -332,11 +332,11 @@ export default function ScoresDashboard({
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-3">
                                         <TrophyIcon className={`w-5 h-5 sm:w-7 sm:h-7 ${round.isTournament ? 'text-yellow-500' : 'text-slate-300'}`} />
-                                        <h2 className="font-black text-black text-[14pt] tracking-tight">
+                                        <h2 className="font-black text-black text-2xl tracking-tight">
                                             {dateStr}
                                         </h2>
                                         {round.isTournament && (
-                                            <span className="text-[14pt] font-black text-amber-700 bg-amber-100 px-1 sm:px-1 py-1 rounded border border-amber-200 uppercase tracking-widest leading-none">
+                                            <span className="text-2xl font-black text-amber-700 bg-amber-100 px-1 sm:px-1 py-1 rounded border border-amber-200 uppercase tracking-widest leading-none">
                                                 Tournament
                                             </span>
                                         )}
@@ -344,7 +344,7 @@ export default function ScoresDashboard({
 
                                     {round.name && (
                                         <div className="mt-1">
-                                            <div className="text-blue-600 font-bold text-[14pt] tracking-[0.1em] sm:tracking-[0.15em] uppercase border border-slate-100 px-1 py-1 rounded inline-block bg-slate-50/50">
+                                            <div className="text-blue-600 font-bold text-2xl tracking-[0.1em] sm:tracking-[0.15em] uppercase border border-slate-100 px-1 py-1 rounded inline-block bg-slate-50/50">
                                                 {round.name}
                                             </div>
                                         </div>
@@ -357,7 +357,7 @@ export default function ScoresDashboard({
                                             return (
                                                 <button
                                                     onClick={() => setSelectedPoolRoundId(round.id)}
-                                                    className={`px-4 py-2 rounded-full text-[15pt] font-bold transition-colors shadow-sm cursor-pointer whitespace-nowrap border-2 ${hasPool
+                                                    className={`px-4 py-2 rounded-full text-xl font-bold transition-colors shadow-sm cursor-pointer whitespace-nowrap border-2 ${hasPool
                                                         ? "bg-black text-white border-black hover:bg-gray-800"
                                                         : "bg-white text-black border-black hover:bg-gray-50"
                                                         }`}
@@ -369,7 +369,7 @@ export default function ScoresDashboard({
                                     }
                                     <button
                                         onClick={() => setSelectedScoreCardsRound(round)}
-                                        className="px-4 py-2 rounded-full text-[15pt] font-bold transition-colors shadow-sm cursor-pointer whitespace-nowrap bg-black text-white hover:bg-gray-800"
+                                        className="px-4 py-2 rounded-full text-xl font-bold transition-colors shadow-sm cursor-pointer whitespace-nowrap bg-black text-white hover:bg-gray-800"
                                     >
                                         ScoreCards
                                     </button>
@@ -391,7 +391,7 @@ export default function ScoresDashboard({
                                             </button>
                                             <Link
                                                 href={`/scores/${round.id}/edit`}
-                                                className="bg-black text-white text-[15pt] font-bold px-4 py-2 rounded-full hover:bg-gray-800 transition-colors shadow-sm cursor-pointer"
+                                                className="bg-black text-white text-xl font-bold px-4 py-2 rounded-full hover:bg-gray-800 transition-colors shadow-sm cursor-pointer"
                                             >
                                                 Edit
                                             </Link>
@@ -434,14 +434,14 @@ export default function ScoresDashboard({
                                     <div key={fIdx} className={fIdx > 0 ? 'border-t-8 border-slate-50' : ''}>
                                         {flight.name && (
                                             <div className="px-1 py-3 bg-slate-50/50 border-b border-slate-100">
-                                                <h3 className="text-[14pt] font-black text-slate-800 flex items-center gap-2 uppercase tracking-widest">
+                                                <h3 className="text-2xl font-black text-slate-800 flex items-center gap-2 uppercase tracking-widest">
                                                     <span className="w-1.5 h-1.5 bg-slate-900 rounded-full"></span>
                                                     {flight.name}
                                                 </h3>
                                             </div>
                                         )}
-                                        <table className="w-full text-sm">
-                                            <thead className="text-[14pt] text-black font-black tracking-[0.05em] sm:tracking-[0.1em] border-b border-slate-100 bg-white">
+                                        <table className="w-full text-2xl">
+                                            <thead className="text-2xl text-black font-black tracking-[0.05em] sm:tracking-[0.1em] border-b border-slate-100 bg-white">
                                                 <tr>
                                                     <th className="px-1 py-4 text-center w-6 sm:w-10">#</th>
                                                     <th className="px-1 py-4 text-left whitespace-nowrap">Name</th>
@@ -491,8 +491,8 @@ export default function ScoresDashboard({
 
                                                     return (
                                                         <tr key={rp.id} className="hover:bg-slate-50/50 transition-colors group">
-                                                            <td className="px-1 sm:px-1 py-3 text-center text-black font-bold text-[14pt]">
-                                                                {pIdx === 0 ? "🏆" : pIdx === 1 ? "🥈" : pIdx === 2 ? "🥉" : pIdx + 1}
+                                                            <td className="px-1 sm:px-1 py-3 text-center text-black font-bold text-2xl">
+                                                                {pIdx === 0 ? "ðŸ†" : pIdx === 1 ? "ðŸ¥ˆ" : pIdx === 2 ? "ðŸ¥‰" : pIdx + 1}
                                                             </td>
                                                             <td className="px-1 py-3">
                                                                 <button
@@ -500,10 +500,10 @@ export default function ScoresDashboard({
                                                                     disabled={isLoading}
                                                                     className="text-left group/name flex flex-col whitespace-nowrap cursor-pointer"
                                                                 >
-                                                                    <span className="font-bold text-blue-600 text-[14pt] underline decoration-2 decoration-black group-hover/name:text-blue-700 group-hover/name:decoration-black transition-colors uppercase leading-tight">
+                                                                    <span className="font-bold text-blue-600 text-2xl underline decoration-2 decoration-black group-hover/name:text-blue-700 group-hover/name:decoration-black transition-colors uppercase leading-tight">
                                                                         {firstName}
                                                                     </span>
-                                                                    <span className="text-[14pt] text-black font-medium leading-none">
+                                                                    <span className="text-2xl text-black font-medium leading-none">
                                                                         {lastName}
                                                                     </span>
                                                                     {isLoading && <LoaderIcon className="w-3 h-3 animate-spin text-slate-300 mt-1" />}
@@ -512,37 +512,37 @@ export default function ScoresDashboard({
                                                             {round.isTournament && (
                                                                 <>
                                                                     <td className="px-1 py-3 text-center">
-                                                                        <span className="font-black text-green-600 text-[14pt]">
+                                                                        <span className="font-black text-green-600 text-2xl">
                                                                             {pIdx === 0 ? '$35' : pIdx === 1 ? '$25' : pIdx === 2 ? '$15' : '-'}
                                                                         </span>
                                                                     </td>
                                                                     <td className="px-1 sm:px-1 py-3 text-center">
-                                                                        <span className="font-bold text-slate-500 text-[14pt]">
+                                                                        <span className="font-bold text-slate-500 text-2xl">
                                                                             +{pIdx === 0 ? '100' : pIdx === 1 ? '75' : pIdx === 2 ? '50' : '20'}
                                                                         </span>
                                                                     </td>
                                                                     <td className="px-1 sm:px-1 py-3 text-center">
-                                                                        <span className="font-bold text-blue-600 text-[14pt]">
+                                                                        <span className="font-bold text-blue-600 text-2xl">
                                                                             {rp.ytdPoints || '-'}
                                                                         </span>
                                                                     </td>
                                                                 </>
                                                             )}
-                                                            <td className="px-1 sm:px-1 py-3 text-center font-bold text-black text-[14pt]">{gross ?? '-'}</td>
-                                                            <td className="px-1 sm:px-1 py-3 text-center font-bold text-black text-[14pt]">{courseHandicap}</td>
+                                                            <td className="px-1 sm:px-1 py-3 text-center font-bold text-black text-2xl">{gross ?? '-'}</td>
+                                                            <td className="px-1 sm:px-1 py-3 text-center font-bold text-black text-2xl">{courseHandicap}</td>
                                                             <td className="px-1 sm:px-1 py-3 text-center bg-slate-50/50">
-                                                                <span className="font-black text-blue-600 text-[14pt]">
+                                                                <span className="font-black text-blue-600 text-2xl">
                                                                     {net ?? '-'}
                                                                 </span>
                                                             </td>
                                                             <td className="px-1 sm:px-1 py-3 text-center">
                                                                 <div className="flex items-center justify-center gap-1 leading-none">
-                                                                    <span className={`text-[14pt] font-black ${hcpColor}`}>{courseHandicapAfter}</span>
+                                                                    <span className={`text-2xl font-black ${hcpColor}`}>{courseHandicapAfter}</span>
                                                                 </div>
                                                             </td>
                                                             <td className="px-1 sm:px-1 py-3 text-center">
                                                                 <div className="flex items-center justify-center gap-1 leading-none">
-                                                                    <span className={`text-[14pt] font-black ${idxColor}`}>{(idxAfter ?? idxBefore).toFixed(1)}</span>
+                                                                    <span className={`text-2xl font-black ${idxColor}`}>{(idxAfter ?? idxBefore).toFixed(1)}</span>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -559,7 +559,7 @@ export default function ScoresDashboard({
                             <div className="p-1 bg-slate-50/50 text-center border-t border-slate-100">
                                 <button
                                     onClick={() => toggleRound(round.id)}
-                                    className="text-slate-500 hover:text-black font-black text-[14pt] uppercase tracking-widest transition-colors cursor-pointer"
+                                    className="text-slate-500 hover:text-black font-black text-2xl uppercase tracking-widest transition-colors cursor-pointer"
                                 >
                                     {isExpanded ? 'Show less' : `+${round.players.length - 3} more player${round.players.length - 3 !== 1 ? 's' : ''}`}
                                 </button>
@@ -573,7 +573,7 @@ export default function ScoresDashboard({
                 visibleRounds.length === 0 && (
                     <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
                         <p className="text-gray-400 font-medium">No rounds found.</p>
-                        <p className="text-sm text-gray-400 mt-1">Add a round to get started.</p>
+                        <p className="text-2xl text-gray-400 mt-1">Add a round to get started.</p>
                     </div>
                 )
             }
@@ -583,7 +583,7 @@ export default function ScoresDashboard({
                     <div className="flex justify-center pt-4">
                         <button
                             onClick={loadMore}
-                            className="px-4 py-2 bg-black text-white rounded-full text-[15pt] font-bold hover:bg-gray-800 transition-colors shadow-sm cursor-pointer"
+                            className="px-4 py-2 bg-black text-white rounded-full text-xl font-bold hover:bg-gray-800 transition-colors shadow-sm cursor-pointer"
                         >
                             More Rounds
                         </button>
@@ -622,3 +622,6 @@ export default function ScoresDashboard({
         </div >
     );
 }
+
+
+

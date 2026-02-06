@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import { cookies } from "next/headers";
 import "./globals.css";
 
-const geistSans = Geist({
-    variable: "--font-geist-sans",
+const inter = Inter({
+    variable: "--font-inter",
     subsets: ["latin"],
+    display: "swap",
 });
 
-const geistMono = Geist_Mono({
-    variable: "--font-geist-mono",
+const jetbrainsMono = JetBrains_Mono({
+    variable: "--font-jetbrains-mono",
     subsets: ["latin"],
+    display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -20,6 +22,25 @@ export const metadata: Metadata = {
         absolute: "Golf Live Scores - GolfLS.app"
     },
     description: "Live score tracking and handicap management for real-time golf rounds.",
+    manifest: "/manifest.json",
+    icons: {
+        icon: [
+            { url: "/icon-192.png", sizes: "192x192" },
+            { url: "/icon-512.png", sizes: "512x512" },
+        ],
+        shortcut: "/icon-192.png",
+        apple: "/icon-512.png",
+    },
+    appleWebApp: {
+        capable: true,
+        statusBarStyle: "default",
+        title: "Golf Live Scores",
+    },
+    // viewports are now a separate export in Next.js 14+, but for now we put other metas here if needed or separate
+};
+
+export const viewport = {
+    themeColor: "#ffffff",
 };
 
 import AppHeader from "@/components/AppHeader";
@@ -36,20 +57,9 @@ export default async function RootLayout({
 
     return (
         <html lang="en" suppressHydrationWarning>
-            <head>
-                <link rel="manifest" href="/manifest.json" />
-                <link rel="apple-touch-icon" href="/icon-512.png" />
-                <meta name="theme-color" content="#ffffff" />
-                <meta name="mobile-web-app-capable" content="yes" />
-                <meta name="apple-mobile-web-app-capable" content="yes" />
-                <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-                <meta name="apple-mobile-web-app-title" content="Golf Live Scores" />
-                <link rel="icon" href="/icon-192.png" sizes="192x192" />
-                <link rel="icon" href="/icon-512.png" sizes="512x512" />
-                <link rel="shortcut icon" href="/icon-192.png" />
-            </head>
+
             <body
-                className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+                className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
                 suppressHydrationWarning
             >
                 {/* <ServiceWorkerRegistration /> */}

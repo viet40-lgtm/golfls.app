@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
@@ -63,7 +63,7 @@ export default function AppHeader() {
                         {!isAuthenticated ? (
                             <Link
                                 href="/"
-                                className="bg-black text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-gray-800 transition-all active:scale-95 shadow-md"
+                                className="bg-black text-white px-5 py-2 rounded-xl text-lg font-bold hover:bg-gray-800 transition-all active:scale-95 shadow-md"
                             >
                                 Sign In
                             </Link>
@@ -71,7 +71,7 @@ export default function AppHeader() {
                             <div className="relative menu-container">
                                 <button
                                     onClick={() => setIsMenuOpen(!isMenuOpen)}
-                                    className="flex items-center gap-2 bg-black text-white border border-black p-1 rounded-xl text-xs font-black transition-all active:scale-95 hover:bg-zinc-800 uppercase tracking-widest"
+                                    className="flex items-center gap-2 bg-black text-white border border-black p-1 rounded-xl text-lg font-black transition-all active:scale-95 hover:bg-zinc-800 uppercase tracking-widest"
                                 >
                                     <Menu className="w-4 h-4" />
                                     <span>Menu</span>
@@ -95,7 +95,7 @@ export default function AppHeader() {
                                                     else await logout();
                                                     window.location.href = '/';
                                                 }}
-                                                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 text-red-600 font-bold rounded-xl transition-colors text-sm"
+                                                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 text-red-600 font-bold rounded-xl transition-colors text-lg"
                                             >
                                                 <LogOut className="w-4 h-4" />
                                                 Logout
@@ -132,19 +132,19 @@ export default function AppHeader() {
                             </div>
                             <form onSubmit={handleAdminSubmit} className="space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-gray-400 ml-1">Password</label>
+                                    <label className="text-base font-bold uppercase tracking-wider text-gray-400 ml-1">Password</label>
                                     <input
                                         type="password"
                                         autoFocus
                                         value={passwordInput}
                                         onChange={(e) => setPasswordInput(e.target.value)}
-                                        className="w-full px-4 py-4 bg-gray-50 border-transparent focus:bg-white focus:border-black rounded-2xl transition-all outline-none text-base font-medium"
+                                        className="w-full px-4 py-4 bg-gray-50 border-transparent focus:bg-white focus:border-black rounded-2xl transition-all outline-none text-xl font-medium"
                                         placeholder="••••••••"
                                     />
                                 </div>
                                 <button
                                     type="submit"
-                                    className="w-full bg-black text-white hover:bg-gray-900 py-4 rounded-2xl font-bold text-lg transition-all shadow-lg active:scale-[0.98]"
+                                    className="w-full bg-black text-white hover:bg-gray-900 py-4 rounded-2xl font-bold text-2xl transition-all shadow-lg active:scale-[0.98]"
                                 >
                                     Verify Identity
                                 </button>
@@ -162,10 +162,12 @@ function MenuLink({ href, icon, label, onClick }: { href: string; icon: React.Re
         <Link
             href={href}
             onClick={onClick}
-            className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 font-bold rounded-xl transition-colors text-sm text-gray-700"
+            className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 font-bold rounded-xl transition-colors text-lg text-gray-700"
         >
             <span className="text-gray-400">{icon}</span>
             {label}
         </Link>
     );
 }
+
+
