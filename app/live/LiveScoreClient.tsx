@@ -491,30 +491,6 @@ export default function LiveScoreClient({
     // Sync local scores with server data when it updates (e.g. after refresh)
     useEffect(() => {
         if (initialRound?.players) {
-            // ENFORCE SINGLE DEVICE SCORING
-            if (clientScorerId) {
-                const takenOverIds = new Set<string>();
-                initialRound.players.forEach((p: any) => {
-                    const playerId = p.is_guest ? p.id : p.player?.id;
-                    if (!playerId) return;
-                    if (p.scorer_id && p.scorer_id !== clientScorerId) {
-                        takenOverIds.add(playerId);
-                    }
-                });
-
-                if (takenOverIds.size > 0) {
-                    setSelectedPlayers(prev => {
-                        const hasTakenOver = prev.some(p => takenOverIds.has(p.id));
-                        if (!hasTakenOver) return prev;
-                        const filtered = prev.filter(p => !takenOverIds.has(p.id));
-                        if (liveRoundId) {
-                            localStorage.setItem(`live_scoring_my_group_${liveRoundId}`, JSON.stringify(filtered.map(p => p.id)));
-                        }
-                        return filtered;
-                    });
-                }
-            }
-
             setScores(prev => {
                 const next = new Map(prev);
 
