@@ -1800,8 +1800,9 @@ export default function LiveScoreClient({
                                         btnClass = "bg-black text-white";
                                     }
 
+                                    const isDark = isSaved || isActive || isMissing;
+                                    const borderColor = isDark ? "border-white/50" : "border-black";
                                     const isLastInRow = (idx + 1) % 9 === 0;
-                                    const isFirstRow = idx < 9;
 
                                     return (
                                         <button
@@ -1816,9 +1817,9 @@ export default function LiveScoreClient({
                                             }}
                                             className={`
                                             flex items-center justify-center h-14 w-full transition-all duration-300
-                                            border-l border-t border-black
-                                            ${isLastInRow ? 'border-r' : ''}
-                                            ${idx >= 9 ? 'border-b' : ''}
+                                            border-l border-t ${borderColor}
+                                            ${isLastInRow ? `border-r ${borderColor}` : ''}
+                                            ${idx >= 9 ? `border-b ${borderColor}` : ''}
                                             ${btnClass}
                                         `}
                                             title={`Hole ${hole.holeNumber}`}
@@ -2547,7 +2548,7 @@ export default function LiveScoreClient({
                             {/* Eagles Section */}
                             <div className="bg-white rounded-xl shadow-lg p-3 border-2 border-yellow-500">
                                 <h2 className="text-xl font-bold text-yellow-700 mb-3 flex items-center gap-2">
-                                    ðŸ¦… Eagles (2 Under Par)
+                                    🦅 Eagles (2 Under Par)
                                 </h2>
                                 <div className="space-y-2">
                                     {eagleLeaders.length > 0 ? (
@@ -2580,7 +2581,7 @@ export default function LiveScoreClient({
                         >
 
                             <div className="bg-white text-black rounded-2xl px-6 py-4 shadow-2xl flex flex-col items-center max-w-sm mx-4 border-4 border-green-500">
-                                <div className="text-9xl leading-none mb-2">ðŸ¦</div>
+                                <div className="text-9xl leading-none mb-2">🐦</div>
                                 <h1 className="text-4xl font-black text-green-600 mb-4 text-center leading-tight drop-shadow-sm uppercase italic">Beautiful Birdie!</h1>
 
                                 <div className="text-2xl font-bold text-gray-900 text-center mb-4 w-full">
@@ -2620,7 +2621,7 @@ export default function LiveScoreClient({
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="bg-white text-black rounded-2xl px-6 py-4 shadow-2xl flex flex-col items-center max-w-sm mx-4 border-4 border-yellow-400">
-                                <div className="text-9xl leading-none mb-2">ðŸ¦…</div>
+                                <div className="text-9xl leading-none mb-2">🦅</div>
                                 <h1 className="text-4xl font-black text-yellow-500 mb-4 text-center leading-tight drop-shadow-sm uppercase italic">Awesome Eagle!</h1>
 
                                 <div className="text-2xl font-bold text-gray-900 text-center mb-4 w-full">

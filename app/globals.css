@@ -18,15 +18,12 @@
   --accent-foreground: #000000;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: #000000;
+  --border: #e2e8f0;
   --input: #e2e8f0;
   --ring: #000000;
   --radius: 0.75rem;
 }
 
-* {
-  border-color: var(--border);
-}
 
 body {
   background-color: var(--background);
@@ -93,7 +90,7 @@ select,
 textarea {
   background-color: #ffffff !important;
   color: #0f172a !important;
-  border: 1px solid #000000 !important;
+  border: 1px solid var(--border) !important;
   border-radius: var(--radius);
   padding: 0.625rem 0.875rem;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
