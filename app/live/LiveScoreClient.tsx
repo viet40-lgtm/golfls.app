@@ -33,7 +33,6 @@ interface Player {
     email?: string | null;
     isGuest?: boolean;
     liveRoundPlayerId?: string; // LiveRoundPlayer ID for server actions
-    scorerId?: string | null; // Scorer tracking
     liveRoundData?: {
         tee_box_name: string | null;
         course_hcp: number | null;
@@ -152,17 +151,7 @@ export default function LiveScoreClient({
 
 
 
-    // Unique ID for this scoring device
-    // Use hydration-safe initialization
-    const [clientScorerId, setClientScorerId] = useState('');
-    useEffect(() => {
-        let id = localStorage.getItem('live_scoring_device_id');
-        if (!id) {
-            id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-            localStorage.setItem('live_scoring_device_id', id);
-        }
-        setClientScorerId(id);
-    }, []);
+
 
     // Restore selected players from localStorage on mount
     useEffect(() => {
@@ -868,8 +857,7 @@ export default function LiveScoreClient({
             courseHandicap: guest.courseHandicap,
             rating: initialRound.rating,
             slope: initialRound.slope,
-            par: initialRound.par,
-            scorerId: isAdmin ? undefined : clientScorerId
+            par: initialRound.par
         });
 
         if (result.success && result.guestPlayerId) {
@@ -979,17 +967,15 @@ export default function LiveScoreClient({
             // Admin doesn't need to "claim" to score, but non-admins do.
 
             const needsToCreate = !existingLrPlayer;
-            const needsToClaim = existingLrPlayer && existingLrPlayer.scorer_id !== clientScorerId && !isAdmin;
 
-            if (needsToCreate || needsToClaim) {
+            if (needsToCreate) {
                 const teeBox = getPlayerTee(player);
                 if (liveRoundId && teeBox?.id) {
-                    console.log(needsToCreate ? "Creating player in round:" : "Claiming player from other device:", player.name);
+                    console.log("Creating player in round:", player.name);
                     await addPlayerToLiveRound({
                         liveRoundId: liveRoundId,
                         playerId: player.id,
-                        teeBoxId: teeBox.id,
-                        scorerId: isAdmin ? undefined : clientScorerId
+                        teeBoxId: teeBox.id
                     });
                 }
             }
@@ -1013,7 +999,7 @@ export default function LiveScoreClient({
                     // This satisfies the user request: "any device that checked players can uncheck players and remove all trace"
 
                     const hasScores = lrPlayer.scores && lrPlayer.scores.length > 0;
-                    console.log("Removing player from round:", lrPlayer.id, hasScores ? "(has scores)" : "(no scores)", "scorer_id:", lrPlayer.scorer_id, "client:", clientScorerId);
+                    console.log("Removing player from round:", lrPlayer.id, hasScores ? "(has scores)" : "(no scores)");
 
                     try {
                         const removeResult = await removePlayerFromLiveRound(lrPlayer.id);
@@ -1266,7 +1252,6 @@ export default function LiveScoreClient({
                 index: meOnServer.player.index,
                 preferred_tee_box: meOnServer.player.preferred_tee_box,
                 liveRoundPlayerId: meOnServer.id,
-                scorerId: meOnServer.scorer_id,
                 liveRoundData: {
                     tee_box_name: meOnServer.tee_box_name,
                     course_hcp: meOnServer.course_handicap
@@ -1299,7 +1284,6 @@ export default function LiveScoreClient({
                         preferred_tee_box: null,
                         isGuest: true,
                         liveRoundPlayerId: p.id, // For guests, the ID is already the LiveRoundPlayer ID
-                        scorerId: p.scorer_id, // Store the scorer ID
                         liveRoundData: {
                             tee_box_name: p.tee_box_name,
                             course_hcp: p.course_handicap
@@ -1313,7 +1297,6 @@ export default function LiveScoreClient({
                         index: p.player.index,
                         preferred_tee_box: p.player.preferred_tee_box,
                         liveRoundPlayerId: p.id, // Store the LiveRoundPlayer ID
-                        scorerId: p.scorer_id, // Store the scorer ID
                         liveRoundData: {
                             tee_box_name: p.tee_box_name,
                             course_hcp: p.course_handicap
@@ -2000,8 +1983,7 @@ export default function LiveScoreClient({
                                                             const result = await saveLiveScore({
                                                                 liveRoundId,
                                                                 holeNumber: currentHole,
-                                                                playerScores: updates,
-                                                                scorerId: clientScorerId
+                                                                playerScores: updates
                                                             });
 
                                                             if (result.success && !result.partialFailure) {

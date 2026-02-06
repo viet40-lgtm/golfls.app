@@ -209,7 +209,6 @@ export async function addPlayerToLiveRound(data: {
     liveRoundId: string;
     playerId: string;
     teeBoxId: string;
-    scorerId?: string;
 }) {
     console.log('SERVER ACTION: addPlayerToLiveRound starting...', data.playerId, 'to', data.liveRoundId);
     try {
@@ -246,13 +245,6 @@ export async function addPlayerToLiveRound(data: {
         });
 
         if (existing) {
-            // If exists, just update scorerId
-            await prisma.liveRoundPlayer.update({
-                where: { id: existing.id },
-                data: {
-                    scorerId: data.scorerId
-                }
-            });
             revalidatePath('/');
             return { success: true, liveRoundPlayerId: existing.id };
         }
@@ -266,8 +258,7 @@ export async function addPlayerToLiveRound(data: {
                 teeBoxId: data.teeBoxId,
                 indexAtTime: handicapIndex, // Snapshot
                 teeBoxName: teeBox.name, // Snapshot
-                courseHandicap: Math.round((handicapIndex * (teeBox.slope / 113)) + (teeBox.rating - par)),
-                scorerId: data.scorerId
+                courseHandicap: Math.round((handicapIndex * (teeBox.slope / 113)) + (teeBox.rating - par))
             }
         });
 
@@ -283,27 +274,7 @@ export async function addPlayerToLiveRound(data: {
     }
 }
 
-/**
- * Updates the scorerId for a player (Claim/Takeover)
- */
-export async function updatePlayerScorer(data: {
-    liveRoundPlayerId: string;
-    scorerId: string;
-}) {
-    try {
-        await prisma.liveRoundPlayer.update({
-            where: { id: data.liveRoundPlayerId },
-            data: {
-                scorerId: data.scorerId
-            }
-        });
-        revalidatePath('/');
-        return { success: true };
-    } catch (error) {
-        console.error('Failed to update player scorer:', error);
-        return { success: false, error: 'Failed to update scorer' };
-    }
-}
+
 
 /**
  * Adds a guest player to a live round
@@ -316,7 +287,6 @@ export async function addGuestToLiveRound(data: {
     rating: number;
     slope: number;
     par: number;
-    scorerId?: string;
 }) {
     try {
         // We typically need a teeBoxId. If 'Guest' tee doesn't exist, we might need a workaround.
@@ -348,8 +318,7 @@ export async function addGuestToLiveRound(data: {
                 teeBoxId: fallbackTeeBox.id,
                 teeBoxName: fallbackTeeBox.name || 'Guest',
                 indexAtTime: data.index,
-                courseHandicap: data.courseHandicap,
-                scorerId: data.scorerId
+                courseHandicap: data.courseHandicap
             }
         });
 
@@ -421,14 +390,13 @@ export async function saveLiveScore(data: {
     liveRoundId: string;
     holeNumber: number;
     playerScores: Array<{ playerId: string; strokes: number }>;
-    scorerId?: string;
 }) {
     const results: Array<{ playerId: string, success: boolean, error?: string }> = [];
     const { getSession } = await import('@/lib/auth');
     const session = await getSession();
 
     try {
-        console.log(`SERVER ACTION: saveLiveScore - Round: ${data.liveRoundId}, Hole: ${data.holeNumber}, Scorer: ${data.scorerId}`);
+        console.log(`SERVER ACTION: saveLiveScore - Round: ${data.liveRoundId}, Hole: ${data.holeNumber}`);
         console.log(`Scores to save: ${JSON.stringify(data.playerScores)}`);
 
         // Get the live round with course and holes
