@@ -95,58 +95,43 @@ export async function getPoolResults(roundId: string, entryFee: number = 10.00) 
         });
 
         const entryFeeVal = Number(entryFee) || 10.00;
-        const totalPot = poolActivePlayers.length * entryFeeVal; // Use ACTIVE players for pot calculation if preferred, but usually it's everyone IN POOL. 
-        // Re-aligning with typical logic: it's all participants.
-        const actualPot = allPoolParticipants.length * entryFeeVal;
 
-        const flights = [
-            { name: "All Players", players: poolActivePlayers, pot: actualPot }
-        ];
-
-        const holes = round.course?.holes || [];
-        const par = holes.length > 0 ? holes.reduce((sum: number, h: any) => sum + (h.par || 4), 0) : 72;
+        const flights = [{ name: 'All Players', players: poolActivePlayers }];
 
         const calc = (rp: any) => {
-            const courseHcp = Number(rp.courseHandicap) || 0;
-
-            let frontGross = Number(rp.frontNine) || 0;
-            let backGross = Number(rp.backNine) || 0;
-
-            const scores = rp.scores || [];
-            if (!frontGross || !backGross) {
-                const f = scores
-                    .filter((s: any) => s.hole?.holeNumber <= 9)
-                    .reduce((sum: number, s: any) => sum + (s.strokes || 0), 0);
-                const b = scores
-                    .filter((s: any) => s.hole?.holeNumber > 9)
-                    .reduce((sum: number, s: any) => sum + (s.strokes || 0), 0);
-
-                if (f > 0) frontGross = f;
-                if (b > 0) backGross = b;
+            const teeBox = rp.teeBox;
+            if (!teeBox) {
+                console.warn(`[getPoolResults] Player ${rp.id} has no teeBox assigned.`);
+                return null;
             }
 
-            const totalGross = Number(rp.grossScore) || (frontGross + backGross) || 0;
+            const courseHcp = Number(rp.courseHandicap || 0);
+            const holes = round.course?.holes || [];
+            if (!holes || holes.length === 0) {
+                console.warn(`[getPoolResults] No holes found for round ${round.id}`);
+                return null;
+            }
 
-            if (frontGross === 0 && totalGross > 0) frontGross = Math.floor(totalGross / 2);
-            if (backGross === 0 && totalGross > 0) backGross = Math.ceil(totalGross / 2);
+            const frontHoles = holes.filter((h: any) => h.holeNumber >= 1 && h.holeNumber <= 9);
+            const backHoles = holes.filter((h: any) => h.holeNumber >= 10 && h.holeNumber <= 18);
 
-            let frontHcp = 0;
-            let backHcp = 0;
+            const frontHcp = Math.round(courseHcp / 2);
+            const backHcp = courseHcp - frontHcp;
 
-            if (holes.length > 0) {
-                holes.forEach((h: any) => {
-                    const diff = Number(h.difficulty || h.holeNumber || 18);
-                    const baseStrokes = Math.floor(courseHcp / 18);
-                    const remainder = courseHcp % 18;
-                    const extraStroke = diff <= remainder ? 1 : 0;
-                    const hcpStrokes = baseStrokes + extraStroke;
+            const scores = rp.scores || [];
+            const frontGross = scores
+                .filter((s: any) => s.hole?.holeNumber >= 1 && s.hole?.holeNumber <= 9)
+                .reduce((sum: number, s: any) => sum + Number(s.strokes || 0), 0);
 
-                    if (h.holeNumber <= 9) frontHcp += hcpStrokes;
-                    else backHcp += hcpStrokes;
-                });
-            } else {
-                frontHcp = Math.round(courseHcp / 2);
-                backHcp = courseHcp - frontHcp;
+            const backGross = scores
+                .filter((s: any) => s.hole?.holeNumber >= 10 && s.hole?.holeNumber <= 18)
+                .reduce((sum: number, s: any) => sum + Number(s.strokes || 0), 0);
+
+            const totalGross = frontGross + backGross;
+
+            if (totalGross === 0) {
+                console.warn(`[getPoolResults] Player ${rp.id} has no scores recorded.`);
+                return null;
             }
 
             const frontNet = frontGross > 0 ? frontGross - frontHcp : 999;
@@ -180,24 +165,65 @@ export async function getPoolResults(roundId: string, entryFee: number = 10.00) 
         };
 
         const processedFlights = flights.map((f: any) => {
-            const results = (f.players || []).map(calc);
-            const potPerSegment = Number(actualPot) / 3;
+            const results = (f.players || []).map(calc).filter(Boolean);
 
-            const getWinners = (category: 'frontNet' | 'backNet' | 'totalNet', pot: number) => {
-                const filteredResults = results.filter(r => r[category] < 500);
-                if (filteredResults.length === 0 || pot <= 0) return [];
+            // Head-to-head Nassau calculation
+            const winningsMap = new Map<string, number>();
 
-                const sorted = [...filteredResults].sort((a: any, b: any) => a[category] - b[category]);
+            // Initialize all players to $0
+            results.forEach((player: any) => {
+                winningsMap.set(player.name, 0);
+            });
+
+            // For each pair of players, determine winners for each segment
+            for (let i = 0; i < results.length; i++) {
+                for (let j = i + 1; j < results.length; j++) {
+                    const playerA = results[i];
+                    const playerB = results[j];
+
+                    // Front 9 matchup
+                    if (playerA.frontNet < playerB.frontNet) {
+                        winningsMap.set(playerA.name, (winningsMap.get(playerA.name) || 0) + entryFeeVal);
+                        winningsMap.set(playerB.name, (winningsMap.get(playerB.name) || 0) - entryFeeVal);
+                    } else if (playerB.frontNet < playerA.frontNet) {
+                        winningsMap.set(playerB.name, (winningsMap.get(playerB.name) || 0) + entryFeeVal);
+                        winningsMap.set(playerA.name, (winningsMap.get(playerA.name) || 0) - entryFeeVal);
+                    }
+                    // Tie = push, no money changes hands
+
+                    // Back 9 matchup
+                    if (playerA.backNet < playerB.backNet) {
+                        winningsMap.set(playerA.name, (winningsMap.get(playerA.name) || 0) + entryFeeVal);
+                        winningsMap.set(playerB.name, (winningsMap.get(playerB.name) || 0) - entryFeeVal);
+                    } else if (playerB.backNet < playerA.backNet) {
+                        winningsMap.set(playerB.name, (winningsMap.get(playerB.name) || 0) + entryFeeVal);
+                        winningsMap.set(playerA.name, (winningsMap.get(playerA.name) || 0) - entryFeeVal);
+                    }
+
+                    // Total 18 matchup
+                    if (playerA.totalNet < playerB.totalNet) {
+                        winningsMap.set(playerA.name, (winningsMap.get(playerA.name) || 0) + entryFeeVal);
+                        winningsMap.set(playerB.name, (winningsMap.get(playerB.name) || 0) - entryFeeVal);
+                    } else if (playerB.totalNet < playerA.totalNet) {
+                        winningsMap.set(playerB.name, (winningsMap.get(playerB.name) || 0) + entryFeeVal);
+                        winningsMap.set(playerA.name, (winningsMap.get(playerA.name) || 0) - entryFeeVal);
+                    }
+                }
+            }
+
+            // Determine segment winners for display purposes
+            const getSegmentWinners = (category: 'frontNet' | 'backNet' | 'totalNet') => {
+                const sorted = [...results].sort((a: any, b: any) => a[category] - b[category]);
+                if (sorted.length === 0) return [];
+
                 const lowScore = sorted[0][category];
-
-                const winners = filteredResults.filter((r: any) => r[category] === lowScore);
-                const grossPayout = pot / winners.length;
+                const winners = results.filter((r: any) => r[category] === lowScore);
 
                 return winners.map((w: any) => ({
                     ...w,
                     score: Number(w[category]),
                     gross: Number(category === 'frontNet' ? w.frontGross : category === 'backNet' ? w.backGross : w.totalGross),
-                    amount: Number(grossPayout),
+                    amount: 0, // Display only, actual winnings are in winningsMap
                     position: 1
                 }));
             };
@@ -205,22 +231,23 @@ export async function getPoolResults(roundId: string, entryFee: number = 10.00) 
             return {
                 name: String(f.name),
                 results,
-                frontWinners: getWinners('frontNet', potPerSegment),
-                backWinners: getWinners('backNet', potPerSegment),
-                totalWinners: getWinners('totalNet', potPerSegment),
-                pots: { front: Number(potPerSegment), back: Number(potPerSegment), total: Number(potPerSegment) }
+                frontWinners: getSegmentWinners('frontNet'),
+                backWinners: getSegmentWinners('backNet'),
+                totalWinners: getSegmentWinners('totalNet'),
+                pots: { front: 0, back: 0, total: 0 }, // No pot in head-to-head
+                winningsMap
             };
         });
 
-        const winningsMap = new Map<string, number>();
+        const globalWinningsMap = new Map<string, number>();
         processedFlights.forEach((f: any) => {
-            [...f.frontWinners, ...f.backWinners, ...f.totalWinners].forEach((w: any) => {
-                const current = winningsMap.get(w.name) || 0;
-                winningsMap.set(w.name, current + w.amount);
+            f.winningsMap.forEach((amount: number, name: string) => {
+                const current = globalWinningsMap.get(name) || 0;
+                globalWinningsMap.set(name, current + amount);
             });
         });
 
-        const winningsArray = Array.from(winningsMap.entries());
+        const winningsArray = Array.from(globalWinningsMap.entries());
 
         return JSON.parse(JSON.stringify({
             success: true,

@@ -90,3 +90,81 @@ This file defines the core UI/UX standards and coding patterns for the G-GolfLS 
     - **Position**: Fixed at the bottom of the screen or bottom of the content area.
     - **Visibility**: Only show if there is data to be changed/saved.
     - **Styling**: Consistent with "Universal Button Styling" (Blue if changed, Black if default).
+
+## 11. FBT (Front/Back/Total) Game Rules
+
+### Overview
+FBT is a classic Nassau betting game where players compete head-to-head across three separate segments of a round.
+
+### The Three Games
+Each player plays **three separate games** simultaneously:
+1. **Front 9** - Holes 1-9
+2. **Back 9** - Holes 10-18  
+3. **Total 18** - All 18 holes
+
+### Entry Fee Structure
+If the entry fee is **$10**, each player is playing for:
+- Front 9: $10
+- Back 9: $10
+- Total 18: $10
+- **Total at risk: $30 per player**
+
+### How to Win
+- **Lowest net score wins** each segment
+- Each segment is an **independent bet**
+- Players compete **head-to-head** against every other player in the pool
+
+### Payout Calculation (Head-to-Head)
+For each segment (Front/Back/Total), every player plays against every other player:
+
+#### Example with 2 Players (Entry Fee: $10)
+| Segment | Player A Score | Player B Score | Winner | Payout |
+|---------|---------------|----------------|---------|---------|
+| Front 9 | 38 | 40 | Player A | Player A wins $10 from Player B |
+| Back 9 | 42 | 39 | Player B | Player B wins $10 from Player A |
+| Total 18 | 80 | 79 | Player B | Player B wins $10 from Player A |
+
+**Net Result:**
+- Player A: -$10 (won $10, lost $20)
+- Player B: +$10 (won $20, lost $10)
+
+#### Example with 3 Players (Entry Fee: $10)
+Each player plays 2 opponents per segment.
+
+**Front 9 Results:**
+- Player A: 38 (wins against B and C) → +$20
+- Player B: 40 (loses to A, wins against C) → $0
+- Player C: 42 (loses to A and B) → -$20
+
+**Back 9 Results:**
+- Player A: 39 (wins against B, loses to C) → $0
+- Player B: 42 (loses to A and C) → -$20
+- Player C: 37 (wins against A and B) → +$20
+
+**Total 18 Results:**
+- Player A: 77 (wins against B and C) → +$20
+- Player B: 82 (loses to A and C) → -$20
+- Player C: 79 (loses to A, wins against B) → $0
+
+**Net Result:**
+- Player A: +$40 (won 5 bets, lost 1)
+- Player B: -$40 (won 1 bet, lost 5)
+- Player C: $0 (won 3 bets, lost 3)
+
+### Ties (Push)
+- If two players tie on a segment, **no money changes hands** for that matchup
+- Example: Player A scores 38, Player B scores 38 on Front 9 → Push, $0 exchanged
+
+### Important Notes
+1. **Net scores are used** (gross score minus handicap strokes)
+2. **Each segment is independent** - you can win one, lose one, and push one
+3. **Head-to-head format** - you play against every other player in the pool
+4. **Ties push** - no winner, no payout for that specific matchup
+5. With N players, each player has (N-1) matchups per segment, for a total of 3×(N-1) bets
+
+### Calculation Formula
+For a player in a pool of N players with entry fee E:
+- **Maximum win per segment:** E × (N-1) [beat everyone]
+- **Maximum loss per segment:** E × (N-1) [lose to everyone]
+- **Maximum total win:** 3 × E × (N-1) [win all three segments against everyone]
+- **Maximum total loss:** 3 × E × (N-1) [lose all three segments to everyone]
