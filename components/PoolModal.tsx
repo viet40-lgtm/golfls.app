@@ -110,10 +110,10 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
                         </button>
                     </div>
                 ) : (
-                    <main className="px-1 py-4 max-w-5xl mx-auto w-full">
+                    <main className="p-1 max-w-5xl mx-auto w-full">
                         {/* Amount Entry Field */}
-                        <div className="bg-white border-2 border-zinc-900 rounded-xl p-2 mb-4 shadow-xl flex items-center justify-start gap-4 mx-1">
-                            <label className="text-xl font-black text-zinc-900 uppercase tracking-tighter italic">Amount $:</label>
+                        <div className="bg-white rounded-xl p-1 mb-1 flex items-center justify-start gap-2">
+                            <label className="text-xl font-black text-zinc-900 uppercase tracking-tighter italic">Amt:</label>
                             <div className="flex gap-2 flex-1">
                                 <input
                                     type="number"
@@ -121,22 +121,22 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
                                     onChange={(e) => setEntryFee(Number(e.target.value))}
                                     title="Entry Fee Amount"
                                     placeholder="30"
-                                    className="w-24 bg-zinc-50 border-2 border-zinc-900 rounded-lg px-3 py-2 text-2xl font-black italic shadow-inner focus:outline-none focus:ring-2 focus:ring-green-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    className="w-24 bg-zinc-50 border border-zinc-300 rounded-lg px-2 py-1 text-2xl font-black italic focus:outline-none focus:ring-2 focus:ring-green-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                 />
                                 <button
                                     onClick={() => {
                                         setIsLoading(true);
                                         fetchData(currentRoundId, entryFee);
                                     }}
-                                    className="bg-green-600 text-white px-6 py-2 rounded-lg font-black text-xl uppercase tracking-tighter shadow-md active:scale-95 hover:bg-green-700 transition-all italic"
+                                    className="bg-green-600 text-white px-4 py-1 rounded-lg font-black text-xl uppercase tracking-tighter active:scale-95 hover:bg-green-700 transition-all italic"
                                 >
-                                    Recalculate
+                                    Recalc
                                 </button>
                             </div>
                         </div>
 
                         {/* Admin Action Bar (Replicating Page Style) */}
-                        <div className="bg-white border border-gray-200 rounded-xl p-1 flex items-center justify-between gap-1 mb-4 shadow-sm">
+                        <div className="bg-white rounded-xl p-1 flex items-center justify-between gap-1 mb-1">
                             <PoolDateSelector
                                 allRounds={data.allRounds}
                                 currentRoundId={currentRoundId}
@@ -161,9 +161,9 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
                         </div>
 
                         {/* Main Results Dashboard Card */}
-                        <div className="border border-gray-300 rounded-2xl overflow-hidden shadow-xl bg-white mb-10">
+                        <div className="rounded-2xl overflow-hidden bg-white mb-1">
                             {/* Participants Header */}
-                            <div className="bg-[#f3f4fa] border-b border-gray-300 px-1 py-4 flex justify-between items-center">
+                            <div className="bg-[#f3f4fa] p-1 flex justify-between items-center">
                                 <h2 className="text-[14pt] font-bold text-gray-700">Pool Participants</h2>
                                 <PoolManagementButton
                                     roundId={data.round.id}

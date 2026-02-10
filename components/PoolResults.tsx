@@ -55,7 +55,7 @@ export default function PoolResults({
     };
 
     return (
-        <div className="p-6 space-y-8">
+        <div className="p-1 space-y-8">
             {allPoolParticipants.length === 0 ? (
                 // ... Empty State 1 ...
                 <div className="text-center">No Participants selected.</div>
