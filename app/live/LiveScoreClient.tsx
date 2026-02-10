@@ -69,13 +69,15 @@ interface HoleElement {
 interface Course {
     id: string;
     name: string;
+    holeCount?: number;
     teeBoxes: {
         id: string;
         name: string;
         rating: number;
         slope: number;
+        par?: number;
     }[];
-    holes: Hole[];
+    holes?: Hole[];
 }
 
 interface LiveScoreClientProps {
