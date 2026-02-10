@@ -19,7 +19,7 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
     const [error, setError] = useState<string | null>(null);
     const [isAdmin, setIsAdmin] = useState(false);
     const [currentRoundId, setCurrentRoundId] = useState(initialRoundId);
-    const [entryFee, setEntryFee] = useState(30);
+    const [entryFee, setEntryFee] = useState(10);
 
     useEffect(() => {
         const checkAdmin = () => {

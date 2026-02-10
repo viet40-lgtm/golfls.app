@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 
-export async function getPoolResults(roundId: string, entryFee: number = 30.00) {
+export async function getPoolResults(roundId: string, entryFee: number = 10.00) {
     try {
         const includeOpts = {
             course: {
