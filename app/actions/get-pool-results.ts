@@ -219,13 +219,21 @@ export async function getPoolResults(roundId: string, entryFee: number = 10.00) 
                 const lowScore = sorted[0][category];
                 const winners = results.filter((r: any) => r[category] === lowScore);
 
-                return winners.map((w: any) => ({
-                    ...w,
-                    score: Number(w[category]),
-                    gross: Number(category === 'frontNet' ? w.frontGross : category === 'backNet' ? w.backGross : w.totalGross),
-                    amount: 0, // Display only, actual winnings are in winningsMap
-                    position: 1
-                }));
+                return winners.map((w: any) => {
+                    // Calculate how much this winner won for this segment
+                    // Count how many opponents they beat (excluding ties)
+                    const opponentsBeat = results.filter((opp: any) =>
+                        opp.id !== w.id && opp[category] > w[category]
+                    ).length;
+
+                    return {
+                        ...w,
+                        score: Number(w[category]),
+                        gross: Number(category === 'frontNet' ? w.frontGross : category === 'backNet' ? w.backGross : w.totalGross),
+                        amount: Number(opponentsBeat * entryFeeVal),
+                        position: 1
+                    };
+                });
             };
 
             return {
