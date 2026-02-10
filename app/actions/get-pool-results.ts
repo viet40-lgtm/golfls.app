@@ -199,6 +199,9 @@ export async function getPoolResults(roundId: string, entryFee: number = 10.00) 
 
         const winningsArray = Array.from(winningsMap.entries());
 
+        // Ping console
+        console.log(`[getPoolResults] Final check: Success. Returning data...`);
+
         return {
             success: true,
             data: {
@@ -214,9 +217,9 @@ export async function getPoolResults(roundId: string, entryFee: number = 10.00) 
                 })),
                 round: {
                     id: round.id,
-                    date: round.date,
-                    name: round.name,
-                    isTournament: round.isTournament || false,
+                    date: String(round.date),
+                    name: String(round.name || ''),
+                    isTournament: Boolean(round.isTournament),
                     players: round.players.map((rp: any) => ({
                         id: rp.id,
                         player_id: rp.playerId || rp.id,
@@ -227,17 +230,27 @@ export async function getPoolResults(roundId: string, entryFee: number = 10.00) 
                     }))
                 },
                 flights: processedFlights.map(f => ({
-                    name: f.name,
-                    pot: (f.pots.front + f.pots.back + f.pots.total),
-                    playerCount: f.results.length
+                    name: String(f.name),
+                    pot: Number(f.pots.front + f.pots.back + f.pots.total),
+                    playerCount: Number(f.results.length)
                 })),
-                processedFlights,
-                winningsArray,
+                processedFlights: processedFlights.map(f => ({
+                    name: String(f.name),
+                    results: f.results.map((r: any) => ({
+                        ...r,
+                        grossHoleScores: r.grossHoleScores.map((s: any) => ({ ...s }))
+                    })),
+                    frontWinners: f.frontWinners.map((w: any) => ({ ...w })),
+                    backWinners: f.backWinners.map((w: any) => ({ ...w })),
+                    totalWinners: f.totalWinners.map((w: any) => ({ ...w })),
+                    pots: { ...f.pots }
+                })),
+                winningsArray: winningsArray.map(([name, amount]) => [String(name), Number(amount)]),
                 allRounds: allRounds.slice(0, 50).map(r => ({
-                    id: r.id,
-                    date: r.date,
-                    name: r.name,
-                    isTournament: r.isTournament
+                    id: String(r.id),
+                    date: String(r.date),
+                    name: String(r.name || ''),
+                    isTournament: Boolean(r.isTournament)
                 }))
             }
         };

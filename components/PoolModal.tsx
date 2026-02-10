@@ -50,7 +50,7 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
         const result = await getPoolResults(id, fee);
         if (result.success && result.data) {
             // Reconstruct the winningsMap from the array
-            const winningsMap = new Map<string, number>(result.data.winningsArray);
+            const winningsMap = new Map<string, number>(result.data.winningsArray as any);
             setData({ ...result.data, winningsMap });
             setIsLoading(false);
         } else {
@@ -69,7 +69,10 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
                     <h2 className="text-[18pt] font-black text-green-600 leading-tight text-left">Classic Nassau: Front, Back and Total:</h2>
                     {data?.round && (
                         <p className="text-[12pt] text-gray-500 font-medium text-left">
-                            {new Date(data.round.date).toLocaleDateString()} {data.round.name ? `- ${data.round.name}` : ''}
+                            {typeof window !== 'undefined'
+                                ? new Date(data.round.date).toLocaleDateString()
+                                : data.round.date}
+                            {data.round.name ? ` - ${data.round.name}` : ''}
                         </p>
                     )}
                 </div>
