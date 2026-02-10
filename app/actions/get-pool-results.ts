@@ -179,7 +179,7 @@ export async function getPoolResults(roundId: string, entryFee: number = 30.00) 
             };
 
             return {
-                ...f,
+                name: f.name,
                 results,
                 frontWinners: getWinners('frontNet', potPerSegment),
                 backWinners: getWinners('backNet', potPerSegment),
