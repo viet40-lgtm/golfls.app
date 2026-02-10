@@ -228,8 +228,8 @@ export async function getPoolResults(roundId: string, entryFee: number = 30.00) 
                 },
                 flights: processedFlights.map(f => ({
                     name: f.name,
-                    pot: f.pot,
-                    playerCount: f.players.length
+                    pot: (f.pots.front + f.pots.back + f.pots.total),
+                    playerCount: f.results.length
                 })),
                 processedFlights,
                 winningsArray,
