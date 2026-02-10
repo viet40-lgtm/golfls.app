@@ -1,0 +1,9 @@
+{
+    "auto-run-command.rules": [
+        {
+            "condition": "always",
+            "command": "auto-run-command.placeholder-command",
+            "message": "Running a dummy command"
+        }
+    ]
+}
