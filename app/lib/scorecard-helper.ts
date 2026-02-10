@@ -10,7 +10,7 @@ interface Player {
 }
 
 interface Course {
-    holes: Array<{
+    holes?: Array<{
         holeNumber: number;
         par: number;
     }>;
