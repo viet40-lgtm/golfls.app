@@ -265,12 +265,12 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
 
     return (
         <LiveScoreClient
-            allPlayers={allPlayers}
+            allPlayers={JSON.parse(JSON.stringify(allPlayers))}
             defaultCourse={defaultCourse ? JSON.parse(JSON.stringify(defaultCourse)) : null}
             allCourses={JSON.parse(JSON.stringify(availableCourses))}
             initialRound={activeRound ? JSON.parse(JSON.stringify(activeRound)) : null}
             todayStr={todayStr}
-            allLiveRounds={allLiveRounds}
+            allLiveRounds={JSON.parse(JSON.stringify(allLiveRounds))}
             isAdmin={isAdmin}
             currentUserId={sessionUserId}
             currentUserName={currentPlayerProfile?.name || 'Player'}
