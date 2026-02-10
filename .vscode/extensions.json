@@ -1,5 +1,6 @@
 {
     "recommendations": [
-        "synedra.auto-run-command"
+        "synedra.auto-run-command",
+        "munkhin.auto-accept-agent"
     ]
 }

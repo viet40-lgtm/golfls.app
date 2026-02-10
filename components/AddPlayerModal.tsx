@@ -32,17 +32,20 @@ export function AddPlayerModal({ isOpen, onClose }: AddPlayerModalProps) {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-white z-[200] p-1">
+            <div className="bg-white rounded-xl shadow-none w-full h-full overflow-y-auto">
                 {/* Header */}
-                <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-xl">
+                <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-xl relative">
                     <h2 className="text-[18pt] font-bold text-gray-900 text-left ml-3">Add New Player</h2>
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 bg-black text-white rounded-full text-[15pt] font-bold hover:bg-gray-800 transition-all shadow-md active:scale-95"
-                        disabled={isSubmitting}
+                        className="absolute right-2 top-2 w-10 h-10 bg-black text-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-800 transition-all z-50"
+                        title="Close"
                     >
-                        Close
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
                     </button>
                 </div>
 
@@ -176,16 +179,8 @@ export function AddPlayerModal({ isOpen, onClose }: AddPlayerModalProps) {
                     {/* Buttons */}
                     <div className="flex gap-3 pt-4">
                         <button
-                            type="button"
-                            onClick={onClose}
-                            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-full text-[15pt] font-bold hover:bg-gray-50 transition-all shadow-md active:scale-95"
-                            disabled={isSubmitting}
-                        >
-                            Cancel
-                        </button>
-                        <button
                             type="submit"
-                            className="flex-1 px-4 py-2 bg-green-600 text-white rounded-full text-[15pt] font-bold hover:bg-green-700 transition-all shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-full text-[15pt] font-bold hover:bg-blue-700 transition-all shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={isSubmitting}
                         >
                             {isSubmitting ? 'Adding...' : 'Add Player'}

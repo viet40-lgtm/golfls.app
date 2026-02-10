@@ -70,8 +70,23 @@ This file defines the core UI/UX standards and coding patterns for the G-GolfLS 
    - All such containers must have a **padding of 1** on all sides (`p-1` or equivalent).
    - *Goal*: Maximize screen real estate while maintaining a uniform, minimal safe area.
 
-## 8. Agent Instructions (Meta-Rules)
-- **Modify, Don't Replace**:
-    - When updating project rules or agent instructions, **ALWAYS** append or edit the existing `rules.md` file.
-    - **NEVER** delete and recreate `rules.md` unless explicitly instructed to "reset" the rules.
-    - Treat `rules.md` as the persistent source of truth for project standards.
+## 9. Universal Button Styling
+- **Delete Buttons**: Always white text on a red background (`bg-red-600 text-white`).
+- **Save Buttons**:
+    - **Default (No Changes)**: White text on a black background (`bg-black text-white`).
+    - **Data Changed**: White text on a blue background (`bg-blue-600 text-white`).
+    - **Revert logic**: If a user changes data but then reverts it back to the original state within the same session/modal, the button must revert to the "Default" black styling.
+- **Generic Buttons**: All other buttons must be white text on a black background (`bg-black text-white`).
+- **Standardization**: Apply these color rules consistently across all components, modals, and pages.
+
+## 10. Universal Popup Styling
+- **Fullscreen**: All popups/modals must be fullscreen (`fixed inset-0 z-50 bg-white`).
+- **Padding**: Set padding to 1 on all sides (`p-1`).
+- **Close Button**:
+    - **Position**: Top right corner (`absolute top-2 right-2` or similar).
+    - **Styling**: White 'X' on black background (`size-8 flex items-center justify-center bg-black text-white rounded-full font-bold shadow-md`).
+    - **Function**: Cancel and close the popup without saving.
+- **Save Button**:
+    - **Position**: Fixed at the bottom of the screen or bottom of the content area.
+    - **Visibility**: Only show if there is data to be changed/saved.
+    - **Styling**: Consistent with "Universal Button Styling" (Blue if changed, Black if default).

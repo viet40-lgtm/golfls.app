@@ -190,17 +190,21 @@ export function ScorecardModal({ data, isOpen, onClose }: ScorecardModalProps) {
     );
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[200] bg-white p-1 animate-in fade-in duration-200">
             <div className="bg-slate-50 w-full h-full flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
 
                 {/* Header Actions */}
-                <div className="flex justify-between items-center p-3 bg-white border-b border-gray-100">
-                    <span className="text-[14pt] font-bold text-gray-400 uppercase tracking-widest">Scorecard</span>
+                <div className="flex justify-between items-center p-3 bg-white border-b border-gray-100 relative">
+                    <span className="text-[14pt] font-bold text-gray-400 uppercase tracking-widest mt-2 ml-1">Scorecard</span>
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 bg-black text-white rounded-full text-[15pt] font-bold hover:bg-gray-800 transition-colors mr-3"
+                        className="absolute top-2 right-2 w-10 h-10 bg-black text-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-800 transition-all z-50"
+                        title="Close"
                     >
-                        Close
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
                     </button>
                 </div>
 

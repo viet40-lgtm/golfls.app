@@ -26,30 +26,30 @@ export default function ConfirmModal({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[250] p-4 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all scale-100">
-                <div className="p-4 text-center">
-                    <h3 className="text-xl font-black text-gray-900 mb-2">{title}</h3>
-                    <p className="text-[14pt] text-gray-600 mb-4 leading-relaxed">{message}</p>
+        <div className="fixed inset-0 z-[250] bg-white p-1 animate-in fade-in duration-200">
+            <div className="w-full h-full flex flex-col items-center justify-center p-6">
+                <div className="w-full max-w-md text-center">
+                    <h3 className="text-3xl font-black text-black mb-4">{title}</h3>
+                    <p className="text-xl text-gray-600 mb-10 leading-relaxed font-medium">{message}</p>
 
-                    <div className="flex gap-3 justify-center">
-                        {!hideCancel && (
-                            <button
-                                onClick={onCancel}
-                                className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 text-[14pt] font-bold rounded-xl hover:bg-gray-200 transition-colors active:scale-95"
-                            >
-                                {cancelText}
-                            </button>
-                        )}
+                    <div className="flex flex-col gap-3 w-full">
                         <button
                             onClick={onConfirm}
-                            className={`flex-1 px-4 py-3 text-white text-[14pt] font-bold rounded-xl transition-colors shadow-lg active:scale-95 ${isDestructive
+                            className={`w-full py-4 text-white text-xl font-bold rounded-xl transition-all shadow-lg active:scale-95 ${isDestructive
                                 ? 'bg-red-600 hover:bg-red-700'
                                 : 'bg-black hover:bg-gray-800'
                                 }`}
                         >
                             {confirmText}
                         </button>
+                        {!hideCancel && (
+                            <button
+                                onClick={onCancel}
+                                className="w-full py-4 bg-gray-100 text-gray-900 text-xl font-bold rounded-xl hover:bg-gray-200 transition-all active:scale-95"
+                            >
+                                {cancelText}
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>

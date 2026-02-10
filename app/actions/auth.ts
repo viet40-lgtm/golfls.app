@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
 import { sendResetPasswordEmail } from '@/lib/mail'
 import crypto from 'crypto'
+import { cleanupStaleRounds } from './cleanup-rounds'
 
 const isDev = process.env.NODE_ENV === 'development'
 
@@ -66,6 +67,9 @@ export async function login(prevState: any, formData: FormData) {
                 sameSite: 'lax'
             })
         }
+
+        // Cleanup stale rounds in the background
+        cleanupStaleRounds(player.id).catch(err => console.error('Stale cleanup error:', err));
 
         return { success: true }
     } catch (e) {

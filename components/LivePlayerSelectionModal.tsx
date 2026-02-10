@@ -76,7 +76,7 @@ export function LivePlayerSelectionModal({
             setIsCreating(false);
             setNewPlayerError('');
         }
-    }, [isOpen, allPlayers]); // Add allPlayers to dependencies so updates propagate
+    }, [isOpen, allPlayers, selectedIds]); // Add allPlayers and selectedIds to dependencies
 
     if (!isOpen) return null;
 
@@ -196,17 +196,19 @@ export function LivePlayerSelectionModal({
                 {/* Header */}
                 <div className="p-1 bg-white flex flex-col gap-1 shadow-sm z-10">
                     <div className="flex justify-between items-center">
-                        <h2 className="text-[16pt] font-bold text-left ml-1">
+                        <h2 className="text-[16pt] font-bold text-left ml-1 mt-2">
                             {isCreating ? "Create New Player" : "Select Players to Score For"}
                         </h2>
-                        {!isCreating && (
-                            <button
-                                onClick={onClose}
-                                className="px-3 py-1 bg-black text-white rounded-full text-[13pt] font-bold hover:bg-gray-800 transition-colors"
-                            >
-                                Close
-                            </button>
-                        )}
+                        <button
+                            onClick={onClose}
+                            className="absolute top-2 right-2 w-10 h-10 bg-black text-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-800 transition-all z-50"
+                            title="Close"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
                     </div>
 
 
@@ -489,15 +491,13 @@ export function LivePlayerSelectionModal({
                 {/* Footer Actions (Only when not creating) */}
                 {!isCreating && (
                     <div className="px-4 py-5 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 z-10">
-                        <button
-                            onClick={onClose}
-                            className="px-4 py-2 rounded-full text-[15pt] font-bold text-gray-600 hover:bg-gray-200 transition-colors"
-                        >
-                            Cancel
-                        </button>
+
                         <button
                             onClick={handleConfirm}
-                            className="bg-black text-white px-4 py-2 rounded-full text-[15pt] font-bold shadow-lg transition-all active:scale-95"
+                            className={`px-4 py-2 rounded-full text-[15pt] font-bold shadow-lg transition-all active:scale-95 ${JSON.stringify(localSelectedIds.slice().sort()) !== JSON.stringify(selectedIds.slice().sort())
+                                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                : 'bg-black text-white hover:bg-gray-800'
+                                }`}
                         >
                             Save ({localSelectedIds.length})
                         </button>

@@ -170,7 +170,7 @@ export default function LoginForm({ initialEmail, initialPassword }: { initialEm
                     <button
                         type="submit"
                         disabled={loading}
-                        className={`w-full bg-[#1b4332] text-white border-none rounded-2xl p-1 text-2xl font-bold flex items-center justify-center gap-3 mt-4 shadow-[0_10px_20px_rgba(27,67,50,0.2)] uppercase ${loading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer hover:bg-opacity-90'}`}
+                        className={`w-full bg-black text-white border-none rounded-2xl p-1 text-2xl font-bold flex items-center justify-center gap-3 mt-4 shadow-[0_10px_20px_rgba(0,0,0,0.2)] uppercase ${loading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-800'}`}
                     >
                         {loading ? (
                             <Loader2 className="animate-spin" size={24} />

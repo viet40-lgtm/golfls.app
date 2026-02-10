@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import LiveScoreClient from './LiveScoreClient';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
+import { cleanupStaleRounds } from '@/app/actions/cleanup-rounds';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -28,6 +29,13 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
         redirect('/');
     }
 
+    // Cleanup stale/incomplete rounds for this user
+    try {
+        await cleanupStaleRounds(sessionUserId);
+    } catch (e) {
+        console.error('Non-critical: Stale round cleanup failed', e);
+    }
+
     // Check if user is admin
     const isAdmin = cookieStore.get('admin_session')?.value === 'true';
 
@@ -45,7 +53,7 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
     let lastUsedCourseId = null;
     let lastUsedTeeBoxId = null;
 
-    // STEP 1: Find user's last round (with course + players included)
+    // STEP 1: Find user's last round (prioritizing complete rounds)
     if (roundIdFromUrl) {
         // Load specific round from URL
         activeRound = await prisma.liveRound.findUnique({
@@ -70,11 +78,13 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
             lastUsedCourseId = activeRound.courseId;
         }
     } else {
-        // Find user's last round
-        const lastUserRoundPlayer = await prisma.liveRoundPlayer.findFirst({
+        // 1. Try to find the user's most recent COMPLETE round (18 holes)
+        const recentRoundPlayers = await prisma.liveRoundPlayer.findMany({
             where: { playerId: sessionUserId },
             orderBy: { liveRound: { date: 'desc' } },
+            take: 20,
             include: {
+                scores: true,
                 liveRound: {
                     include: {
                         course: {
@@ -94,11 +104,45 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
             }
         });
 
-        if (lastUserRoundPlayer) {
-            activeRound = lastUserRoundPlayer.liveRound;
-            defaultCourse = lastUserRoundPlayer.liveRound.course;
-            lastUsedCourseId = lastUserRoundPlayer.liveRound.courseId;
-            lastUsedTeeBoxId = lastUserRoundPlayer.teeBoxId;
+        const completeRoundPlayer = recentRoundPlayers.find(rp => (rp.scores?.length || 0) >= 18);
+
+
+        if (completeRoundPlayer) {
+            activeRound = completeRoundPlayer.liveRound;
+            defaultCourse = completeRoundPlayer.liveRound.course;
+            lastUsedCourseId = completeRoundPlayer.liveRound.courseId;
+            lastUsedTeeBoxId = completeRoundPlayer.teeBoxId;
+        } else {
+            // 2. Fallback: Find user's absolute last round regardless of completion
+            const lastUserRoundPlayer = await prisma.liveRoundPlayer.findFirst({
+                where: { playerId: sessionUserId },
+                orderBy: { liveRound: { date: 'desc' } },
+                include: {
+                    liveRound: {
+                        include: {
+                            course: {
+                                include: {
+                                    teeBoxes: true,
+                                    holes: { include: { elements: true }, orderBy: { holeNumber: 'asc' } }
+                                }
+                            },
+                            players: {
+                                include: {
+                                    player: true,
+                                    scores: { include: { hole: true } }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            if (lastUserRoundPlayer) {
+                activeRound = lastUserRoundPlayer.liveRound;
+                defaultCourse = lastUserRoundPlayer.liveRound.course;
+                lastUsedCourseId = lastUserRoundPlayer.liveRound.courseId;
+                lastUsedTeeBoxId = lastUserRoundPlayer.teeBoxId;
+            }
         }
     }
 

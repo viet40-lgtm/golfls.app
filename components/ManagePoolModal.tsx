@@ -53,17 +53,21 @@ export function ManagePoolModal({
     const sortedPlayers = [...allPlayers].sort((a, b) => a.name.localeCompare(b.name));
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="bg-white w-full h-full flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-[200] bg-white p-1">
+            <div className="bg-white w-full h-full flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
 
                 {/* Header */}
-                <div className="px-1 py-5 border-b border-gray-100 flex justify-between items-center bg-[#f8fafc]">
-                    <h2 className="text-[14pt] font-black text-gray-800 tracking-tight">Manage Pool Participants</h2>
+                <div className="px-1 py-5 border-b border-gray-100 flex justify-between items-center bg-[#f8fafc] relative">
+                    <h2 className="text-[14pt] font-black text-gray-800 tracking-tight ml-1 mt-2">Manage Pool Participants</h2>
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 bg-black text-white rounded-full text-[15pt] font-bold hover:bg-gray-800 transition-colors"
+                        className="absolute top-2 right-2 w-10 h-10 bg-black text-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-800 transition-all z-50"
+                        title="Close"
                     >
-                        Close
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
                     </button>
                 </div>
 
@@ -118,18 +122,14 @@ export function ManagePoolModal({
 
                 {/* Footer Actions */}
                 <div className="px-1 py-5 bg-[#f8fafc] border-t border-gray-100 flex justify-end gap-3">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 rounded-xl text-[15pt] font-bold text-gray-600 hover:bg-gray-200 transition-colors"
-                        disabled={isSaving}
-                    >
-                        {isAdmin ? 'Cancel' : 'Close'}
-                    </button>
                     {isAdmin && (
                         <button
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="bg-[#04d361] hover:bg-[#04b754] text-white px-4 py-2 rounded-xl text-[15pt] font-bold shadow-lg transition-all active:scale-95 flex items-center gap-2"
+                            className={`px-4 py-2 rounded-xl text-[15pt] font-bold shadow-lg transition-all active:scale-95 flex items-center gap-2 ${JSON.stringify(selectedIds.slice().sort()) !== JSON.stringify(initialSelectedIds.slice().sort())
+                                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                : 'bg-black text-white hover:bg-gray-800'
+                                }`}
                         >
                             {isSaving ? (
                                 <>

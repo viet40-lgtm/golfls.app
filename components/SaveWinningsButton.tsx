@@ -70,7 +70,7 @@ export function SaveWinningsButton({
             <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="w-full bg-[#059669] hover:bg-[#047857] text-white font-bold px-1 py-2 rounded-full shadow-sm transition-colors text-[14pt] uppercase tracking-wider flex items-center justify-center gap-2 h-auto cursor-pointer disabled:opacity-50"
+                className="w-full bg-black text-white font-bold px-1 py-2 rounded-full shadow-sm transition-colors text-[14pt] uppercase tracking-wider flex items-center justify-center gap-2 h-auto cursor-pointer hover:bg-gray-800 disabled:opacity-50"
             >
                 {isSaving ? (
                     <>

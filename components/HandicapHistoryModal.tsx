@@ -163,14 +163,14 @@ export function HandicapHistoryModal({ playerId, isOpen, onClose }: HandicapHist
     return (
         <div className="fixed inset-0 z-[200] flex flex-col bg-white animate-in fade-in slide-in-from-bottom-10 duration-200">
             {/* Header */}
-            <div className="bg-slate-50 border-b border-gray-100 px-1 py-4 flex justify-between items-center shrink-0 safe-top">
+            <div className="bg-slate-50 border-b border-gray-100 px-1 py-4 flex justify-between items-center shrink-0 safe-top relative">
                 <div className="flex flex-col">
                     <h2 className="text-[14pt] font-black text-gray-900 leading-tight ml-3">
                         {data?.player.name || 'Loading...'}
                     </h2>
                     <p className="text-[14pt] text-blue-600 font-bold ml-3">Handicap History</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mr-10">
                     <button
                         onClick={handleCopyFullHistory}
                         className="p-2 bg-black hover:bg-gray-800 rounded-full transition-colors flex items-center justify-center group"
@@ -180,9 +180,13 @@ export function HandicapHistoryModal({ playerId, isOpen, onClose }: HandicapHist
                     </button>
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 bg-black text-white rounded-full text-[15pt] font-bold hover:bg-gray-800 transition-colors mr-3"
+                        className="absolute top-2 right-2 w-10 h-10 bg-black text-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-800 transition-all z-50"
+                        title="Close"
                     >
-                        Close
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
                     </button>
                 </div>
             </div>

@@ -169,6 +169,7 @@ export default function ScoreEntryModal({
 }: ScoreModalProps) {
     const [holes, setHoles] = useState<Hole[]>([]);
     const [scores, setScores] = useState<number[]>(Array(18).fill(0));
+    const [originalScores, setOriginalScores] = useState<number[]>(Array(18).fill(0));
     const [points, setPoints] = useState<number>(currentPoints || 0);
     const [payout, setPayout] = useState<number>(currentPayout || 0);
     const [isSaving, setIsSaving] = useState(false);
@@ -195,6 +196,7 @@ export default function ScoreEntryModal({
                         setHoles(holeData);
                         // Initialize with empty scores
                         setScores(Array(18).fill(0));
+                        setOriginalScores(Array(18).fill(0));
                         setIsLoading(false);
                     })
                     .catch(err => {
@@ -223,6 +225,7 @@ export default function ScoreEntryModal({
                                 }
                             });
                             setScores(newScores);
+                            setOriginalScores(newScores);
                             console.log('Mapped scores:', newScores);
                         } else {
                             console.log('No existing scores found');
@@ -298,17 +301,21 @@ export default function ScoreEntryModal({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200]">
-            <div className="bg-white shadow-xl w-full h-full overflow-hidden flex flex-col">
+        <div className="fixed inset-0 bg-white z-[200] p-1">
+            <div className="bg-white shadow-none w-full h-full overflow-hidden flex flex-col">
 
                 {/* Header Actions */}
-                <div className="flex justify-between items-center px-1 py-3 bg-white border-b border-gray-100">
-                    <span className="text-xl font-bold text-gray-400 uppercase tracking-widest">Scorecard</span>
+                <div className="flex justify-between items-center px-1 py-3 bg-white border-b border-gray-100 relative">
+                    <span className="text-xl font-bold text-gray-400 uppercase tracking-widest mt-2 ml-1">Scorecard</span>
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 bg-black text-white rounded-full text-xl font-bold hover:bg-gray-800 transition-colors"
+                        className="absolute top-2 right-2 w-10 h-10 bg-black text-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-800 transition-all z-50"
+                        title="Close"
                     >
-                        Close
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
                     </button>
                 </div>
 
@@ -421,16 +428,14 @@ export default function ScoreEntryModal({
                             <button
                                 onClick={handleSave}
                                 disabled={isSaving || grossTotal === 0}
-                                className="flex-1 bg-gray-700 hover:bg-gray-800 text-white font-bold px-4 py-2 text-xl rounded-lg disabled:opacity-50 transition-colors"
+                                className={`flex-1 font-bold px-4 py-2 text-xl rounded-lg disabled:opacity-50 transition-colors ${JSON.stringify(scores) !== JSON.stringify(originalScores)
+                                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                    : 'bg-black text-white hover:bg-gray-800'
+                                    }`}
                             >
                                 {isSaving ? 'Saving...' : 'Save Score'}
                             </button>
-                            <button
-                                onClick={onClose}
-                                className="px-4 py-2 border border-gray-300 rounded-lg text-xl font-bold hover:bg-gray-50 transition-colors"
-                            >
-                                Cancel
-                            </button>
+
                         </div>
                     </>
                 )}

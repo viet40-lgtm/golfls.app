@@ -27,41 +27,74 @@ export function PlayerProfileModal({ player, isOpen, onClose, liveIndex, courseH
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
+    // Initial State derivation
+    const getInitialState = () => ({
+        firstName: player.name.split(' ')[0],
+        lastName: player.name.split(' ').slice(1).join(' '),
+        email: player.email || '',
+        phone: player.phone || '',
+        password: '',
+        birthday: player.birthday ? new Date(player.birthday).toISOString().split('T')[0] : '',
+        dateStarted: player.dateStarted ? new Date(player.dateStarted).toISOString().split('T')[0] : '',
+        preferredTeeBox: player.preferredTeeBox || 'White',
+        handicapIndex: player.handicapIndex.toString()
+    });
+
+    const [formData, setFormData] = useState(getInitialState());
+
+    // Reset form when opening/closing or changing edit mode
+    React.useEffect(() => {
+        if (isOpen) {
+            setFormData(getInitialState());
+        }
+    }, [isOpen, player, isEditing]);
+
     if (!isOpen) return null;
 
     // Derived Data for Display
     const points = player.points || 0;
     const allTimeWinnings = player.money || 0;
-
-    // YTD Winnings (for current year) - Approximation or 0 since we don't have payout on rounds
-    // If we want real YTD, we need PlayersClient to pass it. For now, use 0 or handle if passed.
-    const ytdWinnings = 0; // Simplified as schema removed payout from rounds
+    const ytdWinnings = 0;
     const currentYear = new Date().getFullYear().toString();
-
-    const lowIndex = '-'; // Removed from schema
-    // Display value for tee
+    const lowIndex = '-';
     const displayTee = player.preferredTeeBox || 'White';
+
+    const hasChanges = JSON.stringify(formData) !== JSON.stringify(getInitialState());
 
     // Handle Form Submit
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
         setIsSaving(true);
-        const formData = new FormData(event.currentTarget);
-        formData.append('id', player.id); // Ensure ID is passed
 
-        const result = await updatePlayerProfile(formData);
+        const data = new FormData();
+        data.append('id', player.id);
+        data.append('firstName', formData.firstName);
+        data.append('lastName', formData.lastName);
+        data.append('email', formData.email);
+        data.append('phone', formData.phone);
+        data.append('password', formData.password);
+        data.append('birthday', formData.birthday);
+        data.append('dateStarted', formData.dateStarted);
+        data.append('preferredTeeBox', formData.preferredTeeBox);
+        data.append('handicapIndex', formData.handicapIndex);
+
+        const result = await updatePlayerProfile(data);
         setIsSaving(false);
         if (result.success) {
             setIsEditing(false);
-            window.location.reload(); // Simple force reload to see changes immediately for MVP
+            window.location.reload();
         } else {
             alert('Failed to save changes');
         }
     }
 
+    const handleChange = (field: string, value: string) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white w-full h-full shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[200] bg-white p-1 animate-in fade-in duration-200">
+            <div className="bg-white w-full h-full shadow-none flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
 
                 <form onSubmit={handleSubmit} className="flex flex-col h-full overflow-hidden">
                     {/* Header */}
@@ -69,9 +102,13 @@ export function PlayerProfileModal({ player, isOpen, onClose, liveIndex, courseH
                         <button
                             type="button"
                             onClick={onClose}
-                            className="absolute right-6 top-6 px-4 py-2 bg-black text-white rounded-full text-[15pt] font-bold hover:bg-gray-800 transition-colors mr-3"
+                            className="absolute right-2 top-2 w-10 h-10 bg-black text-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-800 transition-all z-50"
+                            title="Close"
                         >
-                            Close
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
                         </button>
 
                         <h2 className="text-[14pt] font-extrabold text-gray-900 tracking-tight ml-3">
@@ -182,7 +219,7 @@ export function PlayerProfileModal({ player, isOpen, onClose, liveIndex, courseH
                                                 </div>
                                                 <div>
                                                     <span className="text-[14pt] font-bold text-gray-400 uppercase block mb-0.5">Date Started</span>
-                                                    <span className="font-bold text-gray-900 text-[14pt]">{player.dateStarted || '-'}</span>
+                                                    <span className="font-bold text-gray-900 text-[14pt]">{player.dateStarted ? new Date(player.dateStarted).toLocaleDateString() : '-'}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -201,8 +238,8 @@ export function PlayerProfileModal({ player, isOpen, onClose, liveIndex, courseH
                                                 <label htmlFor="edit-firstName" className="block text-[14pt] font-bold text-gray-500 mb-1 uppercase">First Name</label>
                                                 <input
                                                     id="edit-firstName"
-                                                    name="firstName"
-                                                    defaultValue={player.name.split(' ')[0]}
+                                                    value={formData.firstName}
+                                                    onChange={e => handleChange('firstName', e.target.value)}
                                                     className="w-full text-[14pt] p-2 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"
                                                     placeholder="First"
                                                     required
@@ -212,8 +249,8 @@ export function PlayerProfileModal({ player, isOpen, onClose, liveIndex, courseH
                                                 <label htmlFor="edit-lastName" className="block text-[14pt] font-bold text-gray-500 mb-1 uppercase">Last Name</label>
                                                 <input
                                                     id="edit-lastName"
-                                                    name="lastName"
-                                                    defaultValue={player.name.split(' ').slice(1).join(' ')}
+                                                    value={formData.lastName}
+                                                    onChange={e => handleChange('lastName', e.target.value)}
                                                     className="w-full text-[14pt] p-2 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"
                                                     placeholder="Last"
                                                 />
@@ -227,15 +264,34 @@ export function PlayerProfileModal({ player, isOpen, onClose, liveIndex, courseH
                                         <div className="grid grid-cols-1 gap-4">
                                             <div>
                                                 <label htmlFor="edit-email" className="block text-[14pt] font-bold text-gray-500 mb-1 uppercase">Email</label>
-                                                <input id="edit-email" name="email" defaultValue={player.email || ''} className="w-full text-[14pt] p-2 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none" placeholder="email@example.com" />
+                                                <input
+                                                    id="edit-email"
+                                                    value={formData.email}
+                                                    onChange={e => handleChange('email', e.target.value)}
+                                                    className="w-full text-[14pt] p-2 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                                    placeholder="email@example.com"
+                                                />
                                             </div>
                                             <div>
                                                 <label htmlFor="edit-phone" className="block text-[14pt] font-bold text-gray-500 mb-1 uppercase">Phone</label>
-                                                <input id="edit-phone" name="phone" defaultValue={player.phone || ''} className="w-full text-[14pt] p-2 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none" placeholder="555-555-5555" />
+                                                <input
+                                                    id="edit-phone"
+                                                    value={formData.phone}
+                                                    onChange={e => handleChange('phone', e.target.value)}
+                                                    className="w-full text-[14pt] p-2 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                                    placeholder="555-555-5555"
+                                                />
                                             </div>
                                             <div>
                                                 <label htmlFor="edit-password" className="block text-[14pt] font-bold text-gray-500 mb-1 uppercase">New Password</label>
-                                                <input id="edit-password" name="password" type="password" className="w-full text-[14pt] p-2 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Leave blank to keep current" />
+                                                <input
+                                                    id="edit-password"
+                                                    type="password"
+                                                    value={formData.password}
+                                                    onChange={e => handleChange('password', e.target.value)}
+                                                    className="w-full text-[14pt] p-2 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                                    placeholder="Leave blank to keep current"
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -246,18 +302,30 @@ export function PlayerProfileModal({ player, isOpen, onClose, liveIndex, courseH
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <label htmlFor="edit-birthday" className="block text-[14pt] font-bold text-gray-500 mb-1 uppercase">Birthday</label>
-                                                <input id="edit-birthday" type="date" name="birthday" defaultValue={player.birthday || ''} className="w-full text-[14pt] p-2 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none" />
+                                                <input
+                                                    id="edit-birthday"
+                                                    type="date"
+                                                    value={formData.birthday}
+                                                    onChange={e => handleChange('birthday', e.target.value)}
+                                                    className="w-full text-[14pt] p-2 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                                />
                                             </div>
                                             <div>
                                                 <label htmlFor="edit-dateStarted" className="block text-[14pt] font-bold text-gray-500 mb-1 uppercase">Date Started</label>
-                                                <input id="edit-dateStarted" type="date" name="dateStarted" defaultValue={player.dateStarted || ''} className="w-full text-[14pt] p-2 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none" />
+                                                <input
+                                                    id="edit-dateStarted"
+                                                    type="date"
+                                                    value={formData.dateStarted}
+                                                    onChange={e => handleChange('dateStarted', e.target.value)}
+                                                    className="w-full text-[14pt] p-2 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                                />
                                             </div>
                                             <div>
                                                 <label htmlFor="edit-preferredTeeBox" className="block text-[14pt] font-bold text-gray-500 mb-1 uppercase">Preferred Tee Box</label>
                                                 <select
                                                     id="edit-preferredTeeBox"
-                                                    name="preferredTeeBox"
-                                                    defaultValue={player.preferredTeeBox || 'White'}
+                                                    value={formData.preferredTeeBox}
+                                                    onChange={e => handleChange('preferredTeeBox', e.target.value)}
                                                     className="w-full text-[14pt] p-2 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"
                                                 >
                                                     <option value="Black">Black</option>
@@ -274,8 +342,8 @@ export function PlayerProfileModal({ player, isOpen, onClose, liveIndex, courseH
                                                     id="edit-handicapIndex"
                                                     type="number"
                                                     step="0.1"
-                                                    name="handicapIndex"
-                                                    defaultValue={player.handicapIndex}
+                                                    value={formData.handicapIndex}
+                                                    onChange={e => handleChange('handicapIndex', e.target.value)}
                                                     className="w-full text-[14pt] p-2 border rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"
                                                     placeholder="0.0"
                                                 />
@@ -304,7 +372,10 @@ export function PlayerProfileModal({ player, isOpen, onClose, liveIndex, courseH
                                 <button
                                     type="submit"
                                     disabled={isSaving}
-                                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full font-bold text-[15pt] shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 active:scale-95 disabled:opacity-50"
+                                    className={`px-4 py-2 rounded-full font-bold text-[15pt] shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 ${hasChanges
+                                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                        : 'bg-black text-white hover:bg-gray-800'
+                                        }`}
                                 >
                                     {isSaving ? 'Saving...' : 'Save Changes'}
                                 </button>
@@ -313,7 +384,7 @@ export function PlayerProfileModal({ player, isOpen, onClose, liveIndex, courseH
                             <button
                                 type="button"
                                 onClick={() => setIsEditing(true)}
-                                className="bg-gray-900 hover:bg-black text-white px-4 py-2 rounded-full font-bold text-[15pt] shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 active:scale-95"
+                                className="bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-full font-bold text-[15pt] shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 active:scale-95"
                             >
                                 Edit Player Profile
                             </button>

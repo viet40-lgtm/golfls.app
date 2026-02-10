@@ -63,7 +63,7 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
     return (
         <div className="fixed inset-0 z-[100] flex flex-col bg-white overflow-hidden animate-in fade-in zoom-in duration-200">
             {/* Header */}
-            <header className="bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between shadow-sm sticky top-0 z-10">
+            <header className="bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between shadow-sm sticky top-0 z-10 relative">
                 <div className="flex flex-col">
                     <h2 className="text-[18pt] font-black text-green-600 leading-tight text-left ml-3">$5 Pool Results</h2>
                     {data?.round && (
@@ -74,9 +74,13 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
                 </div>
                 <button
                     onClick={onClose}
-                    className="px-4 py-2 bg-black text-white rounded-full text-[15pt] font-bold hover:bg-gray-800 transition-colors mr-3"
+                    className="absolute top-2 right-2 w-10 h-10 bg-black text-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-800 transition-all z-50"
+                    title="Close"
                 >
-                    Close
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
                 </button>
             </header>
 
@@ -118,7 +122,10 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
                                         isTournament={data.round.is_tournament}
                                         flights={data.processedFlights}
                                     />
-                                    <button className="p-2.5 bg-black rounded-lg hover:bg-gray-800 transition-colors shadow-sm text-white cursor-pointer">
+                                    <button
+                                        className="p-2.5 bg-black rounded-lg hover:bg-gray-800 transition-colors shadow-sm text-white cursor-pointer"
+                                        title="Email Pool Results"
+                                    >
                                         <Mail className="w-5 h-5" />
                                     </button>
                                 </div>

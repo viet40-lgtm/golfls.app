@@ -210,10 +210,17 @@ export function LiveRoundModal({
         <div className="fixed inset-0 z-[200] bg-white p-1">
             <div className="bg-white w-full h-full flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
                 {/* Header */}
-                <div className="p-1 bg-black text-white flex justify-between items-center shrink-0">
-                    <h2 className="text-[16pt] font-bold text-left ml-1">{existingRound ? 'Edit Live Round' : 'New Live Round'}</h2>
-                    <button onClick={onClose} className="hover:opacity-70 transition-opacity bg-white text-black text-[13pt] font-bold px-3 py-1 rounded-full">
-                        Close
+                <div className="p-1 bg-white text-black flex justify-between items-center shrink-0 border-b border-gray-100 relative">
+                    <h2 className="text-[16pt] font-bold text-left ml-1 mt-2">{existingRound ? 'Edit Live Round' : 'New Live Round'}</h2>
+                    <button
+                        onClick={onClose}
+                        className="absolute top-2 right-2 w-10 h-10 bg-black text-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-800 transition-all z-50"
+                        title="Close"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
                     </button>
                 </div>
 
@@ -335,19 +342,20 @@ export function LiveRoundModal({
                     </div>
                 </div>
 
-                {/* Footer */}
                 <div className="p-1 bg-gray-50 flex justify-end gap-2 mt-1 shrink-0">
-                    <button
-                        onClick={onClose}
-                        disabled={isSaving}
-                        className="px-3 py-1.5 rounded-full text-[13pt] font-bold text-gray-600 hover:bg-gray-200 transition-colors"
-                    >
-                        Cancel
-                    </button>
                     <button
                         onClick={handleSave}
                         disabled={isSaving}
-                        className="bg-black text-white px-3 py-1.5 rounded-full text-[13pt] font-bold shadow-lg hover:bg-gray-800 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+                        className={`px-3 py-1.5 rounded-full text-[13pt] font-bold shadow-lg disabled:opacity-50 flex items-center gap-2 cursor-pointer transition-colors ${!existingRound ||
+                            name !== existingRound.name ||
+                            date !== existingRound.date ||
+                            par !== existingRound.par ||
+                            rating !== existingRound.rating ||
+                            slope !== existingRound.slope ||
+                            selectedCourseId !== (existingRound.courseId || '')
+                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'bg-black text-white hover:bg-gray-800'
+                            }`}
                     >
                         {isSaving ? 'Saving...' : (existingRound ? 'Save Round' : 'Start Round')}
                     </button>

@@ -13,23 +13,20 @@ export default function RulesModal({ isOpen, onClose, title, content }: RulesMod
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center">
-            {/* Backdrop */}
-            <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
-                onClick={onClose}
-            />
-
-            {/* Modal Content */}
-            <div className="relative bg-white w-full h-full shadow-2xl overflow-hidden flex flex-col transform transition-all border border-gray-100">
+        <div className="fixed inset-0 z-[200] bg-white p-1">
+            <div className="relative bg-white w-full h-full shadow-none overflow-hidden flex flex-col transform transition-all">
                 {/* Header */}
-                <div className="flex items-center justify-between px-1 py-4 border-b border-gray-100 bg-gray-50/50">
-                    <h2 className="text-xl font-black text-gray-900 tracking-tight uppercase">{title}</h2>
+                <div className="flex items-center justify-between px-1 py-4 border-b border-gray-100 bg-gray-50/50 relative">
+                    <h2 className="text-xl font-black text-gray-900 tracking-tight uppercase ml-1 mt-2">{title}</h2>
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 bg-black text-white rounded-full text-[15pt] font-bold hover:bg-gray-800 transition-colors"
+                        className="absolute top-2 right-2 w-10 h-10 bg-black text-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-800 transition-all z-50"
+                        title="Close"
                     >
-                        Close
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
                     </button>
                 </div>
 
@@ -38,16 +35,6 @@ export default function RulesModal({ isOpen, onClose, title, content }: RulesMod
                     <div className="text-2xl text-gray-600 leading-relaxed font-medium">
                         {content}
                     </div>
-                </div>
-
-                {/* Footer */}
-                <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex justify-end">
-                    <button
-                        onClick={onClose}
-                        className="bg-black text-white px-4 py-2 rounded-full font-bold text-[15pt] hover:bg-gray-800 transition-all"
-                    >
-                        Close
-                    </button>
                 </div>
             </div>
         </div>

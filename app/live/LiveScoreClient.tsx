@@ -1482,7 +1482,7 @@ export default function LiveScoreClient({
                                 )}
                                 <button
                                     onClick={handleCreateNewRound}
-                                    className="p-1 bg-blue-600 text-white rounded-xl text-lg font-black hover:bg-blue-700 transition-all shadow-md active:scale-95 uppercase tracking-widest"
+                                    className="p-1 bg-black text-white rounded-xl text-lg font-black hover:bg-gray-800 transition-all shadow-md active:scale-95 uppercase tracking-widest"
                                 >
                                     New
                                 </button>
@@ -2250,7 +2250,7 @@ export default function LiveScoreClient({
                             <div className="flex gap-1">
                                 <button
                                     onClick={() => router.refresh()}
-                                    className="flex-1 bg-white border border-zinc-200 text-zinc-900 rounded-xl py-1 text-lg font-black uppercase tracking-widest hover:bg-zinc-50 transition-all shadow-md active:scale-95"
+                                    className="flex-1 bg-black text-white border border-black rounded-xl py-1 text-lg font-black uppercase tracking-widest hover:bg-gray-800 transition-all shadow-md active:scale-95"
                                 >
                                     Leaderboard ({summaryPlayers.length})
                                 </button>
@@ -2409,17 +2409,19 @@ export default function LiveScoreClient({
 
                                 <button
                                     onClick={() => setIsStatsModalOpen(true)}
-                                    className="w-12 h-12 bg-white border border-zinc-200 text-zinc-500 rounded-xl flex items-center justify-center hover:bg-zinc-50 hover:text-zinc-900 transition-all shadow-md active:scale-95"
+                                    className="w-12 h-12 bg-black border border-black text-white rounded-xl flex items-center justify-center hover:bg-gray-800 transition-all shadow-md active:scale-95"
                                     title="View Stats"
                                 >
                                     <Bird size={24} />
                                 </button>
-                                <button
-                                    onClick={() => setIsPoolModalOpen(true)}
-                                    className="px-1 h-12 rounded-xl text-lg font-black uppercase tracking-widest transition-all bg-green-600 text-white border border-green-700 hover:bg-green-700 shadow-md active:scale-95"
-                                >
-                                    BFT
-                                </button>
+                                {summaryPlayers.length > 1 && (
+                                    <button
+                                        onClick={() => setIsPoolModalOpen(true)}
+                                        className="px-1 h-12 rounded-xl text-lg font-black uppercase tracking-widest transition-all bg-black text-white border border-black hover:bg-gray-800 shadow-md active:scale-95"
+                                    >
+                                        BFT
+                                    </button>
+                                )}
 
 
                             </div>
@@ -2463,27 +2465,27 @@ export default function LiveScoreClient({
                                 {/* Eagle */}
                                 <div className="flex items-center gap-2">
                                     <div className="w-4 h-4 rounded-sm bg-yellow-300"></div>
-                                    <span className="text-2xl font-bold text-zinc-600">(-2)</span>
+                                    <span className="text-lg font-bold text-zinc-600">(-2)</span>
                                 </div>
                                 {/* Birdie */}
                                 <div className="flex items-center gap-2">
                                     <div className="w-4 h-4 rounded-sm bg-green-300"></div>
-                                    <span className="text-2xl font-bold text-zinc-600">(-1)</span>
+                                    <span className="text-lg font-bold text-zinc-600">(-1)</span>
                                 </div>
                                 {/* Par */}
                                 <div className="flex items-center gap-2">
                                     <div className="w-4 h-4 rounded-sm bg-white border border-zinc-200"></div>
-                                    <span className="text-2xl font-bold text-zinc-600">(E)</span>
+                                    <span className="text-lg font-bold text-zinc-600">(E)</span>
                                 </div>
                                 {/* Bogey */}
                                 <div className="flex items-center gap-2">
                                     <div className="w-4 h-4 rounded-sm bg-orange-300"></div>
-                                    <span className="text-2xl font-bold text-zinc-600">(+1)</span>
+                                    <span className="text-lg font-bold text-zinc-600">(+1)</span>
                                 </div>
                                 {/* Double Bogey */}
                                 <div className="flex items-center gap-2">
                                     <div className="w-4 h-4 rounded-sm bg-red-300"></div>
-                                    <span className="text-2xl font-bold text-zinc-600">(+2)</span>
+                                    <span className="text-lg font-bold text-zinc-600">(+2)</span>
                                 </div>
                             </div>
                         </div>

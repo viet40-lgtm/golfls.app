@@ -14,19 +14,24 @@ export function MapModal({ isOpen, onClose }: MapModalProps) {
     const mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[200] bg-white p-1">
             <div className="bg-white w-full h-full flex flex-col overflow-hidden">
 
                 {/* Map with Close Button Overlay */}
                 <div className="flex-1 relative">
                     <button
                         onClick={onClose}
-                        className="absolute top-4 right-4 z-10 px-4 py-2 bg-black text-white rounded-full text-[15pt] font-bold hover:bg-gray-800 transition-colors shadow-lg"
+                        className="absolute top-2 right-2 z-10 w-10 h-10 bg-black text-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-800 transition-all"
+                        title="Close"
                     >
-                        Close
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
                     </button>
                     <iframe
                         src={mapUrl}
+                        title="Google Map Location"
                         className="absolute inset-0 w-full h-full border-0"
                         allowFullScreen
                         loading="lazy"

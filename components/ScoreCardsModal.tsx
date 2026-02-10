@@ -118,16 +118,20 @@ export default function ScoreCardsModal({ isOpen, onClose, roundPlayers, holes, 
     const allPlayersFinished = rankedPlayers.length > 0 && rankedPlayers.every(p => p.thru >= 18);
 
     return (
-        <div className="fixed inset-0 z-[300] bg-gray-50 overflow-y-auto">
+        <div className="fixed inset-0 z-[300] bg-white p-1 overflow-y-auto">
             {/* Header */}
-            <div className="bg-white shadow-sm sticky top-0 z-10 px-1 py-3 border-b border-gray-200">
+            <div className="bg-white shadow-sm sticky top-0 z-10 px-1 py-3 border-b border-gray-200 relative">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight text-left ml-3">ScoreCards</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight text-left ml-5 mt-2">ScoreCards</h1>
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 bg-black text-white rounded-full text-xl font-bold hover:bg-gray-800 transition-colors mr-3"
+                        className="absolute top-2 right-2 w-10 h-10 bg-black text-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-800 transition-all z-50"
+                        title="Close"
                     >
-                        Close
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
                     </button>
                 </div>
             </div>

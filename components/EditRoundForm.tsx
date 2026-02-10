@@ -408,7 +408,7 @@ export default function EditRoundForm({
                     {/* List Added Players (Disabled) */}
                     {statePlayers.map(rp => (
                         <div key={rp.id} className="flex items-center gap-2 px-1 py-1.5 opacity-50">
-                            <input type="checkbox" checked disabled className="rounded border-gray-300" />
+                            <input type="checkbox" checked disabled className="rounded border-gray-300" title="Player Added" />
                             <span className="text-[14pt] text-gray-500">
                                 {rp.player.name} <span className="text-[14pt]">(HCP: {Math.round(rp.player.handicapIndex)})</span>
                                 <span className="ml-2 text-[14pt] font-bold">(Added)</span>
@@ -536,7 +536,15 @@ export default function EditRoundForm({
                 <button
                     onClick={handleSaveRound}
                     disabled={isPending}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2 rounded-full shadow-md transition-all active:scale-95 text-[15pt]"
+                    className={`w-full font-bold px-4 py-2 rounded-full shadow-md transition-all active:scale-95 text-[15pt] ${isNew ||
+                        name !== (round.name || '') ||
+                        date !== (round.date.split('T')[0]) ||
+                        isTournament !== round.isTournament ||
+                        selectedCourseId !== round.course.id ||
+                        JSON.stringify(statePlayers) !== JSON.stringify(round.players)
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                        : 'bg-black text-white hover:bg-gray-800'
+                        }`}
                 >
                     {isPending ? 'Saving...' : (isNew ? 'Create Round' : 'Save & Update Round')}
                 </button>

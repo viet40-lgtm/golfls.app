@@ -38,7 +38,7 @@ export default function DeleteCourseButton({ courseId, canDelete }: { courseId: 
         <button
             onClick={handleDelete}
             disabled={isPending}
-            className="bg-red-100 hover:bg-red-200 text-red-700 font-bold px-4 py-2 text-[15pt] rounded-lg transition-colors border border-red-200"
+            className="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 text-[15pt] rounded-lg transition-colors border border-red-700"
         >
             {isPending ? 'Deleting...' : 'Delete'}
         </button>

@@ -80,12 +80,18 @@ export const LiveLeaderboardCard = ({
     const tee = (() => {
         if (!defaultCourse) return null;
         if (p.liveRoundData?.tee_box_name) {
-            return defaultCourse.teeBoxes.find((t: any) => t.name === p.liveRoundData?.tee_box_name);
+            const match = defaultCourse.teeBoxes.find((t: any) => t.name === p.liveRoundData?.tee_box_name);
+            if (match) return match;
         }
         if (p.preferred_tee_box) {
-            return defaultCourse.teeBoxes.find((t: any) => t.id === p.preferred_tee_box || t.name === p.preferred_tee_box);
+            const match = defaultCourse.teeBoxes.find((t: any) => t.id === p.preferred_tee_box || t.name === p.preferred_tee_box);
+            if (match) return match;
+            const partial = defaultCourse.teeBoxes.find((t: any) => t.name.toLowerCase().includes(p.preferred_tee_box!.toLowerCase()));
+            if (partial) return partial;
         }
-        return null;
+        // Fallback to White or first available
+        const white = defaultCourse.teeBoxes.find((t: any) => t.name.toLowerCase().includes('white'));
+        return white || defaultCourse.teeBoxes[0];
     })();
 
     let toParStr = "E";
@@ -99,87 +105,84 @@ export const LiveLeaderboardCard = ({
     return (
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl overflow-hidden border border-zinc-200 shadow-xl">
             {/* Player Header */}
-            <div className="bg-gradient-to-r from-green-600/5 to-transparent p-2 border-b border-zinc-100">
-                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+            <div className="bg-blue-600 p-1 border-b border-black">
+                <div className="flex items-center justify-between gap-4 p-1 text-white">
                     {/* Left: Name */}
-                    <div className="flex items-center gap-1 justify-self-start">
+                    <div className="flex items-center gap-1">
                         <div className="flex flex-col">
-                            <div className="font-black text-zinc-900 text-2xl italic uppercase tracking-tighter leading-none flex items-center gap-1">
+                            <div className="font-black text-2xl italic uppercase tracking-tighter leading-none flex items-center gap-2">
                                 {splitName(p.name).first}
                                 {(() => {
                                     if (!tee) return null;
                                     const letter = tee.name.toLowerCase().includes('white') ? 'W'
                                         : tee.name.toLowerCase().includes('gold') ? 'G'
                                             : tee.name.charAt(0).toUpperCase();
-                                    const colorClass = letter === 'W' ? 'bg-zinc-100 text-black'
-                                        : letter === 'G' ? 'bg-yellow-400 text-black'
-                                            : 'bg-zinc-500 text-white';
 
                                     return (
-                                        <span className={`text-[10px] font-black px-1 py-0.5 rounded-md ${colorClass} uppercase tracking-widest`}>
+                                        <span className={`text-sm font-black px-1.5 py-0.5 rounded bg-white text-black uppercase tracking-widest`}>
                                             {letter}
                                         </span>
                                     );
                                 })()}
                             </div>
-                            <div className="text-zinc-500 text-2xl font-black uppercase tracking-widest mt-1">{splitName(p.name).last}</div>
+                            <div className="text-white text-sm font-bold uppercase tracking-widest mt-0.5 opacity-90">{splitName(p.name).last}</div>
                         </div>
                     </div>
 
-                    {/* Center: To Par Score */}
-                    <div className="justify-self-center">
-                        <div className="bg-black text-white rounded-md px-3 py-1 min-w-[3.5rem] text-center shadow-md">
-                            <div className="text-3xl font-black italic tracking-tighter leading-none">
+                    {/* Right: Stats and To Par */}
+                    <div className="flex gap-3 items-center">
+                        {/* To Par Score moved here */}
+                        <div className="bg-white text-black rounded px-2 py-0.5 min-w-[3rem] text-center shadow-sm h-fit self-center">
+                            <div className="text-xl font-black italic tracking-tighter leading-none">
                                 {toParStr}
                             </div>
                         </div>
-                    </div>
 
-                    {/* Right: Stats */}
-                    <div className="flex gap-2 items-end justify-self-end">
-                        <div className="flex flex-col items-center gap-0">
-                            <div className="text-xl text-zinc-500 font-black tracking-widest uppercase">GRS</div>
-                            <div className={`text-xl font-black italic tracking-tighter leading-none ${p.toPar < 0 ? 'text-red-600' : p.toPar > 0 ? 'text-zinc-900' : 'text-green-600'}`}>
-                                {p.front9 > 0 || p.back9 > 0 ? (
-                                    <>{p.front9}+{p.back9}={p.totalGross}</>
-                                ) : (
-                                    <>{p.totalGross}</>
-                                )}
+                        <div className="flex gap-3 items-center text-sm">
+                            <div className="flex flex-col items-center gap-0">
+                                <div className="text-xs font-black tracking-widest uppercase opacity-80">GRS</div>
+                                <div className={`text-lg font-bold leading-none`}>
+                                    {p.front9 > 0 || p.back9 > 0 ? (
+                                        <>{p.front9}+{p.back9}={p.totalGross}</>
+                                    ) : (
+                                        <>{p.totalGross}</>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                        <div className="flex flex-col items-center gap-0">
-                            <div className="text-xl text-zinc-500 font-black tracking-widest uppercase">HCP</div>
-                            <div className={`text-xl font-black italic tracking-tighter leading-none ${p.toPar < 0 ? 'text-red-600' : p.toPar > 0 ? 'text-zinc-900' : 'text-green-600'}`}>{isNaN(p.courseHcp) ? 0 : p.courseHcp}</div>
-                        </div>
-                        <div className="flex flex-col items-center gap-0">
-                            <div className="text-xl text-zinc-500 font-black tracking-widest uppercase">NET</div>
-                            <div className={`text-xl font-black italic tracking-tighter leading-none ${p.toPar < 0 ? 'text-red-600' : p.toPar > 0 ? 'text-zinc-900' : 'text-green-600'}`}>{isNaN(p.totalNet) ? 0 : p.totalNet}</div>
+                            <div className="flex flex-col items-center gap-0">
+                                <div className="text-xs font-black tracking-widest uppercase opacity-80">HCP</div>
+                                <div className={`text-lg font-bold leading-none`}>{isNaN(p.courseHcp) ? 0 : p.courseHcp}</div>
+                            </div>
+                            <div className="flex flex-col items-center gap-0">
+                                <div className="text-xs font-black tracking-widest uppercase opacity-80">NET</div>
+                                <div className={`text-xl font-bold leading-none text-green-400`}>{isNaN(p.totalNet) ? 0 : p.totalNet}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Score Grid */}
-            <div className="border-t border-zinc-100 bg-zinc-50/30">
+            <div className="border-t border-black bg-zinc-50/30">
                 {/* Row 1: Holes 1-9 */}
-                <div className="grid grid-cols-9 border-b border-zinc-100">
+                <div className="grid grid-cols-9 border-b border-black">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => {
                         const score = getSavedScore(num);
                         const isActive = activeHole === num;
                         const hole = defaultCourse?.holes.find((h: any) => h.holeNumber === num);
                         const holePar = hole?.par || 4;
 
-                        let shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black italic tracking-tighter text-black";
+                        let shapeClass = "w-7 h-7 flex items-center justify-center text-3xl font-black italic tracking-tighter text-black";
                         // Active hole still gets a subtle green background if no score
                         let bgColor = isActive ? "bg-green-600/10" : "bg-transparent";
 
                         if (score !== null) {
                             const diff = score - holePar;
-                            if (diff <= -2) shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black text-black bg-yellow-300 rounded"; // Eagle
-                            else if (diff === -1) shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black text-black bg-green-300 rounded"; // Birdie
-                            else if (diff === 0) { shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black text-black"; } // Par
-                            else if (diff === 1) shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black text-black bg-orange-300 rounded"; // Bogey
-                            else if (diff >= 2) shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black text-black bg-red-300 rounded"; // Double Bogey
+                            if (diff <= -2) shapeClass = "w-7 h-7 flex items-center justify-center text-3xl font-black text-black bg-yellow-300 rounded"; // Eagle
+                            else if (diff === -1) shapeClass = "w-7 h-7 flex items-center justify-center text-3xl font-black text-black bg-green-300 rounded"; // Birdie
+                            else if (diff === 0) { shapeClass = "w-7 h-7 flex items-center justify-center text-3xl font-black text-black"; } // Par
+                            else if (diff === 1) shapeClass = "w-7 h-7 flex items-center justify-center text-3xl font-black text-black bg-orange-300 rounded"; // Bogey
+                            else if (diff >= 2) shapeClass = "w-7 h-7 flex items-center justify-center text-3xl font-black text-black bg-red-300 rounded"; // Double Bogey
                         }
 
                         return (
@@ -188,14 +191,14 @@ export const LiveLeaderboardCard = ({
                                     if (isAdmin) setSummaryEditCell({ playerId: p.id, holeNumber: num });
                                 }}
                                 className={`
-                                flex flex-col items-center justify-center h-14 border-r border-zinc-100 last:border-r-0 relative transition-all
+                                flex flex-col items-center justify-center h-14 border-r border-black last:border-r-0 relative transition-all
                                 ${bgColor}
-                                ${isActive ? 'ring-1 ring-green-600/50 inset-0 z-10' : ''}
+                                ${isActive ? 'ring-inset ring-2 ring-black z-20' : ''}
                                 ${isAdmin ? 'cursor-pointer hover:bg-zinc-100' : ''}
                             `}>
                                 <div className="absolute top-0.5 inset-x-0 flex justify-center items-baseline px-1 leading-none gap-0.5">
-                                    <span className="text-2xl font-black text-black">{num}</span>
-                                    <span className="text-2xl font-black text-black">/{holePar}</span>
+                                    <span className="text-sm font-bold text-black">{num}</span>
+                                    <span className="text-xs text-gray-500 font-medium">/{holePar}</span>
                                 </div>
                                 {isAdmin && summaryEditCell?.playerId === p.id && summaryEditCell?.holeNumber === num ? (
                                     <input
@@ -219,7 +222,7 @@ export const LiveLeaderboardCard = ({
                                         }}
                                     />
                                 ) : (
-                                    <div className={`${shapeClass} mt-4`}>
+                                    <div className={`${shapeClass} mt-6`}>
                                         {score || '-'}
                                     </div>
                                 )}
@@ -235,17 +238,17 @@ export const LiveLeaderboardCard = ({
                         const hole = defaultCourse?.holes.find((h: any) => h.holeNumber === num);
                         const holePar = hole?.par || 4;
 
-                        let shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black italic tracking-tighter text-black";
+                        let shapeClass = "w-7 h-7 flex items-center justify-center text-3xl font-black italic tracking-tighter text-black";
                         // Active hole still gets a subtle green background if no score
                         let bgColor = isActive ? "bg-green-600/10" : "bg-transparent";
 
                         if (score !== null) {
                             const diff = score - holePar;
-                            if (diff <= -2) shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black text-black bg-yellow-300 rounded"; // Eagle
-                            else if (diff === -1) shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black text-black bg-green-300 rounded"; // Birdie
-                            else if (diff === 0) { shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black text-black"; } // Par
-                            else if (diff === 1) shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black text-black bg-orange-300 rounded"; // Bogey
-                            else if (diff >= 2) shapeClass = "w-7 h-7 flex items-center justify-center text-xl font-black text-black bg-red-300 rounded"; // Double Bogey
+                            if (diff <= -2) shapeClass = "w-7 h-7 flex items-center justify-center text-3xl font-black text-black bg-yellow-300 rounded"; // Eagle
+                            else if (diff === -1) shapeClass = "w-7 h-7 flex items-center justify-center text-3xl font-black text-black bg-green-300 rounded"; // Birdie
+                            else if (diff === 0) { shapeClass = "w-7 h-7 flex items-center justify-center text-3xl font-black text-black"; } // Par
+                            else if (diff === 1) shapeClass = "w-7 h-7 flex items-center justify-center text-3xl font-black text-black bg-orange-300 rounded"; // Bogey
+                            else if (diff >= 2) shapeClass = "w-7 h-7 flex items-center justify-center text-3xl font-black text-black bg-red-300 rounded"; // Double Bogey
                         }
 
                         return (
@@ -254,14 +257,14 @@ export const LiveLeaderboardCard = ({
                                     if (isAdmin) setSummaryEditCell({ playerId: p.id, holeNumber: num });
                                 }}
                                 className={`
-                                flex flex-col items-center justify-center h-14 border-r border-zinc-100 last:border-r-0 relative transition-all
+                                flex flex-col items-center justify-center h-14 border-r border-black last:border-r-0 relative transition-all
                                 ${bgColor}
-                                ${isActive ? 'ring-1 ring-green-600/50 inset-0 z-10' : ''}
+                                ${isActive ? 'ring-inset ring-2 ring-black z-20' : ''}
                                 ${isAdmin ? 'cursor-pointer hover:bg-zinc-100' : ''}
                             `}>
                                 <div className="absolute top-0.5 inset-x-0 flex justify-center items-baseline px-1 leading-none gap-0.5">
-                                    <span className="text-2xl font-black text-black">{num}</span>
-                                    <span className="text-2xl font-black text-black">/{holePar}</span>
+                                    <span className="text-sm font-bold text-black">{num}</span>
+                                    <span className="text-xs text-gray-500 font-medium">/{holePar}</span>
                                 </div>
                                 {isAdmin && summaryEditCell?.playerId === p.id && summaryEditCell?.holeNumber === num ? (
                                     <input
@@ -285,7 +288,7 @@ export const LiveLeaderboardCard = ({
                                         }}
                                     />
                                 ) : (
-                                    <div className={`${shapeClass} mt-4`}>
+                                    <div className={`${shapeClass} mt-6`}>
                                         {score || '-'}
                                     </div>
                                 )}

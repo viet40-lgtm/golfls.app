@@ -94,9 +94,19 @@ export function GuestPlayerModal({ isOpen, onClose, onAdd, onUpdate, onDelete, r
     return (
         <div className="fixed inset-0 bg-white z-[250] p-1">
             <div className="bg-white rounded-none shadow-none w-full h-full p-1 flex flex-col">
-                <h2 className="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">
+                <h2 className="text-2xl font-bold mb-4 text-gray-800 border-b pb-2 mt-2 ml-1">
                     {editingGuest ? 'Edit Guest Player' : 'Add Guest Player'}
                 </h2>
+                <button
+                    onClick={onClose}
+                    className="absolute top-2 right-2 w-10 h-10 bg-black text-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-800 transition-all z-50"
+                    title="Close"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
 
                 <div className="space-y-4 flex-1 overflow-y-auto">
                     <div>
@@ -175,17 +185,12 @@ export function GuestPlayerModal({ isOpen, onClose, onAdd, onUpdate, onDelete, r
                             Delete
                         </button>
                     )}
-                    <button
-                        onClick={onClose}
-                        className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300 transition-all text-xl"
-                    >
-                        Cancel
-                    </button>
+
                     <button
                         onClick={handleSubmit}
-                        className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all text-xl"
+                        className="flex-1 px-4 py-2 bg-black text-white rounded-lg font-bold hover:bg-gray-800 transition-all text-xl shadow-lg"
                     >
-                        {editingGuest ? 'Update Guest' : 'Add Guest'}
+                        {editingGuest ? 'Save Changes' : 'Add Guest'}
                     </button>
                 </div>
             </div>

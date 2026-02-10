@@ -82,20 +82,24 @@ export default function AddToClubModal({ isOpen, onClose, players, liveRoundId, 
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-white z-[200] p-1">
+            <div className="bg-white w-full h-full flex flex-col overflow-hidden">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-t-xl">
+                <div className="bg-white p-4 border-b border-gray-200 relative">
                     <div className="flex justify-between items-center">
-                        <h2 className="text-[18pt] font-bold text-white text-left ml-3">Add to Club Scores</h2>
+                        <h2 className="text-[18pt] font-bold text-black text-left ml-1 mt-2">Add to Club Scores</h2>
                         <button
                             onClick={onClose}
-                            className="bg-white/20 hover:bg-white/30 text-white rounded-lg px-4 py-2 transition-colors font-bold text-[15pt]"
+                            className="absolute top-2 right-2 w-10 h-10 bg-black text-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-800 transition-all z-50"
+                            title="Close"
                         >
-                            Close
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
                         </button>
                     </div>
-                    <p className="text-white/90 text-[12pt] mt-1">
+                    <p className="text-gray-600 text-[12pt] mt-1 ml-1">
                         Select players to copy their scores to the main club scores page
                     </p>
                 </div>
@@ -173,12 +177,7 @@ export default function AddToClubModal({ isOpen, onClose, players, liveRoundId, 
                 {/* Footer */}
                 <div className="border-t-2 border-gray-200 p-4 bg-gray-50 rounded-b-xl">
                     <div className="flex gap-3">
-                        <button
-                            onClick={onClose}
-                            className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-900 font-bold px-4 py-2 rounded-full text-[15pt] transition-colors"
-                        >
-                            Cancel
-                        </button>
+
                         <button
                             onClick={handleSave}
                             disabled={selectedIds.size === 0 || isSaving}
