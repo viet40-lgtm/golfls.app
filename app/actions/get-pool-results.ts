@@ -60,11 +60,16 @@ export async function getPoolResults(roundId: string, entryFee: number = 30.00) 
         });
 
         const playersRaw = round.players as any[];
+        console.log(`[getPoolResults] Found ${playersRaw.length} total players in round`);
+
         const allPoolParticipants = playersRaw.filter((rp: any) => {
-            return poolStatusMap.get(rp.id) === true;
+            const inPool = poolStatusMap.get(rp.id) === true;
+            return inPool;
         });
+        console.log(`[getPoolResults] ${allPoolParticipants.length} players are in the pool`);
 
         const poolActivePlayers = allPoolParticipants.filter((rp: any) => rp.teeBox && (rp.grossScore !== null || rp.scores?.length > 0));
+        console.log(`[getPoolResults] ${poolActivePlayers.length} active players with scores`);
 
         // Determine Pots (Nassau Style)
         const totalPot = allPoolParticipants.length * entryFee;
@@ -182,6 +187,7 @@ export async function getPoolResults(roundId: string, entryFee: number = 30.00) 
                 pots: { front: potPerSegment, back: potPerSegment, total: potPerSegment }
             };
         });
+        console.log(`[getPoolResults] Processed ${processedFlights.length} flights`);
 
         const winningsMap = new Map<string, number>();
         processedFlights.forEach((f: any) => {
@@ -220,10 +226,19 @@ export async function getPoolResults(roundId: string, entryFee: number = 30.00) 
                         }
                     }))
                 },
-                flights,
+                flights: processedFlights.map(f => ({
+                    name: f.name,
+                    pot: f.pot,
+                    playerCount: f.players.length
+                })),
                 processedFlights,
                 winningsArray,
-                allRounds
+                allRounds: allRounds.slice(0, 50).map(r => ({
+                    id: r.id,
+                    date: r.date,
+                    name: r.name,
+                    isTournament: r.isTournament
+                }))
             }
         };
 
