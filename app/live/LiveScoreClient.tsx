@@ -141,14 +141,8 @@ export default function LiveScoreClient({
     const [unsavedToDbHoles, setUnsavedToDbHoles] = useState<Map<number, Array<{ playerId: string; strokes: number }>>>(new Map());
     const [summaryEditCell, setSummaryEditCell] = useState<{ playerId: string, holeNumber: number } | null>(null);
     const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-    const [isGPSEnabled, setIsGPSEnabled] = useState(() => {
-        if (typeof window !== 'undefined') {
-            const urlGps = new URLSearchParams(window.location.search).get('gps');
-            if (urlGps !== null) return urlGps === 'true';
-            return Cookies.get('gps_enabled') === 'true';
-        }
-        return false;
-    });
+    // Initialize to false to prevent hydration mismatch, then update in useEffect
+    const [isGPSEnabled, setIsGPSEnabled] = useState(false);
     const [confirmConfig, setConfirmConfig] = useState<{
         isOpen: boolean;
         title: string;
@@ -273,6 +267,19 @@ export default function LiveScoreClient({
 
 
 
+
+
+    // Initialize GPS state from URL/cookies after mount (prevents hydration mismatch)
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const urlGps = new URLSearchParams(window.location.search).get('gps');
+            if (urlGps !== null) {
+                setIsGPSEnabled(urlGps === 'true');
+            } else {
+                setIsGPSEnabled(Cookies.get('gps_enabled') === 'true');
+            }
+        }
+    }, []);
 
     // GPS Logic with fallback for desktop
     useEffect(() => {
