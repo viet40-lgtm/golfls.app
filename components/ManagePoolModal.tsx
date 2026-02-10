@@ -29,7 +29,6 @@ export function ManagePoolModal({
     if (!isOpen) return null;
 
     const togglePlayer = (id: string) => {
-        if (!isAdmin) return; // Only admins can toggle
         setSelectedIds(prev =>
             prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
         );
@@ -58,7 +57,7 @@ export function ManagePoolModal({
 
                 {/* Header */}
                 <div className="px-1 py-5 border-b border-gray-100 flex justify-between items-center bg-[#f8fafc] relative">
-                    <h2 className="text-[14pt] font-black text-gray-800 tracking-tight ml-1 mt-2">Manage Pool Participants</h2>
+                    <h2 className="text-[14pt] font-black text-gray-800 tracking-tight ml-1 mt-2">Manage Front, Back and Total:</h2>
                     <button
                         onClick={onClose}
                         className="absolute top-2 right-2 w-10 h-10 bg-black text-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-800 transition-all z-50"
@@ -73,22 +72,20 @@ export function ManagePoolModal({
 
                 {/* Body - Player Grid */}
                 <div className="flex-1 overflow-y-auto p-6">
-                    {isAdmin && (
-                        <div className="flex gap-4 mb-6">
-                            <button
-                                onClick={() => setSelectedIds(allPlayers.map(p => p.id))}
-                                className="text-[14pt] font-bold text-green-600 hover:text-green-700 transition-colors"
-                            >
-                                Select All
-                            </button>
-                            <button
-                                onClick={() => setSelectedIds([])}
-                                className="text-[14pt] font-bold text-red-600 hover:text-red-700 transition-colors"
-                            >
-                                Uncheck All
-                            </button>
-                        </div>
-                    )}
+                    <div className="flex gap-4 mb-6">
+                        <button
+                            onClick={() => setSelectedIds(allPlayers.map(p => p.id))}
+                            className="text-[14pt] font-black text-green-600 hover:text-green-700 transition-colors uppercase tracking-widest italic"
+                        >
+                            Select All
+                        </button>
+                        <button
+                            onClick={() => setSelectedIds([])}
+                            className="text-[14pt] font-black text-red-600 hover:text-red-700 transition-colors uppercase tracking-widest italic"
+                        >
+                            Uncheck All
+                        </button>
+                    </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {sortedPlayers.map(player => {
@@ -97,11 +94,10 @@ export function ManagePoolModal({
                                 <button
                                     key={player.id}
                                     onClick={() => togglePlayer(player.id)}
-                                    disabled={!isAdmin}
                                     className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left ${isSelected
                                         ? 'border-green-500 bg-green-50 shadow-sm'
                                         : 'border-gray-100 bg-white hover:border-gray-200'
-                                        } ${!isAdmin ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
+                                        } cursor-pointer`}
                                 >
                                     <div className={`w-7 h-7 rounded flex items-center justify-center border-2 transition-colors ${isSelected
                                         ? 'bg-green-600 border-green-600'
@@ -121,26 +117,24 @@ export function ManagePoolModal({
                 </div>
 
                 {/* Footer Actions */}
-                <div className="px-1 py-5 bg-[#f8fafc] border-t border-gray-100 flex justify-end gap-3">
-                    {isAdmin && (
-                        <button
-                            onClick={handleSave}
-                            disabled={isSaving}
-                            className={`px-4 py-2 rounded-xl text-[15pt] font-bold shadow-lg transition-all active:scale-95 flex items-center gap-2 ${JSON.stringify(selectedIds.slice().sort()) !== JSON.stringify(initialSelectedIds.slice().sort())
-                                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                : 'bg-black text-white hover:bg-gray-800'
-                                }`}
-                        >
-                            {isSaving ? (
-                                <>
-                                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                    Saving...
-                                </>
-                            ) : (
-                                'Save Pool Participants'
-                            )}
-                        </button>
-                    )}
+                <div className="p-6 bg-[#f8fafc] border-t border-gray-100">
+                    <button
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className={`w-full py-5 rounded-2xl text-[18pt] font-black uppercase tracking-widest shadow-xl transition-all active:scale-[0.98] flex items-center justify-center gap-3 ${JSON.stringify(selectedIds.slice().sort()) !== JSON.stringify(initialSelectedIds.slice().sort())
+                            ? 'bg-green-600 text-white hover:bg-green-700'
+                            : 'bg-black text-white hover:bg-gray-800'
+                            }`}
+                    >
+                        {isSaving ? (
+                            <>
+                                <svg className="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                Saving...
+                            </>
+                        ) : (
+                            'Save Pool'
+                        )}
+                    </button>
                 </div>
             </div>
         </div>

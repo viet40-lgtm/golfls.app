@@ -12,6 +12,7 @@ interface Player {
     toPar: number;
     courseHcp: number;
     thru: number;
+    scorerId?: string | null;
     // Add other necessary fields
     liveRoundData?: {
         tee_box_name: string | null;
@@ -124,6 +125,11 @@ export const LiveLeaderboardCard = ({
                                         </span>
                                     );
                                 })()}
+                                {!p.scorerId && (
+                                    <span className="text-[12px] font-black text-red-600 uppercase">
+                                        No Score Keeper
+                                    </span>
+                                )}
                             </div>
                             <div className="text-white text-sm font-bold uppercase tracking-widest mt-0.5 opacity-90">{splitName(p.name).last}</div>
                         </div>
@@ -140,8 +146,8 @@ export const LiveLeaderboardCard = ({
 
                         <div className="flex gap-3 items-center text-sm">
                             <div className="flex flex-col items-center gap-0">
-                                <div className="text-xs font-black tracking-widest uppercase opacity-80">GRS</div>
-                                <div className={`text-lg font-bold leading-none`}>
+                                <div className="text-base font-black tracking-widest uppercase opacity-80">GRS</div>
+                                <div className={`text-xl font-bold leading-none`}>
                                     {p.front9 > 0 || p.back9 > 0 ? (
                                         <>{p.front9}+{p.back9}={p.totalGross}</>
                                     ) : (
@@ -150,11 +156,11 @@ export const LiveLeaderboardCard = ({
                                 </div>
                             </div>
                             <div className="flex flex-col items-center gap-0">
-                                <div className="text-xs font-black tracking-widest uppercase opacity-80">HCP</div>
-                                <div className={`text-lg font-bold leading-none`}>{isNaN(p.courseHcp) ? 0 : p.courseHcp}</div>
+                                <div className="text-base font-black tracking-widest uppercase opacity-80">HCP</div>
+                                <div className={`text-xl font-bold leading-none`}>{isNaN(p.courseHcp) ? 0 : p.courseHcp}</div>
                             </div>
                             <div className="flex flex-col items-center gap-0">
-                                <div className="text-xs font-black tracking-widest uppercase opacity-80">NET</div>
+                                <div className="text-base font-black tracking-widest uppercase opacity-80">NET</div>
                                 <div className={`text-xl font-bold leading-none text-green-400`}>{isNaN(p.totalNet) ? 0 : p.totalNet}</div>
                             </div>
                         </div>
@@ -197,8 +203,8 @@ export const LiveLeaderboardCard = ({
                                 ${isAdmin ? 'cursor-pointer hover:bg-zinc-100' : ''}
                             `}>
                                 <div className="absolute top-0.5 inset-x-0 flex justify-center items-baseline px-1 leading-none gap-0.5">
-                                    <span className="text-sm font-bold text-black">{num}</span>
-                                    <span className="text-xs text-gray-500 font-medium">/{holePar}</span>
+                                    <span className="text-lg font-bold text-black">{num}</span>
+                                    <span className="text-base text-gray-500 font-medium">/{holePar}</span>
                                 </div>
                                 {isAdmin && summaryEditCell?.playerId === p.id && summaryEditCell?.holeNumber === num ? (
                                     <input
@@ -206,7 +212,7 @@ export const LiveLeaderboardCard = ({
                                         aria-label={`Score for hole ${num}`}
                                         inputMode="numeric"
                                         autoFocus
-                                        className="w-full text-center bg-white text-zinc-900 font-black text-2xl focus:outline-none border-none"
+                                        className="w-full text-center bg-white text-zinc-900 font-black text-3xl focus:outline-none border-none"
                                         defaultValue={score || ''}
                                         onFocus={(e) => e.target.select()}
                                         onKeyDown={(e) => {
@@ -263,8 +269,8 @@ export const LiveLeaderboardCard = ({
                                 ${isAdmin ? 'cursor-pointer hover:bg-zinc-100' : ''}
                             `}>
                                 <div className="absolute top-0.5 inset-x-0 flex justify-center items-baseline px-1 leading-none gap-0.5">
-                                    <span className="text-sm font-bold text-black">{num}</span>
-                                    <span className="text-xs text-gray-500 font-medium">/{holePar}</span>
+                                    <span className="text-lg font-bold text-black">{num}</span>
+                                    <span className="text-base text-gray-500 font-medium">/{holePar}</span>
                                 </div>
                                 {isAdmin && summaryEditCell?.playerId === p.id && summaryEditCell?.holeNumber === num ? (
                                     <input
@@ -272,7 +278,7 @@ export const LiveLeaderboardCard = ({
                                         aria-label={`Score for hole ${num}`}
                                         inputMode="numeric"
                                         autoFocus
-                                        className="w-full text-center bg-white text-zinc-900 font-black text-2xl focus:outline-none border-none"
+                                        className="w-full text-center bg-white text-zinc-900 font-black text-3xl focus:outline-none border-none"
                                         defaultValue={score || ''}
                                         onFocus={(e) => e.target.select()}
                                         onKeyDown={(e) => {

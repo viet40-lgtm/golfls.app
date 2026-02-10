@@ -73,17 +73,18 @@ export function LiveRoundModal({
                 }
             } else {
                 // New Mode: Populating from defaults/props
-                const cpNorth = allCourses.find(c => c.name.toLowerCase().includes('city park north'));
-                const initialCourse = cpNorth || allCourses.find(c => c.id === courseId) || allCourses[0];
+                const initialCourse = allCourses.find(c => c.id === courseId) ||
+                    allCourses.find(c => c.name.toLowerCase().includes('city park north')) ||
+                    allCourses[0];
 
                 if (initialCourse) {
                     setSelectedCourseId(initialCourse.id);
                     setName(initialCourse.name);
                     setDate(today);
 
-                    // Find White tee or first available (or defaultTeeBoxId if provided)
-                    const whiteTee = initialCourse.teeBoxes.find((t: any) => t.name.toLowerCase().includes('white'));
+                    // Priority: defaultTeeBoxId -> white tee -> first available
                     const defaultTee = defaultTeeBoxId ? initialCourse.teeBoxes.find((t: any) => t.id === defaultTeeBoxId) : null;
+                    const whiteTee = initialCourse.teeBoxes.find((t: any) => t.name.toLowerCase().includes('white'));
                     const initialTee = defaultTee || whiteTee || initialCourse.teeBoxes[0];
 
                     if (initialTee) {
@@ -92,12 +93,11 @@ export function LiveRoundModal({
                         setSlope(initialTee.slope);
                     }
 
-                    // Calculate par
-                    if (initialCourse.holes?.length) {
-                        const calcPar = initialCourse.holes.reduce((sum: number, h: any) => sum + h.par, 0);
-                        setPar(calcPar);
+                    // Set par from tee
+                    if (initialTee) {
+                        setPar(initialTee.par || 72);
                     } else {
-                        setPar(68);
+                        setPar(72);
                     }
                 }
             }
@@ -259,11 +259,7 @@ export function LiveRoundModal({
                                         setSelectedTeeId(devTee.id);
                                         setRating(devTee.rating);
                                         setSlope(devTee.slope);
-                                    }
-
-                                    if (c.holes?.length) {
-                                        const cPar = c.holes.reduce((sum: number, h: any) => sum + h.par, 0);
-                                        setPar(cPar);
+                                        setPar(devTee.par || 72);
                                     }
                                 }
                             }}
@@ -291,8 +287,7 @@ export function LiveRoundModal({
                                     if (tee) {
                                         setRating(tee.rating);
                                         setSlope(tee.slope);
-                                        const cPar = c.holes.reduce((sum: number, h: any) => sum + h.par, 0);
-                                        setPar(cPar || par);
+                                        setPar(tee.par || par);
                                     }
                                 }
                             }}
@@ -342,11 +337,11 @@ export function LiveRoundModal({
                     </div>
                 </div>
 
-                <div className="p-1 bg-gray-50 flex justify-end gap-2 mt-1 shrink-0">
+                <div className="p-1 bg-gray-50 flex mt-1 shrink-0">
                     <button
                         onClick={handleSave}
                         disabled={isSaving}
-                        className={`px-3 py-1.5 rounded-full text-[13pt] font-bold shadow-lg disabled:opacity-50 flex items-center gap-2 cursor-pointer transition-colors ${!existingRound ||
+                        className={`w-full py-3 rounded-xl text-[18pt] font-black shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer transition-colors uppercase italic tracking-tighter ${!existingRound ||
                             name !== existingRound.name ||
                             date !== existingRound.date ||
                             par !== existingRound.par ||

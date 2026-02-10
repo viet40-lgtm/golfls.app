@@ -19,6 +19,7 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
     const [error, setError] = useState<string | null>(null);
     const [isAdmin, setIsAdmin] = useState(false);
     const [currentRoundId, setCurrentRoundId] = useState(initialRoundId);
+    const [entryFee, setEntryFee] = useState(30);
 
     useEffect(() => {
         const checkAdmin = () => {
@@ -34,7 +35,7 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
         if (isOpen && currentRoundId) {
             setIsLoading(true);
             setError(null);
-            fetchData(currentRoundId);
+            fetchData(currentRoundId, entryFee);
         }
     }, [isOpen, currentRoundId]);
 
@@ -45,8 +46,8 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
         }
     }, [initialRoundId, isOpen]);
 
-    const fetchData = async (id: string) => {
-        const result = await getPoolResults(id);
+    const fetchData = async (id: string, fee: number) => {
+        const result = await getPoolResults(id, fee);
         if (result.success && result.data) {
             // Reconstruct the winningsMap from the array
             const winningsMap = new Map<string, number>(result.data.winningsArray);
@@ -64,10 +65,10 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
         <div className="fixed inset-0 z-[100] flex flex-col bg-white overflow-hidden animate-in fade-in zoom-in duration-200">
             {/* Header */}
             <header className="bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between shadow-sm sticky top-0 z-10 relative">
-                <div className="flex flex-col">
-                    <h2 className="text-[18pt] font-black text-green-600 leading-tight text-left ml-3">$5 Pool Results</h2>
+                <div className="flex flex-col ml-3">
+                    <h2 className="text-[18pt] font-black text-green-600 leading-tight text-left">Classic Nassau: Front, Back and Total:</h2>
                     {data?.round && (
-                        <p className="text-[12pt] text-gray-500 font-medium">
+                        <p className="text-[12pt] text-gray-500 font-medium text-left">
                             {new Date(data.round.date).toLocaleDateString()} {data.round.name ? `- ${data.round.name}` : ''}
                         </p>
                     )}
@@ -99,7 +100,7 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
                         <h3 className="text-[16pt] font-bold text-gray-900">Oops! Something went wrong</h3>
                         <p className="text-[14pt] text-gray-500 max-w-md">{error}</p>
                         <button
-                            onClick={() => fetchData(currentRoundId)}
+                            onClick={() => fetchData(currentRoundId, entryFee)}
                             className="bg-black text-white px-6 py-2 rounded-full font-bold text-[14pt] hover:bg-gray-800 transition-colors"
                         >
                             Try Again
@@ -107,6 +108,30 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
                     </div>
                 ) : (
                     <main className="px-1 py-4 max-w-5xl mx-auto w-full">
+                        {/* Amount Entry Field */}
+                        <div className="bg-white border-2 border-zinc-900 rounded-xl p-2 mb-4 shadow-xl flex items-center justify-start gap-4 mx-1">
+                            <label className="text-xl font-black text-zinc-900 uppercase tracking-tighter italic">Amount $:</label>
+                            <div className="flex gap-2 flex-1">
+                                <input
+                                    type="number"
+                                    value={entryFee}
+                                    onChange={(e) => setEntryFee(Number(e.target.value))}
+                                    title="Entry Fee Amount"
+                                    placeholder="30"
+                                    className="w-24 bg-zinc-50 border-2 border-zinc-900 rounded-lg px-3 py-2 text-2xl font-black italic shadow-inner focus:outline-none focus:ring-2 focus:ring-green-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                />
+                                <button
+                                    onClick={() => {
+                                        setIsLoading(true);
+                                        fetchData(currentRoundId, entryFee);
+                                    }}
+                                    className="bg-green-600 text-white px-6 py-2 rounded-lg font-black text-xl uppercase tracking-tighter shadow-md active:scale-95 hover:bg-green-700 transition-all italic"
+                                >
+                                    Recalculate
+                                </button>
+                            </div>
+                        </div>
+
                         {/* Admin Action Bar (Replicating Page Style) */}
                         <div className="bg-white border border-gray-200 rounded-xl p-1 flex items-center justify-between gap-1 mb-4 shadow-sm">
                             <PoolDateSelector

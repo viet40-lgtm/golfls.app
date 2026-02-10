@@ -180,6 +180,7 @@ model LiveRoundPlayer {
   guestName      String?
   courseHandicap Int
   grossScore     Int?
+  inPool         Boolean     @default(true) @map("in_pool")
   frontNine      Int?
   backNine       Int?
   liveRound      LiveRound   @relation(fields: [liveRoundId], references: [id], onDelete: Cascade)

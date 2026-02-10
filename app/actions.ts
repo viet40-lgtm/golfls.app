@@ -472,19 +472,35 @@ export async function updatePlayerScore(
 
 export async function updatePoolParticipants(roundId: string, inPoolPlayerIds: string[]) {
     try {
-        await prisma.$transaction(async (tx: TransactionClient) => {
-            // 1. Get current players in round
-            const players = await tx.roundPlayer.findMany({
-                where: { roundId: roundId },
+        await prisma.$transaction(async (tx: any) => {
+            // Check if it's a LiveRound first
+            const livePlayers = await tx.liveRoundPlayer.findMany({
+                where: { liveRoundId: roundId },
                 select: { id: true, playerId: true }
             });
 
-            for (const p of players) {
-                const isSelected = inPoolPlayerIds.includes(p.playerId);
-                await tx.roundPlayer.update({
-                    where: { id: p.id },
-                    data: { inPool: isSelected }
+            if (livePlayers.length > 0) {
+                for (const p of livePlayers) {
+                    const isSelected = inPoolPlayerIds.includes(p.playerId);
+                    await tx.liveRoundPlayer.update({
+                        where: { id: p.id },
+                        data: { inPool: isSelected }
+                    });
+                }
+            } else {
+                // Otherwise assume it's a regular Round
+                const players = await tx.roundPlayer.findMany({
+                    where: { roundId: roundId },
+                    select: { id: true, playerId: true }
                 });
+
+                for (const p of players) {
+                    const isSelected = inPoolPlayerIds.includes(p.playerId);
+                    await tx.roundPlayer.update({
+                        where: { id: p.id },
+                        data: { inPool: isSelected }
+                    });
+                }
             }
         });
 

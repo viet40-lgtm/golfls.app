@@ -136,7 +136,7 @@ export async function createDefaultLiveRound(date: string, creatorName?: string,
             });
         }
 
-        revalidatePath('/');
+        // revalidatePath('/'); // Removed for performance, client handles redirect/refresh
         return { success: true, roundId: newRound.id };
     } catch (error) {
         console.error('Error creating live round:', error);
@@ -191,7 +191,7 @@ export async function updateLiveRound(data: {
             });
         }
 
-        revalidatePath('/');
+        // revalidatePath('/'); // Removed for performance
         return { success: true };
     } catch (error) {
         console.error('Failed to update live round:', error);
@@ -263,7 +263,7 @@ export async function addPlayerToLiveRound(data: {
         });
 
         console.log('SERVER ACTION: addPlayerToLiveRound SUCCESS:', liveRoundPlayer.id);
-        revalidatePath('/');
+        revalidatePath('/live'); // Target specific path only
         return { success: true, liveRoundPlayerId: liveRoundPlayer.id };
     } catch (error) {
         console.error('SERVER ACTION: addPlayerToLiveRound FAILED:', error);
@@ -275,10 +275,56 @@ export async function addPlayerToLiveRound(data: {
 }
 
 
-
 /**
- * Adds a guest player to a live round
+ * Updates the scorer for multiple players in a live round
  */
+export async function updatePlayerScorers(data: {
+    liveRoundId: string;
+    scorerId: string | null;
+    playerIds: string[]; // These are system player IDs or guest IDs
+}) {
+    try {
+        console.log('SERVER ACTION: updatePlayerScorers starting...', data.playerIds.length, 'players');
+
+        // 1. Clear scorerId for any player previously scored by this user who is NOT in the new list
+        await prisma.liveRoundPlayer.updateMany({
+            where: {
+                liveRoundId: data.liveRoundId,
+                scorerId: data.scorerId,
+                NOT: {
+                    OR: [
+                        { playerId: { in: data.playerIds } },
+                        { id: { in: data.playerIds } }
+                    ]
+                }
+            },
+            data: { scorerId: null }
+        });
+
+        // 2. Set scorerId for players in the new list
+        // Note: We only set it if it's currently null or already matches this user.
+        // This prevents accidentally "stealing" a player from another scorer during a sync.
+        // However, for simplicity and to satisfy "last one wins", we can just set it.
+        if (data.scorerId) {
+            await prisma.liveRoundPlayer.updateMany({
+                where: {
+                    liveRoundId: data.liveRoundId,
+                    OR: [
+                        { playerId: { in: data.playerIds } },
+                        { id: { in: data.playerIds } }
+                    ]
+                },
+                data: { scorerId: data.scorerId }
+            });
+        }
+
+        revalidatePath('/live'); // Target specific path only
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: 'Failed to update scorers' };
+    }
+}
+
 export async function addGuestToLiveRound(data: {
     liveRoundId: string;
     guestName: string;
@@ -500,8 +546,8 @@ export async function saveLiveScore(data: {
             }
         }
 
-        revalidatePath('/');
-        revalidatePath('/live');
+        // revalidatePath('/'); 
+        // revalidatePath('/live'); // Removed to prevent double-revalidation as client-side hole change handles this
 
         // Return overall status
         const anyFailed = results.some(r => !r.success);

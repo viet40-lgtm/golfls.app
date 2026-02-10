@@ -2,41 +2,50 @@
 
 import { prisma } from '@/lib/prisma';
 
-export async function getPoolResults(roundId: string) {
+export async function getPoolResults(roundId: string, entryFee: number = 30.00) {
     try {
         const includeOpts = {
             course: {
-                include: { holes: true }
+                include: { holes: true, teeBoxes: true }
             },
             players: {
                 include: {
                     player: true,
                     teeBox: true,
                     scores: {
+                        orderBy: { hole: { holeNumber: 'asc' as const } },
                         include: { hole: true }
                     }
                 }
             }
         };
 
-        const round = await prisma.round.findUnique({
+        let round = await (prisma.round as any).findUnique({
             where: { id: roundId },
             include: includeOpts
         });
+
+        let isLive = false;
+        if (!round) {
+            round = await (prisma.liveRound as any).findUnique({
+                where: { id: roundId },
+                include: includeOpts
+            });
+            if (round) isLive = true;
+        }
 
         if (!round) {
             return { success: false, error: 'Round not found' };
         }
 
-        // Fetch in_pool status via Raw SQL
-        // Note: Assuming raw SQL columns might still be snake_case in existing DB or match custom maps.
-        // If query fails, we might need to adjust column names to "playerId".
-        const poolStatusRaw = await prisma.$queryRaw<{ player_id: string, in_pool: boolean }[]>`
-            SELECT player_id, in_pool FROM round_players WHERE round_id = ${round.id}
-        `;
-        const poolStatusMap = new Map(poolStatusRaw.map((p: any) => [p.player_id, Boolean(p.in_pool)]));
+        // Fetch in_pool status
+        const poolStatusRaw = isLive
+            ? await (prisma as any).liveRoundPlayer.findMany({ where: { liveRoundId: round.id }, select: { id: true, inPool: true } })
+            : await (prisma as any).roundPlayer.findMany({ where: { roundId: round.id }, select: { id: true, inPool: true } });
 
-        // Fetch all round dates for selector (matching app/pool/page.tsx logic)
+        const poolStatusMap = new Map((poolStatusRaw as any[]).map((p: any) => [p.id, Boolean(p.inPool)]));
+
+        // Fetch all round dates for selector
         const allRounds = await prisma.round.findMany({
             orderBy: { date: 'desc' },
             select: {
@@ -52,14 +61,12 @@ export async function getPoolResults(roundId: string) {
 
         const playersRaw = round.players as any[];
         const allPoolParticipants = playersRaw.filter((rp: any) => {
-            const rawStatus = poolStatusMap.get(rp.player_id) || poolStatusMap.get(rp.playerId);
-            return rawStatus === true;
+            return poolStatusMap.get(rp.id) === true;
         });
 
-        const poolActivePlayers = allPoolParticipants.filter((rp: any) => rp.teeBox && rp.grossScore !== null);
+        const poolActivePlayers = allPoolParticipants.filter((rp: any) => rp.teeBox && (rp.grossScore !== null || rp.scores?.length > 0));
 
-        // Determine Flights
-        const entryFee = 5.00;
+        // Determine Pots (Nassau Style)
         const totalPot = allPoolParticipants.length * entryFee;
 
         const flights = [
@@ -69,12 +76,7 @@ export async function getPoolResults(roundId: string) {
         const par = round.course?.holes.reduce((sum: number, h: any) => sum + h.par, 0) || 72;
 
         const calc = (rp: any) => {
-            // Historical rounds don't have indexAtTime usually, fallback to current player index
-            const index = rp.player.handicapIndex;
-            const slope = rp.teeBox?.slope || 113;
-            const rating = rp.teeBox?.rating || par;
-
-            const courseHcp = Math.round((index * (slope / 113)) + (rating - par));
+            const courseHcp = rp.courseHandicap;
 
             let frontGross = rp.frontNine;
             let backGross = rp.backNine;
@@ -92,16 +94,17 @@ export async function getPoolResults(roundId: string) {
                 if (b > 0) backGross = b;
             }
 
-            frontGross = frontGross ?? Math.floor((rp.grossScore || 0) / 2);
-            backGross = backGross ?? Math.ceil((rp.grossScore || 0) / 2);
-            const totalGross = rp.grossScore;
+            const totalGross = rp.grossScore || (frontGross + backGross) || 0;
+
+            if (!frontGross && totalGross > 0) frontGross = Math.floor(totalGross / 2);
+            if (!backGross && totalGross > 0) backGross = Math.ceil(totalGross / 2);
 
             let frontHcp = 0;
             let backHcp = 0;
 
-            if (round.course?.holes) {
+            if (round.course?.holes && round.course.holes.length > 0) {
                 round.course.holes.forEach((h: any) => {
-                    const diff = h.difficulty || 18;
+                    const diff = h.difficulty || h.holeNumber || 18;
                     const baseStrokes = Math.floor(courseHcp / 18);
                     const remainder = courseHcp % 18;
                     const extraStroke = diff <= remainder ? 1 : 0;
@@ -119,9 +122,9 @@ export async function getPoolResults(roundId: string) {
             const backNet = backGross - backHcp;
             const totalNet = totalGross - courseHcp;
 
-            const grossHoleScores = rp.scores.map((s: any) => {
+            const grossHoleScores = (rp.scores || []).map((s: any) => {
                 const h = s.hole;
-                const diff = h.difficulty || 18;
+                const diff = h.difficulty || h.holeNumber || 18;
                 return {
                     holeNumber: h.holeNumber,
                     difficulty: diff,
@@ -130,8 +133,8 @@ export async function getPoolResults(roundId: string) {
             }).sort((a: any, b: any) => a.difficulty - b.difficulty);
 
             return {
-                id: rp.player.id,
-                name: rp.player.name,
+                id: rp.playerId || rp.id,
+                name: rp.isGuest ? (rp.guestName || 'Guest') : (rp.player?.name || 'Unknown'),
                 courseHcp,
                 frontHcp,
                 backHcp,
@@ -147,73 +150,36 @@ export async function getPoolResults(roundId: string) {
 
         const processedFlights = flights.map((f: any) => {
             const results = f.players.map(calc);
-            const potFront = f.pot * 0.40;
-            const potBack = f.pot * 0.40;
-            const potTotal = f.pot * 0.20;
+            // In a Nassau, the 'entryFee' is the bet PER segment (Front, Back, Total)
+            const potPerSegment = allPoolParticipants.length * entryFee;
 
             const getWinners = (category: 'frontNet' | 'backNet' | 'totalNet', pot: number) => {
                 if (results.length === 0 || pot <= 0) return [];
 
-                const sorted = [...results].sort((a: any, b: any) => {
-                    if (a[category] !== b[category]) return a[category] - b[category];
-                    const filter = (h: any) => {
-                        if (category === 'frontNet') return h.holeNumber <= 9;
-                        if (category === 'backNet') return h.holeNumber > 9;
-                        return true;
-                    };
-                    const aHoles = a.grossHoleScores.filter(filter);
-                    const bHoles = b.grossHoleScores.filter(filter);
-                    for (let i = 0; i < aHoles.length; i++) {
-                        if (aHoles[i].grossScore !== bHoles[i].grossScore) {
-                            return aHoles[i].grossScore - bHoles[i].grossScore;
-                        }
-                    }
-                    return 0;
-                });
+                const sorted = [...results].sort((a: any, b: any) => a[category] - b[category]);
+                const lowScore = sorted[0][category];
 
-                const percentages = [0.5, 0.3, 0.2];
-                const finalWinners: any[] = [];
-                let prizeIndex = 0;
-                let i = 0;
-                while (prizeIndex < percentages.length && i < sorted.length) {
-                    const currentScore = sorted[i][category];
-                    const currentGrossHoles = sorted[i].grossHoleScores;
-                    const absoluteTies = sorted.slice(i).filter((r: any) =>
-                        r[category] === currentScore &&
-                        JSON.stringify(r.grossHoleScores) === JSON.stringify(currentGrossHoles)
-                    );
-                    const count = absoluteTies.length;
-                    let combinedPercentage = 0;
-                    for (let j = 0; j < count; j++) {
-                        if (prizeIndex + j < percentages.length) {
-                            combinedPercentage += percentages[prizeIndex + j];
-                        }
-                    }
-                    const payoutPerPlayer = (pot * combinedPercentage) / count;
-                    if (payoutPerPlayer > 0) {
-                        absoluteTies.forEach((t: any) => {
-                            finalWinners.push({
-                                ...t,
-                                score: t[category],
-                                gross: category === 'frontNet' ? t.frontGross : category === 'backNet' ? t.backGross : t.totalGross,
-                                amount: payoutPerPlayer,
-                                position: prizeIndex + 1
-                            });
-                        });
-                    }
-                    prizeIndex += count;
-                    i += count;
-                }
-                return finalWinners;
+                const winners = results.filter((r: any) => r[category] === lowScore);
+                const grossPayout = pot / winners.length;
+
+                const netProfit = grossPayout - entryFee;
+
+                return winners.map((w: any) => ({
+                    ...w,
+                    score: w[category],
+                    gross: category === 'frontNet' ? w.frontGross : category === 'backNet' ? w.backGross : w.totalGross,
+                    amount: netProfit,
+                    position: 1
+                }));
             };
 
             return {
                 ...f,
                 results,
-                frontWinners: getWinners('frontNet', potFront),
-                backWinners: getWinners('backNet', potBack),
-                totalWinners: getWinners('totalNet', potTotal),
-                pots: { front: potFront, back: potBack, total: potTotal }
+                frontWinners: getWinners('frontNet', potPerSegment),
+                backWinners: getWinners('backNet', potPerSegment),
+                totalWinners: getWinners('totalNet', potPerSegment),
+                pots: { front: potPerSegment, back: potPerSegment, total: potPerSegment }
             };
         });
 
@@ -225,31 +191,32 @@ export async function getPoolResults(roundId: string) {
             });
         });
 
-        // Convert Map to Object or Array for serialization
         const winningsArray = Array.from(winningsMap.entries());
 
         return {
             success: true,
             data: {
                 allPoolParticipants: allPoolParticipants.map(p => ({
-                    player_id: p.player_id || p.playerId,
-                    player: { name: p.player.name }
+                    id: p.id,
+                    player_id: p.playerId || p.id,
+                    player: { name: p.isGuest ? (p.guestName || 'Guest') : (p.player?.name || 'Unknown') }
                 })),
                 poolActivePlayers: poolActivePlayers.map(p => ({
-                    player_id: p.player_id || p.playerId,
-                    player: { name: p.player.name }
+                    id: p.id,
+                    player_id: p.playerId || p.id,
+                    player: { name: p.isGuest ? (p.guestName || 'Guest') : (p.player?.name || 'Unknown') }
                 })),
                 round: {
                     id: round.id,
                     date: round.date,
                     name: round.name,
-                    isTournament: round.isTournament,
+                    isTournament: round.isTournament || false,
                     players: round.players.map((rp: any) => ({
                         id: rp.id,
-                        player_id: rp.playerId,
+                        player_id: rp.playerId || rp.id,
                         player: {
-                            id: rp.player.id,
-                            name: rp.player.name
+                            id: rp.player?.id || rp.id,
+                            name: rp.isGuest ? (rp.guestName || 'Guest') : (rp.player?.name || 'Unknown')
                         }
                     }))
                 },
@@ -261,8 +228,7 @@ export async function getPoolResults(roundId: string) {
         };
 
     } catch (e) {
-        console.error('Error in getPoolResults:', e);
-        return { success: false, error: 'Internal server error' };
+        console.error('Error in getPoolResults for roundId:', roundId, e);
+        return { success: false, error: 'Internal server error: ' + (e instanceof Error ? e.message : String(e)) };
     }
 }
-

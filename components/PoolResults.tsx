@@ -93,33 +93,37 @@ export default function PoolResults({
                                 <div className="space-y-4">
                                     <div className="text-center pb-2 border-b border-gray-900 mb-4">
                                         <h3 className="text-[14pt] font-black text-gray-900 uppercase tracking-widest">Front Nine</h3>
-                                        <div className="text-[14pt] font-black text-green-600 mt-0.5">${flight.pots.front.toFixed(2)}</div>
                                     </div>
                                     <div className="space-y-3">
-                                        {flight.frontWinners.map((w: any, i: number) => (
-                                            <div key={i} className="flex justify-between items-center group">
-                                                <div className="flex gap-3 items-center flex-1">
-                                                    <button
-                                                        onClick={() => handlePlayerClick(w.id)}
-                                                        className="flex flex-col text-left cursor-pointer"
-                                                    >
-                                                        <span className="text-[14pt] font-black text-blue-600 underline decoration-black decoration-2 leading-tight">
-                                                            {w.name.split(' ')[0]}
+                                        {[...flight.results].sort((a, b) => a.frontNet - b.frontNet).map((r: any, i: number) => {
+                                            const winner = flight.frontWinners.find((w: any) => w.id === r.id);
+                                            return (
+                                                <div key={i} className={`flex justify-between items-center group ${winner ? 'p-1 bg-green-50/50 rounded-lg -m-1' : ''}`}>
+                                                    <div className="flex gap-3 items-center flex-1">
+                                                        <button
+                                                            onClick={() => handlePlayerClick(r.id)}
+                                                            className="flex flex-col text-left cursor-pointer"
+                                                        >
+                                                            <span className={`text-[14pt] font-black underline decoration-black decoration-2 leading-tight ${winner ? 'text-green-700' : 'text-blue-600'}`}>
+                                                                {r.name.split(' ')[0]}
+                                                            </span>
+                                                            <span className="text-[14pt] text-gray-600 leading-none">
+                                                                {r.name.split(' ').slice(1).join(' ')}
+                                                            </span>
+                                                        </button>
+                                                        {isLoadingScorecard === r.id && <LoaderIcon className="w-4 h-4 animate-spin text-gray-400" />}
+                                                    </div>
+                                                    <div className="text-right flex items-center gap-0 w-[200px] justify-end">
+                                                        <span className="text-[14pt] text-gray-800 font-medium w-[40px] text-center" title="Gross">{r.frontGross}</span>
+                                                        <span className="text-[14pt] text-gray-400 font-medium w-[40px] text-center" title="Hcp">{r.frontHcp}</span>
+                                                        <span className={`text-[14pt] font-black w-[50px] text-center ${winner ? 'text-black' : 'text-gray-400'}`} title="Net">({r.frontNet.toFixed(0)})</span>
+                                                        <span className="text-[14pt] font-black text-green-600 w-[70px] text-right">
+                                                            {winner ? `$${winner.amount.toFixed(2)}` : ''}
                                                         </span>
-                                                        <span className="text-[14pt] text-gray-600 leading-none">
-                                                            {w.name.split(' ').slice(1).join(' ')}
-                                                        </span>
-                                                    </button>
-                                                    {isLoadingScorecard === w.id && <LoaderIcon className="w-4 h-4 animate-spin text-gray-400" />}
+                                                    </div>
                                                 </div>
-                                                <div className="text-right flex items-center gap-0 w-[200px] justify-end">
-                                                    <span className="text-[14pt] text-gray-800 font-medium w-[30px] text-center" title="Gross">{w.gross}</span>
-                                                    <span className="text-[14pt] text-gray-400 font-medium w-[30px] text-center" title="Half Hcp">{w.frontHcp}</span>
-                                                    <span className="text-[14pt] font-black text-black w-[50px] text-center" title="Net">({w.score.toFixed(0)})</span>
-                                                    <span className="text-[14pt] font-black text-green-600 w-[70px] text-right">${w.amount.toFixed(2)}</span>
-                                                </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </div>
 
@@ -127,34 +131,37 @@ export default function PoolResults({
                                 <div className="space-y-4">
                                     <div className="text-center pb-2 border-b border-gray-900 mb-4">
                                         <h3 className="text-[14pt] font-black text-gray-900 uppercase tracking-widest">Back Nine</h3>
-                                        <div className="text-[14pt] font-black text-green-600 mt-0.5">${flight.pots.back.toFixed(2)}</div>
                                     </div>
                                     <div className="space-y-3">
-                                        {flight.backWinners.map((w: any, i: number) => (
-                                            <div key={i} className="flex justify-between items-center group">
-                                                <div className="flex gap-3 items-center flex-1">
-                                                    <button
-                                                        onClick={() => handlePlayerClick(w.id)}
-                                                        className="flex flex-col text-left cursor-pointer"
-                                                    >
-                                                        <span className="text-[14pt] font-black text-blue-600 underline decoration-black decoration-2 leading-tight">
-                                                            {w.name.split(' ')[0]}
+                                        {[...flight.results].sort((a, b) => a.backNet - b.backNet).map((r: any, i: number) => {
+                                            const winner = flight.backWinners.find((w: any) => w.id === r.id);
+                                            return (
+                                                <div key={i} className={`flex justify-between items-center group ${winner ? 'p-1 bg-green-50/50 rounded-lg -m-1' : ''}`}>
+                                                    <div className="flex gap-3 items-center flex-1">
+                                                        <button
+                                                            onClick={() => handlePlayerClick(r.id)}
+                                                            className="flex flex-col text-left cursor-pointer"
+                                                        >
+                                                            <span className={`text-[14pt] font-black underline decoration-black decoration-2 leading-tight ${winner ? 'text-green-700' : 'text-blue-600'}`}>
+                                                                {r.name.split(' ')[0]}
+                                                            </span>
+                                                            <span className="text-[14pt] text-gray-600 leading-none">
+                                                                {r.name.split(' ').slice(1).join(' ')}
+                                                            </span>
+                                                        </button>
+                                                        {isLoadingScorecard === r.id && <LoaderIcon className="w-4 h-4 animate-spin text-gray-400" />}
+                                                    </div>
+                                                    <div className="text-right flex items-center gap-0 w-[200px] justify-end">
+                                                        <span className="text-[14pt] text-gray-800 font-medium w-[40px] text-center" title="Gross">{r.backGross}</span>
+                                                        <span className="text-[14pt] text-gray-400 font-medium w-[40px] text-center" title="Hcp">{r.backHcp}</span>
+                                                        <span className={`text-[14pt] font-black w-[50px] text-center ${winner ? 'text-black' : 'text-gray-400'}`} title="Net">({r.backNet.toFixed(0)})</span>
+                                                        <span className="text-[14pt] font-black text-green-600 w-[70px] text-right">
+                                                            {winner ? `$${winner.amount.toFixed(2)}` : ''}
                                                         </span>
-                                                        <span className="text-[14pt] text-gray-600 leading-none">
-                                                            {w.name.split(' ').slice(1).join(' ')}
-                                                        </span>
-                                                    </button>
-                                                    {isLoadingScorecard === w.id && <LoaderIcon className="w-4 h-4 animate-spin text-gray-400" />}
-
+                                                    </div>
                                                 </div>
-                                                <div className="text-right flex items-center gap-0 w-[200px] justify-end">
-                                                    <span className="text-[14pt] text-gray-800 font-medium w-[30px] text-center" title="Gross">{w.gross}</span>
-                                                    <span className="text-[14pt] text-gray-400 font-medium w-[30px] text-center" title="Half Hcp">{w.backHcp}</span>
-                                                    <span className="text-[14pt] font-black text-black w-[50px] text-center" title="Net">({w.score.toFixed(0)})</span>
-                                                    <span className="text-[14pt] font-black text-green-600 w-[70px] text-right">${w.amount.toFixed(2)}</span>
-                                                </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             </div>
@@ -166,33 +173,37 @@ export default function PoolResults({
                             <div className="space-y-6">
                                 <div className="text-center pb-2 border-b border-gray-900 max-w-sm mx-auto mb-6">
                                     <h3 className="text-[14pt] font-black text-gray-900 uppercase tracking-widest leading-none">Total</h3>
-                                    <div className="text-[14pt] font-black text-green-600 mt-1">${flight.pots.total.toFixed(2)}</div>
                                 </div>
                                 <div className="space-y-4 max-w-2xl mx-auto">
-                                    {flight.totalWinners.map((w: any, i: number) => (
-                                        <div key={i} className="flex justify-between items-center group">
-                                            <div className="flex gap-4 items-center flex-1">
-                                                <button
-                                                    onClick={() => handlePlayerClick(w.id)}
-                                                    className="flex flex-col text-left cursor-pointer"
-                                                >
-                                                    <span className="text-[14pt] font-black text-blue-600 underline decoration-black decoration-2 leading-tight">
-                                                        {w.name.split(' ')[0]}
+                                    {[...flight.results].sort((a, b) => a.totalNet - b.totalNet).map((r: any, i: number) => {
+                                        const winner = flight.totalWinners.find((w: any) => w.id === r.id);
+                                        return (
+                                            <div key={i} className={`flex justify-between items-center group ${winner ? 'p-1 bg-green-50/50 rounded-lg -m-1' : ''}`}>
+                                                <div className="flex gap-4 items-center flex-1">
+                                                    <button
+                                                        onClick={() => handlePlayerClick(r.id)}
+                                                        className="flex flex-col text-left cursor-pointer"
+                                                    >
+                                                        <span className={`text-[14pt] font-black underline decoration-black decoration-2 leading-tight ${winner ? 'text-green-700' : 'text-blue-600'}`}>
+                                                            {r.name.split(' ')[0]}
+                                                        </span>
+                                                        <span className="text-[14pt] text-gray-600 leading-none">
+                                                            {r.name.split(' ').slice(1).join(' ')}
+                                                        </span>
+                                                    </button>
+                                                    {isLoadingScorecard === r.id && <LoaderIcon className="w-4 h-4 animate-spin text-gray-400" />}
+                                                </div>
+                                                <div className="text-right flex items-center gap-0 w-[240px] justify-end">
+                                                    <span className="text-[14pt] text-gray-800 font-medium w-[40px] text-center" title="Gross">{r.totalGross}</span>
+                                                    <span className="text-[14pt] text-gray-400 font-medium w-[40px] text-center" title="Hcp">{r.courseHcp}</span>
+                                                    <span className={`text-[14pt] font-black w-[60px] text-center ${winner ? 'text-black' : 'text-gray-400'}`} title="Total">({r.totalNet.toFixed(0)})</span>
+                                                    <span className="text-[14pt] font-black text-green-600 w-[100px] text-right">
+                                                        {winner ? `$${winner.amount.toFixed(2)}` : ''}
                                                     </span>
-                                                    <span className="text-[14pt] text-gray-600 leading-none">
-                                                        {w.name.split(' ').slice(1).join(' ')}
-                                                    </span>
-                                                </button>
-                                                {isLoadingScorecard === w.id && <LoaderIcon className="w-4 h-4 animate-spin text-gray-400" />}
+                                                </div>
                                             </div>
-                                            <div className="text-right flex items-center gap-0 w-[240px] justify-end">
-                                                <span className="text-[14pt] text-gray-800 font-medium w-[40px] text-center" title="Gross">{w.gross}</span>
-                                                <span className="text-[14pt] text-gray-400 font-medium w-[40px] text-center" title="Net">{w.courseHcp}</span>
-                                                <span className="text-[14pt] font-black text-black w-[60px] text-center" title="Total">({w.score.toFixed(0)})</span>
-                                                <span className="text-[14pt] font-black text-green-600 w-[100px] text-right">${w.amount.toFixed(2)}</span>
-                                            </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>

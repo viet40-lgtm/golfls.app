@@ -13,7 +13,7 @@ import ConfirmModal from '@/components/ConfirmModal';
 import AddToClubModal from '@/components/AddToClubModal';
 import { PoolModal } from '@/components/PoolModal';
 
-import { createLiveRound, addPlayerToLiveRound, saveLiveScore, deleteLiveRound, addGuestToLiveRound, updateGuestInLiveRound, deleteGuestFromLiveRound } from '@/app/actions/create-live-round';
+import { createLiveRound, addPlayerToLiveRound, saveLiveScore, deleteLiveRound, addGuestToLiveRound, updateGuestInLiveRound, deleteGuestFromLiveRound, updatePlayerScorers } from '@/app/actions/create-live-round';
 import { copyLiveToClub } from '@/app/actions/copy-live-to-club';
 import { generateScorecardHtml, generateClipboardHtml } from '@/app/lib/scorecard-helper';
 import { LiveLeaderboardCard } from './LiveLeaderboardCard';
@@ -37,9 +37,11 @@ interface Player {
         tee_box_name: string | null;
         course_hcp: number | null;
     } | null;
+    player_id?: string | null;
     thru?: string | number;
     totalGross?: number;
     totalNet?: number;
+    scorerId?: string | null;
 }
 
 interface Hole {
@@ -137,7 +139,14 @@ export default function LiveScoreClient({
     const [unsavedToDbHoles, setUnsavedToDbHoles] = useState<Map<number, Array<{ playerId: string; strokes: number }>>>(new Map());
     const [summaryEditCell, setSummaryEditCell] = useState<{ playerId: string, holeNumber: number } | null>(null);
     const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-    const [isGPSEnabled, setIsGPSEnabled] = useState(false);
+    const [isGPSEnabled, setIsGPSEnabled] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const urlGps = new URLSearchParams(window.location.search).get('gps');
+            if (urlGps !== null) return urlGps === 'true';
+            return Cookies.get('gps_enabled') === 'true';
+        }
+        return false;
+    });
     const [confirmConfig, setConfirmConfig] = useState<{
         isOpen: boolean;
         title: string;
@@ -153,27 +162,84 @@ export default function LiveScoreClient({
 
 
 
-    // Restore selected players from localStorage on mount
+    // Flag to prevent auto-select from overwriting restored data
+    const hasAttemptedRestore = useRef(false);
+
+    // Consolidated Selection Initialization
     useEffect(() => {
-        if (!liveRoundId) return;
+        if (!liveRoundId || typeof window === 'undefined') return;
 
-        const savedPlayerIds = localStorage.getItem(`live_scoring_my_group_${liveRoundId}`);
-        if (savedPlayerIds) {
-            try {
-                const playerIds: string[] = JSON.parse(savedPlayerIds);
-                const allAvailable = [...allPlayers, ...guestPlayers];
-                const restoredPlayers = playerIds
-                    .map(id => allAvailable.find(p => p.id === id))
-                    .filter((p): p is Player => p !== undefined);
+        const performInitialization = () => {
+            const roundSpecificKey = `live_scoring_my_group_${liveRoundId}`;
+            const saved = localStorage.getItem(roundSpecificKey);
 
-                if (restoredPlayers.length > 0) {
-                    setSelectedPlayers(restoredPlayers);
+            // 1. Try Restore from LocalStorage
+            if (saved) {
+                try {
+                    const savedIds = JSON.parse(saved);
+                    const allAvailablePlayers = [...allPlayers, ...guestPlayers];
+                    const restored = savedIds.map((id: string) =>
+                        allAvailablePlayers.find((p: Player) => p.id === id)
+                    ).filter((p: Player | undefined): p is Player => p !== undefined);
+
+                    if (restored.length > 0) {
+                        console.log("Group selection restored from LS:", restored.map(p => p.name));
+                        setSelectedPlayers(restored);
+                        hasAttemptedRestore.current = true;
+                        return;
+                    }
+                } catch (e) {
+                    console.error("Failed to parse saved group", e);
                 }
-            } catch (e) {
-                console.error('Failed to restore selected players from localStorage:', e);
             }
-        }
-    }, [liveRoundId, allPlayers, guestPlayers]);
+
+            // 2. Admin Fallback (Auto-select ALL in round)
+            if (isAdmin && initialRound?.players) {
+                const allRoundPlayers: Player[] = [];
+                initialRound.players.forEach((p: any) => {
+                    const pid = p.is_guest ? p.id : p.player?.id;
+                    if (pid) {
+                        allRoundPlayers.push({
+                            id: pid,
+                            name: p.is_guest ? (p.guest_name || 'Guest') : p.player.name,
+                            index: p.is_guest ? p.index_at_time : p.player.index,
+                            preferred_tee_box: p.is_guest ? null : p.player.preferred_tee_box,
+                            isGuest: !!p.is_guest,
+                            liveRoundData: { tee_box_name: p.tee_box_name, course_hcp: p.course_handicap }
+                        });
+                    }
+                });
+                if (allRoundPlayers.length > 0) {
+                    console.log("Admin fallback: Selecting everyone in round");
+                    setSelectedPlayers(allRoundPlayers);
+                    hasAttemptedRestore.current = true;
+                    return;
+                }
+            }
+
+            // 3. Auto-select Current User (Last Resort)
+            if (currentUserId && initialRound?.players && !hasAttemptedRestore.current) {
+                const me = initialRound.players.find((p: any) =>
+                    (p.player && p.player.id === currentUserId) || (p.is_guest && p.id === currentUserId)
+                );
+                if (me) {
+                    const meAsPlayer: Player = {
+                        id: me.is_guest ? me.id : me.player.id,
+                        name: me.is_guest ? (me.guest_name || 'Guest') : me.player.name,
+                        index: me.is_guest ? me.index_at_time : me.player.index,
+                        preferred_tee_box: me.is_guest ? null : me.player.preferred_tee_box,
+                        isGuest: !!me.is_guest,
+                        liveRoundData: { tee_box_name: me.tee_box_name, course_hcp: me.course_handicap }
+                    };
+                    console.log("Initial load: Auto-selecting current user");
+                    setSelectedPlayers([meAsPlayer]);
+                }
+            }
+            hasAttemptedRestore.current = true;
+        };
+
+        performInitialization();
+    }, [liveRoundId, allPlayers, guestPlayers, initialRound, currentUserId, isAdmin]);
 
 
 
@@ -324,108 +390,33 @@ export default function LiveScoreClient({
         return Math.round(d * 1.09361); // convert to yards
     };
 
-    // Load saved group from localStorage after mount to avoid hydration mismatch
+    // Load initialization and guest players
     useEffect(() => {
-        try {
-            const currentId = initialRound?.id;
-            if (!currentId) return;
+        if (!initialRound?.id) return;
+        localStorage.setItem('live_scoring_last_round_id', initialRound.id);
 
-            localStorage.setItem('live_scoring_last_round_id', currentId);
-
-            // Load guest players from database
-            const guestsFromDb: Player[] = [];
-            if (initialRound?.players) {
-                initialRound.players.forEach((p: any) => {
-                    if (p.is_guest) {
-                        guestsFromDb.push({
-                            id: p.id, // Use LiveRoundPlayer ID
-                            name: p.guest_name || 'Guest',
-                            index: p.index_at_time,
-                            preferred_tee_box: null,
-                            isGuest: true,
-                            liveRoundData: {
-                                tee_box_name: p.tee_box_name,
-                                course_hcp: p.course_handicap
-                            }
-                        });
-                    }
-                });
-            }
-            setGuestPlayers(guestsFromDb);
-
-            // Restore selected players (both regular and guests from database) - Namespaced by round ID
-            const roundSpecificKey = `live_scoring_my_group_${currentId}`;
-            const saved = localStorage.getItem(roundSpecificKey);
-            if (saved) {
-                const savedIds = JSON.parse(saved);
-                // Combine allPlayers with guest players from database
-                const allAvailablePlayers = [...allPlayers, ...guestsFromDb];
-                const restored = savedIds.map((id: string) =>
-                    allAvailablePlayers.find((p: Player) => p.id === id)
-                ).filter((p: Player | undefined): p is Player => p !== undefined);
-
-                if (restored.length > 0) {
-                    setSelectedPlayers(restored);
-                } else if (isAdmin && initialRound?.players) {
-                    // Admin Fallback: If no local selection, select EVERYONE in the round.
-                    const allRoundPlayers: Player[] = [];
-                    initialRound.players.forEach((p: any) => {
-                        if (p.is_guest) {
-                            allRoundPlayers.push({
-                                id: p.id,
-                                name: p.guest_name || 'Guest',
-                                index: p.index_at_time,
-                                preferred_tee_box: null,
-                                isGuest: true,
-                                liveRoundData: { tee_box_name: p.tee_box_name, course_hcp: p.course_handicap }
-                            });
-                        } else if (p.player) {
-                            allRoundPlayers.push({
-                                id: p.player.id,
-                                name: p.player.name,
-                                index: p.player.index,
-                                preferred_tee_box: p.player.preferred_tee_box,
-                                liveRoundData: { tee_box_name: p.tee_box_name, course_hcp: p.course_handicap }
-                            });
+        // Load guest players from database
+        const guestsFromDb: Player[] = [];
+        if (initialRound?.players) {
+            initialRound.players.forEach((p: any) => {
+                if (p.is_guest) {
+                    guestsFromDb.push({
+                        id: p.id, // Use LiveRoundPlayer ID
+                        name: p.guest_name || 'Guest',
+                        index: p.index_at_time,
+                        preferred_tee_box: null,
+                        isGuest: true,
+                        scorerId: p.scorerId,
+                        liveRoundData: {
+                            tee_box_name: p.tee_box_name,
+                            course_hcp: p.course_handicap
                         }
                     });
-                    setSelectedPlayers(allRoundPlayers);
-                } else {
-                    setSelectedPlayers([]); // Clear if no valid players found
                 }
-            } else if (isAdmin && initialRound?.players) {
-                // Admin Fallback: If no saved data, select EVERYONE in the round.
-                const allRoundPlayers: Player[] = [];
-                initialRound.players.forEach((p: any) => {
-                    if (p.is_guest) {
-                        allRoundPlayers.push({
-                            id: p.id,
-                            name: p.guest_name || 'Guest',
-                            index: p.index_at_time,
-                            preferred_tee_box: null,
-                            isGuest: true,
-                            liveRoundData: { tee_box_name: p.tee_box_name, course_hcp: p.course_handicap }
-                        });
-                    } else if (p.player) {
-                        allRoundPlayers.push({
-                            id: p.player.id,
-                            name: p.player.name,
-                            index: p.player.index,
-                            preferred_tee_box: p.player.preferred_tee_box,
-                            liveRoundData: { tee_box_name: p.tee_box_name, course_hcp: p.course_handicap }
-                        });
-                    }
-                });
-                setSelectedPlayers(allRoundPlayers);
-            } else {
-                setSelectedPlayers([]); // No saved data, start empty
-            }
-        } catch (e) {
-            console.error("Failed to load saved players", e);
-            setSelectedPlayers([]); // On error, start empty
-            setGuestPlayers([]); // On error, clear guests
+            });
         }
-    }, [initialRound, isAdmin]);
+        setGuestPlayers(guestsFromDb);
+    }, [initialRound?.id, initialRound?.players]);
 
     const [scores, setScores] = useState<Map<string, Map<number, number>>>(() => {
         const initialMap = new Map();
@@ -449,41 +440,7 @@ export default function LiveScoreClient({
         return initialMap;
     });
 
-    // Auto-select current user if no selection exists (Backup for new rounds/first load)
-    useEffect(() => {
-        if (!initialRound?.players || selectedPlayers.length > 0 || !currentUserId) return;
-
-        // Try to find myself in the round
-        const myEntry = initialRound.players.find((p: any) =>
-            (p.player && p.player.id === currentUserId) ||
-            (p.is_guest && p.id === currentUserId)
-        );
-
-        if (myEntry) {
-            // Construct Player object
-            const isGuest = myEntry.is_guest;
-            if (!isGuest && !myEntry.player) return;
-
-            const playerObj: Player = {
-                id: isGuest ? myEntry.id : myEntry.player.id,
-                name: isGuest ? (myEntry.guest_name || 'Guest') : myEntry.player.name,
-                index: isGuest ? myEntry.index_at_time : myEntry.player.index,
-                preferred_tee_box: isGuest ? null : myEntry.player.preferred_tee_box,
-                isGuest: !!isGuest,
-                liveRoundData: {
-                    tee_box_name: myEntry.tee_box_name,
-                    course_hcp: myEntry.course_handicap
-                }
-            };
-
-            setSelectedPlayers([playerObj]);
-
-            // Also save to LS to persist future reloads
-            if (initialRound.id) {
-                localStorage.setItem(`live_scoring_my_group_${initialRound.id}`, JSON.stringify([playerObj.id]));
-            }
-        }
-    }, [initialRound, currentUserId, selectedPlayers.length]);
+    // Redundant auto-select removed ( consolidated above )
 
 
 
@@ -699,12 +656,19 @@ export default function LiveScoreClient({
         }
 
         const currentHole = searchParams.get('hole');
-        if (currentHole === activeHole.toString()) return;
+        const currentGps = searchParams.get('gps');
+        const gpsStr = isGPSEnabled.toString();
+
+        if (currentHole === activeHole.toString() && currentGps === gpsStr) return;
 
         const params = new URLSearchParams(searchParams.toString());
         params.set('hole', activeHole.toString());
+        params.set('gps', gpsStr);
         router.replace(`?${params.toString()}`, { scroll: false });
-    }, [activeHole, liveRoundId, searchParams, router]);
+
+        // Also sync to cookie for initial load
+        Cookies.set('gps_enabled', gpsStr, { expires: 365, path: '/' });
+    }, [activeHole, isGPSEnabled, liveRoundId, searchParams, router]);
 
 
     // Cleanup state when moving to a new hole
@@ -916,15 +880,31 @@ export default function LiveScoreClient({
         }
     };
 
-    const handleAddPlayers = async (newSelectedPlayerIds: string[]) => {
-        const allAvailable = [...allPlayers, ...guestPlayers];
-        const combinedSelection = newSelectedPlayerIds.map(id =>
-            allAvailable.find(p => p.id === id)
-        ).filter((p): p is Player => p !== undefined);
+    const handleAddPlayers = async (scoringList: any[], inRoundList: any[]) => {
+        const scoringMapped = scoringList.map(p => ({
+            id: p.id,
+            name: p.name,
+            index: p.index ?? 0,
+            preferred_tee_box: p.preferred_tee_box ?? null,
+            phone: p.phone,
+            player_id: p.player_id,
+            isGuest: p.isGuest || p.id.startsWith('guest-')
+        }));
 
-        setSelectedPlayers(combinedSelection);
+        const inRoundMapped = inRoundList.map(p => ({
+            id: p.id,
+            name: p.name,
+            index: p.index ?? 0,
+            preferred_tee_box: p.preferred_tee_box ?? null,
+            phone: p.phone,
+            player_id: p.player_id,
+            isGuest: p.isGuest || p.id.startsWith('guest-')
+        }));
 
-        const newSelectedPlayers = combinedSelection.filter(p => !p.isGuest && !p.id.startsWith('guest-'));
+        const inRoundIds = new Set(inRoundMapped.map(p => p.id));
+
+        // 1. Update LOCAL Scoring selection immediately
+        setSelectedPlayers(scoringMapped);
 
         // Check if a round is selected
         if (!liveRoundId) {
@@ -932,22 +912,14 @@ export default function LiveScoreClient({
             return;
         }
 
-        // 2. Add New Players to DB (or Claim existing ones)
-        for (const player of newSelectedPlayers) {
-            // Check if player is already in the Live Round (on server)
+        // 2. Add New Players to Round (on server)
+        const regularInRound = inRoundMapped.filter(p => !p.isGuest);
+        for (const player of regularInRound) {
             const existingLrPlayer = initialRound?.players?.find((p: any) => p.player?.id === player.id);
-
-            // We need to call the API if:
-            // 1. Player is NOT in the round (Create)
-            // 2. Player IS in the round, but scored by someone else (Claim) - unless we are Admin
-            // Admin doesn't need to "claim" to score, but non-admins do.
-
-            const needsToCreate = !existingLrPlayer;
-
-            if (needsToCreate) {
+            if (!existingLrPlayer) {
                 const teeBox = getPlayerTee(player);
                 if (liveRoundId && teeBox?.id) {
-                    console.log("Creating player in round:", player.name);
+                    console.log("Adding player to round leaderboard:", player.name);
                     await addPlayerToLiveRound({
                         liveRoundId: liveRoundId,
                         playerId: player.id,
@@ -957,63 +929,55 @@ export default function LiveScoreClient({
             }
         }
 
-        // 3. Handle Removals (Explicit Drop)
-        // Only remove players that were IN my previous selection and are NOT in the new selection.
-        // Additionally, only remove if this device added them (scorer_id matches) or if admin
-        const playersDropped = selectedPlayers.filter(p => !newSelectedPlayerIds.includes(p.id));
-
+        // 3. Remove Players dropped from BOTH (Explicit Drop)
         if (liveRoundId && initialRound?.players) {
             const vetoedPlayers: Player[] = [];
-            for (const player of playersDropped) {
-                // Find the LiveRoundPlayer record
-                const lrPlayer = initialRound.players.find((lr: any) =>
-                    (lr.is_guest && lr.id === player.id) || (!lr.is_guest && lr.player?.id === player.id)
-                );
 
-                if (lrPlayer) {
-                    // Relaxed removal: Any device that has the player selected can remove them
-                    // This satisfies the user request: "any device that checked players can uncheck players and remove all trace"
-
-                    const hasScores = lrPlayer.scores && lrPlayer.scores.length > 0;
-                    console.log("Removing player from round:", lrPlayer.id, hasScores ? "(has scores)" : "(no scores)");
+            // Check all players currently in the round on server
+            for (const lrPlayer of initialRound.players) {
+                const pid = lrPlayer.is_guest ? lrPlayer.id : lrPlayer.player?.id;
+                if (pid && !inRoundIds.has(pid)) {
+                    // Player was in the round but is now deselected for both Leaderboard and Scoring
+                    console.log("Removing player from round entirely:", pid);
 
                     try {
                         const removeResult = await removePlayerFromLiveRound(lrPlayer.id);
-                        if (removeResult.success) {
-                            console.log("âœ“ Successfully removed player:", lrPlayer.id);
-                        } else {
-                            // Check for "Record to delete does not exist" (Prisma P2025) which counts as success
+                        if (!removeResult.success) {
                             if (removeResult.error && (removeResult.error.includes('does not exist') || removeResult.error.includes('Record to delete'))) {
-                                console.log("âœ“ Player already removed (concurrency):", lrPlayer.id);
+                                console.log("✓ Player already removed (concurrency):", lrPlayer.id);
                             } else {
-                                console.error("âœ— Failed to remove player:", lrPlayer.id, removeResult.error);
+                                console.error("— Failed to remove player:", lrPlayer.id, removeResult.error);
                                 showAlert('Error', `Failed to remove player: ${removeResult.error || 'Unknown error'}`);
-                                vetoedPlayers.push(player);
+                                // If they are a regular player, we might want to restore them
+                                if (!lrPlayer.is_guest && lrPlayer.player) {
+                                    vetoedPlayers.push({
+                                        id: lrPlayer.player.id,
+                                        name: lrPlayer.player.name,
+                                        index: lrPlayer.player.index,
+                                        preferred_tee_box: lrPlayer.player.preferred_tee_box
+                                    });
+                                }
                             }
                         }
                     } catch (error) {
-                        console.error("âœ— Error removing player:", error);
-                        // Only alert if it's not a "not found" error
+                        console.error("— Error removing player:", error);
                         const errorMsg = String(error);
                         if (!errorMsg.includes('does not exist') && !errorMsg.includes('Record to delete')) {
                             showAlert('Error', `Error removing player: ${error}`);
-                            vetoedPlayers.push(player);
                         }
                     }
                 }
             }
 
-            // Restore any vetoed players to the selection state
-            if (vetoedPlayers.length > 0) {
-                setSelectedPlayers(prev => {
-                    // Avoid duplicates
-                    const existingIds = new Set(prev.map(p => p.id));
-                    const uniqueVetoed = vetoedPlayers.filter(p => !existingIds.has(p.id));
-                    return [...prev, ...uniqueVetoed];
+            // 4. Sync Scorer assignments to DB
+            if (currentUserId) {
+                await updatePlayerScorers({
+                    liveRoundId: liveRoundId,
+                    scorerId: currentUserId,
+                    playerIds: scoringMapped.map(p => p.id)
                 });
             }
 
-            // Refresh to update server-side round state
             router.refresh();
         }
     };
@@ -1102,7 +1066,7 @@ export default function LiveScoreClient({
     // 1. Initial Load (via useState initializer at top)
     // 2. Auto-save on change
     useEffect(() => {
-        if (typeof window !== 'undefined' && liveRoundId) { // Removed selectedPlayers.length > 0 check to allow clearing
+        if (typeof window !== 'undefined' && liveRoundId) {
             localStorage.setItem(`live_scoring_my_group_${liveRoundId}`, JSON.stringify(selectedPlayers.map(p => p.id)));
         }
     }, [selectedPlayers, liveRoundId]);
@@ -1192,33 +1156,7 @@ export default function LiveScoreClient({
     useEffect(() => {
         // No-op for removed device locking logic
     }, []);
-    // AUTO-SELECT CURRENT USER:
-    // If no players are selected for scoring locally, but the current user is a participant 
-    // in the round, auto-select them.
-    // This ensures a "Ready to Score" state immediately after creating or joining a round.
-    useEffect(() => {
-        if (!liveRoundId || !currentUserId || selectedPlayers.length > 0 || isAdmin || !initialRound?.players) return;
-
-        // Check if current user is in the round participants
-        const meOnServer = initialRound.players.find((p: any) => p.player?.id === currentUserId);
-
-        if (meOnServer) {
-            const meAsPlayer: Player = {
-                id: meOnServer.player.id,
-                name: meOnServer.player.name,
-                index: meOnServer.player.index,
-                preferred_tee_box: meOnServer.player.preferred_tee_box,
-                liveRoundPlayerId: meOnServer.id,
-                liveRoundData: {
-                    tee_box_name: meOnServer.tee_box_name,
-                    course_hcp: meOnServer.course_handicap
-                }
-            };
-
-            console.log("Auto-selecting current user for scoring:", meAsPlayer.name);
-            setSelectedPlayers([meAsPlayer]);
-        }
-    }, [initialRound, currentUserId, selectedPlayers.length, isAdmin, liveRoundId]);
+    // Redundant auto-select removed ( consolidated above )
 
     // Ensure all relevant sections are visible when switching rounds or starting new ones
     useEffect(() => {
@@ -1241,6 +1179,7 @@ export default function LiveScoreClient({
                         preferred_tee_box: null,
                         isGuest: true,
                         liveRoundPlayerId: p.id, // For guests, the ID is already the LiveRoundPlayer ID
+                        scorerId: p.scorerId,
                         liveRoundData: {
                             tee_box_name: p.tee_box_name,
                             course_hcp: p.course_handicap
@@ -1254,6 +1193,7 @@ export default function LiveScoreClient({
                         index: p.player.index,
                         preferred_tee_box: p.player.preferred_tee_box,
                         liveRoundPlayerId: p.id, // Store the LiveRoundPlayer ID
+                        scorerId: p.scorerId,
                         liveRoundData: {
                             tee_box_name: p.tee_box_name,
                             course_hcp: p.course_handicap
@@ -1345,7 +1285,11 @@ export default function LiveScoreClient({
 
             return { ...player, totalGross, front9, back9, strokesReceivedSoFar, courseHcp, totalNet, thru, toPar, parTotal, grossHoleScores };
         }).sort((a, b) => {
-            // Primary Sort: Total Net (Ascending)
+            // 0. Primary Sort: "Has Scorer" vs "No Scorer" (Show "No Score Keeper" at bottom)
+            if (a.scorerId && !b.scorerId) return -1;
+            if (!a.scorerId && b.scorerId) return 1;
+
+            // 1. Secondary Sort: Total Net (Ascending)
             if (a.totalNet !== b.totalNet) return a.totalNet - b.totalNet;
 
             // Tie Breaker: Compare Gross Score on hardest holes (Difficulty 1, 2, 3...)
@@ -2175,14 +2119,22 @@ export default function LiveScoreClient({
                                                         </div>
                                                         <div className="text-zinc-500 text-xl font-black uppercase tracking-widest">{splitName(player.name).last}</div>
                                                     </div>
-                                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <div className="flex items-center gap-1">
                                                         <button
                                                             onClick={() => movePlayerOrder(index, 'up')}
                                                             disabled={index === 0}
-                                                            className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md active:scale-95 transition-all ${index === 0 ? 'bg-zinc-50 text-zinc-300 cursor-not-allowed' : 'bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-50'}`}
+                                                            className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md active:scale-95 transition-all ${index === 0 ? 'bg-zinc-50 text-zinc-200 cursor-not-allowed' : 'bg-white border-2 border-zinc-900 text-black hover:bg-zinc-50'}`}
                                                             title="Move Up"
                                                         >
-                                                            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor"><path d="M7 14l5-5 5 5z" /></svg>
+                                                            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="4"><path d="M18 15l-6-6-6 6" /></svg>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => movePlayerOrder(index, 'down')}
+                                                            disabled={index === effectiveScoringPlayers.length - 1}
+                                                            className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md active:scale-95 transition-all ${index === effectiveScoringPlayers.length - 1 ? 'bg-zinc-50 text-zinc-200 cursor-not-allowed' : 'bg-white border-2 border-zinc-900 text-black hover:bg-zinc-50'}`}
+                                                            title="Move Down"
+                                                        >
+                                                            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="4"><path d="M6 9l6 6 6-6" /></svg>
                                                         </button>
                                                         {(player.isGuest || player.id.startsWith('guest-')) && (
                                                             <button
@@ -2195,7 +2147,7 @@ export default function LiveScoreClient({
                                                                     });
                                                                     setIsGuestModalOpen(true);
                                                                 }}
-                                                                className="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center text-white text-2xl hover:bg-blue-600 transition-all shadow-lg"
+                                                                className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-white text-xl hover:bg-blue-600 transition-all shadow-lg border-2 border-black"
                                                                 title="Edit Guest"
                                                             >
                                                                 ✏️
@@ -2419,7 +2371,7 @@ export default function LiveScoreClient({
                                         onClick={() => setIsPoolModalOpen(true)}
                                         className="px-1 h-12 rounded-xl text-lg font-black uppercase tracking-widest transition-all bg-black text-white border border-black hover:bg-gray-800 shadow-md active:scale-95"
                                     >
-                                        BFT
+                                        FBT
                                     </button>
                                 )}
 

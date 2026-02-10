@@ -1,7 +1,8 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPlayer } from '@/app/actions';
+import { getAllPlayers } from '@/app/actions/get-all-players';
 
 interface Player {
     id: string;
@@ -10,6 +11,7 @@ interface Player {
     preferred_tee_box?: string | null;
     phone?: string | null;
     player_id?: string | null;
+    scorerId?: string | null;
 }
 
 interface TeeBox {
@@ -35,7 +37,7 @@ export function LivePlayerSelectionModal({
     allPlayers: Player[];
     selectedIds: string[];
     playersInRound?: string[];
-    onSelectionChange: (ids: string[]) => void;
+    onSelectionChange: (scoring: Player[], inRound: Player[]) => void;
     isOpen: boolean;
     onClose: () => void;
     courseData?: {
@@ -53,8 +55,10 @@ export function LivePlayerSelectionModal({
     hasMultipleGroups?: boolean;
 }) {
     const [localSelectedIds, setLocalSelectedIds] = useState<string[]>(selectedIds);
+    const [localInRoundIds, setLocalInRoundIds] = useState<string[]>(playersInRound);
     const [searchQuery, setSearchQuery] = useState('');
     const [localAllPlayers, setLocalAllPlayers] = useState<Player[]>(allPlayers);
+    const searchRef = useRef<HTMLDivElement>(null);
 
     // Create Player Mode
     const [isCreating, setIsCreating] = useState(false);
@@ -72,22 +76,67 @@ export function LivePlayerSelectionModal({
     useEffect(() => {
         if (isOpen) {
             setLocalSelectedIds(selectedIds);
-            setLocalAllPlayers(allPlayers); // Update list if props change
+            setLocalInRoundIds(playersInRound || []);
+
+            const fetchAllPlayers = async () => {
+                const systemPlayers = await getAllPlayers();
+                // Merge in round-specific data (like scorerId) from the allPlayers prop
+                const merged = systemPlayers.map(p => {
+                    const roundPlayer = allPlayers.find(rp => rp.id === p.id);
+                    return roundPlayer ? { ...p, scorerId: roundPlayer.scorerId } : p;
+                });
+                setLocalAllPlayers(merged);
+            };
+            fetchAllPlayers();
+
             setIsCreating(false);
             setNewPlayerError('');
         }
-    }, [isOpen, allPlayers, selectedIds]); // Add allPlayers and selectedIds to dependencies
+    }, [isOpen, selectedIds, playersInRound]);
+
+    // Close search dropdown when clicking outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+                setSearchQuery('');
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     if (!isOpen) return null;
 
-    const togglePlayer = (id: string) => {
-        setLocalSelectedIds(prev =>
-            prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
-        );
+    const toggleScoring = (id: string) => {
+        setLocalSelectedIds(prev => {
+            const isNowSelected = !prev.includes(id);
+            if (isNowSelected) {
+                if (!localInRoundIds.includes(id)) {
+                    setLocalInRoundIds(curr => [...curr, id]);
+                }
+                return [...prev, id];
+            } else {
+                return prev.filter(p => p !== id);
+            }
+        });
+    };
+
+    const toggleInRound = (id: string) => {
+        setLocalInRoundIds(prev => {
+            const isNowInRound = !prev.includes(id);
+            if (!isNowInRound) {
+                setLocalSelectedIds(curr => curr.filter(cid => cid !== id));
+                return prev.filter(p => p !== id);
+            } else {
+                return [...prev, id];
+            }
+        });
     };
 
     const handleConfirm = () => {
-        onSelectionChange(localSelectedIds);
+        const scoringPlayersList = localAllPlayers.filter(p => localSelectedIds.includes(p.id));
+        const inRoundPlayersList = localAllPlayers.filter(p => localInRoundIds.includes(p.id));
+        onSelectionChange(scoringPlayersList, inRoundPlayersList);
         onClose();
     };
 
@@ -101,7 +150,6 @@ export function LivePlayerSelectionModal({
         setIsSubmitting(true);
         try {
             const indexValue = parseFloat(newPlayer.handicapIndex);
-
             const created = await createPlayer({
                 firstName: newPlayer.firstName,
                 lastName: newPlayer.lastName,
@@ -110,7 +158,6 @@ export function LivePlayerSelectionModal({
                 handicapIndex: isNaN(indexValue) ? 0 : indexValue
             });
 
-            // Add to local list
             const newPlayerObj: Player = {
                 id: created.id,
                 name: created.name,
@@ -120,11 +167,10 @@ export function LivePlayerSelectionModal({
             };
 
             setLocalAllPlayers(prev => [...prev, newPlayerObj]);
-            // Automatically select the new player
+            setLocalInRoundIds(prev => [...prev, created.id]);
             setLocalSelectedIds(prev => [...prev, created.id]);
-
             setIsCreating(false);
-            setSearchQuery(''); // Clear search to show context or just done
+            setSearchQuery('');
             setNewPlayer({ firstName: '', lastName: '', email: '', phone: '', handicapIndex: '0' });
         } catch (err: any) {
             setNewPlayerError(err.message || "Failed to create player.");
@@ -133,373 +179,259 @@ export function LivePlayerSelectionModal({
         }
     };
 
-    // Filter Logic
     const filteredPlayers = localAllPlayers.filter(p => {
         if (!searchQuery) return true;
-
         const q = searchQuery.toLowerCase();
         const last4 = p.phone ? p.phone.slice(-4) : '';
-        const playerId = p.player_id ? p.player_id.toLowerCase() : '';
-        return p.name.toLowerCase().includes(q) || last4.includes(q) || playerId.includes(q);
+        const pid = p.player_id ? p.player_id.toLowerCase() : '';
+        return p.name.toLowerCase().includes(q) || last4.includes(q) || pid.includes(q);
     });
 
     const sortedPlayers = [...filteredPlayers].sort((a, b) => {
-        // Priority 1: Current User
-        if (currentUserId && a.id === currentUserId) return -1;
-        if (currentUserId && b.id === currentUserId) return 1;
+        // Priority 1: Current User (YOU)
+        const isAUser = currentUserId === a.id;
+        const isBUser = currentUserId === b.id;
+        if (isAUser && !isBUser) return -1;
+        if (!isAUser && isBUser) return 1;
 
-        // Priority 2: In Group (Frequent or already selected)
-        const isAFrequent = frequentPlayerIds?.includes(a.id);
-        const isBFrequent = frequentPlayerIds?.includes(b.id);
-        if (isAFrequent && !isBFrequent) return -1;
-        if (!isAFrequent && isBFrequent) return 1;
+        // Priority 2: Anyone who has a score keeper
+        // (Either locally selected by me, OR already has a scorerId on the server)
+        const hasAScorer = (p: Player) => localSelectedIds.includes(p.id) || !!p.scorerId;
+        const isAHoved = hasAScorer(a);
+        const isBHoved = hasAScorer(b);
+        if (isAHoved && !isBHoved) return -1;
+        if (!isAHoved && isBHoved) return 1;
 
-        // Priority 3: Alphabetical by Last Name
+        // Tie-breaker: Alphabetical by Last Name
         const aLastName = a.name.split(' ').pop() || a.name;
         const bLastName = b.name.split(' ').pop() || b.name;
         return aLastName.localeCompare(bLastName);
     });
 
-    // Determine course handicap
     const getCourseHandicap = (player: Player): number | null => {
         if (player.index === undefined || !courseData) return null;
-
         const isCityParkNorth = courseData.courseName.toLowerCase().includes('city park north');
         let teeBox: TeeBox | undefined;
-
         if (isCityParkNorth && player.preferred_tee_box) {
             teeBox = courseData.teeBoxes.find(t =>
                 player.preferred_tee_box && t.name.toLowerCase().includes(player.preferred_tee_box.toLowerCase())
             );
         }
-
         if (!teeBox && courseData.roundTeeBox) {
             teeBox = courseData.teeBoxes.find(t =>
                 t.rating === courseData.roundTeeBox!.rating && t.slope === courseData.roundTeeBox!.slope
             );
         }
-
         if (!teeBox) {
             teeBox = courseData.teeBoxes.find(t => t.name.toLowerCase().includes('white')) || courseData.teeBoxes[0];
         }
-
         if (!teeBox) return null;
-
         const courseHandicap = (player.index * teeBox.slope / 113) + (teeBox.rating - courseData.par);
         return Math.round(courseHandicap);
     };
 
     return (
         <div className="fixed inset-0 z-[200] bg-white p-1">
-            <div className="bg-white w-full h-full flex flex-col shadow-none overflow-hidden animate-in fade-in zoom-in duration-200">
-
+            <div className="bg-white w-full h-full flex flex-col overflow-hidden">
                 {/* Header */}
-                <div className="p-1 bg-white flex flex-col gap-1 shadow-sm z-10">
+                <div className="p-2 border-b border-gray-100 flex flex-col gap-2">
                     <div className="flex justify-between items-center">
-                        <h2 className="text-[16pt] font-bold text-left ml-1 mt-2">
-                            {isCreating ? "Create New Player" : "Select Players to Score For"}
+                        <h2 className="text-[18pt] font-black uppercase italic tracking-tighter">
+                            {isCreating ? "+ New Guest" : "Select player:"}
                         </h2>
-                        <button
-                            onClick={onClose}
-                            className="absolute top-2 right-2 w-10 h-10 bg-black text-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-800 transition-all z-50"
-                            title="Close"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>
+                        <button onClick={onClose} className="p-2 bg-black text-white rounded-full shadow-lg" aria-label="Close modal">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                         </button>
                     </div>
 
-
                     {!isCreating && (
-                        <div className="relative flex items-stretch gap-2">
-                            <div className="flex-1 relative">
+                        <div className="flex gap-2">
+                            <div className="flex-1 relative" ref={searchRef}>
+                                <label htmlFor="player-search" className="sr-only">Search players</label>
                                 <input
+                                    id="player-search"
                                     type="text"
-                                    placeholder="Search by ID, Phone (last 4), Name (F-L)"
-                                    title="Search players"
+                                    placeholder="Search player name"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full text-[14pt] h-[48px] p-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none text-black bg-white shadow-sm transition-all"
+                                    className="w-full text-[14pt] h-[48px] px-4 border-2 border-black rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold"
                                 />
-                                {/* Dropdown for search results */}
                                 {searchQuery && filteredPlayers.length > 0 && (
-                                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-lg max-h-[400px] overflow-y-auto z-50">
+                                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-black rounded-xl shadow-2xl max-h-[400px] overflow-y-auto z-[100] p-1">
+                                        <div className="p-2 text-[10pt] font-black uppercase text-zinc-400 tracking-widest border-b border-gray-100">Search Results</div>
                                         {sortedPlayers.slice(0, 20).map(player => {
                                             const isSelected = localSelectedIds.includes(player.id);
-                                            const isInRound = playersInRound.includes(player.id);
-                                            // Use initial selectedIds to determine if this player was in MY group at modal open
+                                            const isInRound = localInRoundIds.includes(player.id);
+                                            const isInRoundOnServer = playersInRound.includes(player.id);
                                             const wasInMyGroup = selectedIds.includes(player.id);
-                                            // Only disable if: not admin, player is in round, multiple groups exist, AND was NOT in my group initially
-                                            const isDisabled = !isAdmin && isInRound && hasMultipleGroups && !wasInMyGroup;
+                                            const isDisabled = !isAdmin && isInRoundOnServer && hasMultipleGroups && !wasInMyGroup;
 
                                             return (
-                                                <button
-                                                    key={player.id}
-                                                    onClick={() => {
-                                                        if (!isDisabled) {
-                                                            togglePlayer(player.id);
-                                                        }
-                                                    }}
-                                                    disabled={isDisabled}
-                                                    className={`w-full flex items-center gap-2 p-3 border-b border-gray-100 transition-colors text-left ${isDisabled
-                                                        ? 'bg-gray-100 opacity-60 cursor-not-allowed'
-                                                        : isSelected
-                                                            ? 'bg-blue-50 hover:bg-blue-100'
-                                                            : 'hover:bg-gray-50'
-                                                        }`}
-                                                >
-                                                    <div className={`w-7 h-7 shrink-0 rounded flex items-center justify-center border-2 ${isDisabled
-                                                        ? 'bg-gray-200 border-gray-300'
-                                                        : isSelected
-                                                            ? 'bg-blue-600 border-blue-600'
-                                                            : 'bg-white border-gray-300'
-                                                        }`}>
-                                                        {isSelected && (
-                                                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                                                <div key={player.id} className="flex items-center justify-between p-3 border-b border-gray-50 bg-white">
+                                                    <div className="flex flex-col">
+                                                        <span className={`text-[15pt] font-black italic uppercase tracking-tighter ${isDisabled ? 'text-gray-400' : 'text-zinc-900'}`}>{player.name}</span>
+                                                        <span className="text-[10pt] text-gray-500 font-bold uppercase tracking-widest line-clamp-1">{player.player_id || 'Player'}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-4">
+                                                        {/* Keep Score Checkbox - Show for YOU, if you are ALREADY keeping score, if they have NO score keeper, or if Admin */}
+                                                        {(player.id === currentUserId || isSelected || !player.scorerId || isAdmin) && (
+                                                            <label className={`flex items-center gap-2 cursor-pointer ${isDisabled ? 'opacity-30 cursor-not-allowed' : ''}`}>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={isSelected}
+                                                                    disabled={isDisabled}
+                                                                    onChange={() => toggleScoring(player.id)}
+                                                                    className="w-5 h-5 rounded border-2 border-black accent-black cursor-pointer"
+                                                                />
+                                                                <span className="text-[11pt] font-black uppercase italic tracking-tighter text-zinc-900">Keep Score</span>
+                                                            </label>
                                                         )}
+
+                                                        {/* Leaderboard Checkbox */}
+                                                        <label className={`flex items-center gap-2 cursor-pointer ${isDisabled ? 'opacity-30 cursor-not-allowed' : ''}`}>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isInRound}
+                                                                disabled={isDisabled}
+                                                                onChange={() => toggleInRound(player.id)}
+                                                                className="w-5 h-5 rounded border-2 border-black accent-black cursor-pointer"
+                                                            />
+                                                            <span className="text-[11pt] font-black uppercase italic tracking-tighter text-zinc-900">Leaderboard</span>
+                                                        </label>
                                                     </div>
-                                                    <div className="flex-1">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className={`text-[16pt] font-bold ${isDisabled ? 'text-gray-400' : isSelected ? 'text-blue-800' : 'text-gray-700'}`}>
-                                                                {player.name}
-                                                            </span>
-                                                            {player.player_id && (
-                                                                <span className={`text-[14pt] font-semibold ${isDisabled ? 'text-gray-400' : 'text-gray-600'}`}>
-                                                                    ({player.player_id})
-                                                                </span>
-                                                            )}
-                                                            {isInRound && (
-                                                                <span className={`px-2 py-0.5 rounded text-[10pt] font-black uppercase tracking-wider ${isDisabled ? 'bg-gray-100 text-gray-500 border border-gray-200' : 'bg-green-100 text-green-700 border border-green-200'}`}>
-                                                                    {isDisabled ? 'Claimed' : 'In Round'}
-                                                                </span>
-                                                            )}
-                                                            {player.id === currentUserId && (
-                                                                <span className="px-2 py-0.5 rounded text-[10pt] font-black uppercase tracking-wider bg-blue-100 text-blue-700 border border-blue-200">
-                                                                    YOU
-                                                                </span>
-                                                            )}
-                                                            {(() => {
-                                                                const courseHcp = getCourseHandicap(player);
-                                                                return courseHcp !== null && (
-                                                                    <span className={`text-[14pt] font-semibold ${isDisabled ? 'text-gray-400' : 'text-gray-600'}`}>
-                                                                        ({courseHcp})
-                                                                    </span>
-                                                                );
-                                                            })()}
-                                                        </div>
-                                                    </div>
-                                                </button>
+                                                </div>
                                             );
                                         })}
                                     </div>
                                 )}
                             </div>
-                            <button
-                                onClick={() => setIsCreating(true)}
-                                className="bg-green-600 text-white font-black px-6 rounded-xl text-[14pt] shrink-0 hover:bg-green-700 transition-all shadow-md active:scale-95 h-[58px] flex items-center justify-center"
-                            >
-                                + New
-                            </button>
+                            <button onClick={() => setIsCreating(true)} className="px-6 h-[48px] bg-green-600 text-white font-black rounded-xl uppercase italic tracking-tighter shadow-md active:scale-95">Guest</button>
                         </div>
                     )}
                 </div>
 
                 {/* Body */}
-                <div className="flex-1 overflow-y-auto p-6 bg-slate-50">
+                <div className="flex-1 overflow-y-auto p-2 bg-gray-50">
                     {isCreating ? (
-                        <div className="max-w-lg mx-auto bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm space-y-4 max-w-md mx-auto">
+                            <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-2xl font-bold text-gray-700 mb-1">First Name</label>
-                                    <input
-                                        type="text"
-                                        title="First Name"
-                                        className="w-full border-2 border-gray-300 p-3 rounded-lg text-2xl text-black bg-white"
-                                        value={newPlayer.firstName}
-                                        onChange={e => setNewPlayer({ ...newPlayer, firstName: e.target.value })}
-                                    />
+                                    <label htmlFor="new-player-first-name" className="sr-only">First Name</label>
+                                    <input id="new-player-first-name" placeholder="First Name" className="w-full p-3 border-2 border-gray-200 rounded-lg text-xl" value={newPlayer.firstName} onChange={e => setNewPlayer({ ...newPlayer, firstName: e.target.value })} />
                                 </div>
                                 <div>
-                                    <label className="block text-2xl font-bold text-gray-700 mb-1">Last Name</label>
-                                    <input
-                                        type="text"
-                                        title="Last Name"
-                                        className="w-full border-2 border-gray-300 p-3 rounded-lg text-2xl text-black bg-white"
-                                        value={newPlayer.lastName}
-                                        onChange={e => setNewPlayer({ ...newPlayer, lastName: e.target.value })}
-                                    />
+                                    <label htmlFor="new-player-last-name" className="sr-only">Last Name</label>
+                                    <input id="new-player-last-name" placeholder="Last Name" className="w-full p-3 border-2 border-gray-200 rounded-lg text-xl" value={newPlayer.lastName} onChange={e => setNewPlayer({ ...newPlayer, lastName: e.target.value })} />
                                 </div>
                             </div>
-
                             <div>
-                                <label className="block text-2xl font-bold text-gray-700 mb-1">Email</label>
-                                <input
-                                    type="email"
-                                    title="Email Address"
-                                    className="w-full border-2 border-gray-300 p-3 rounded-lg text-2xl text-black bg-white"
-                                    value={newPlayer.email}
-                                    onChange={e => setNewPlayer({ ...newPlayer, email: e.target.value })}
-                                />
+                                <label htmlFor="new-player-email" className="sr-only">Email</label>
+                                <input id="new-player-email" type="email" placeholder="Email" className="w-full p-3 border-2 border-gray-200 rounded-lg text-xl" value={newPlayer.email} onChange={e => setNewPlayer({ ...newPlayer, email: e.target.value })} />
                             </div>
-
                             <div>
-                                <label className="block text-2xl font-bold text-gray-700 mb-1">Mobile Phone (Use for ID)</label>
-                                <input
-                                    type="tel"
-                                    title="Mobile Phone"
-                                    className="w-full border-2 border-gray-300 p-3 rounded-lg text-2xl text-black bg-white"
-                                    value={newPlayer.phone}
-                                    onChange={e => setNewPlayer({ ...newPlayer, phone: e.target.value })}
-                                />
+                                <label htmlFor="new-player-phone" className="sr-only">Phone</label>
+                                <input id="new-player-phone" type="tel" placeholder="Phone" className="w-full p-3 border-2 border-gray-200 rounded-lg text-xl" value={newPlayer.phone} onChange={e => setNewPlayer({ ...newPlayer, phone: e.target.value })} />
                             </div>
-
-                            <div>
-                                <label className="block text-2xl font-bold text-gray-700 mb-1">Handicap Index (Optional)</label>
-                                <input
-                                    type="number"
-                                    step="0.1"
-                                    title="Handicap Index"
-                                    className="w-full border-2 border-gray-300 p-3 rounded-lg text-2xl text-black bg-white"
-                                    value={newPlayer.handicapIndex}
-                                    onChange={e => setNewPlayer({ ...newPlayer, handicapIndex: e.target.value })}
-                                    placeholder="0.0"
-                                />
+                            <div className="flex flex-col gap-1">
+                                <label htmlFor="new-player-handicap" className="text-sm font-bold uppercase text-gray-500 ml-1">Handicap Index</label>
+                                <input id="new-player-handicap" type="number" step="0.1" placeholder="0.0" className="w-full p-3 border-2 border-gray-200 rounded-lg text-xl" value={newPlayer.handicapIndex} onChange={e => setNewPlayer({ ...newPlayer, handicapIndex: e.target.value })} />
                             </div>
-
-                            {newPlayerError && (
-                                <div className="text-red-600 font-bold bg-red-50 p-3 rounded-lg text-center">
-                                    {newPlayerError}
-                                </div>
-                            )}
-
-                            <div className="flex gap-4 pt-4">
-                                <button
-                                    onClick={() => { setIsCreating(false); setNewPlayerError(''); }}
-                                    className="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-lg text-xl"
-                                    disabled={isSubmitting}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleCreatePlayer}
-                                    disabled={isSubmitting}
-                                    className="flex-1 bg-black text-white font-bold py-3 rounded-lg text-xl disabled:opacity-50"
-                                >
-                                    {isSubmitting ? "Creating..." : "Create Player"}
-                                </button>
+                            {newPlayerError && <div className="p-3 bg-red-50 text-red-600 rounded-lg text-center font-bold">{newPlayerError}</div>}
+                            <div className="flex gap-2">
+                                <button onClick={() => setIsCreating(false)} className="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-lg uppercase">Cancel</button>
+                                <button onClick={handleCreatePlayer} disabled={isSubmitting} className="flex-1 py-3 bg-black text-white font-bold rounded-lg uppercase disabled:opacity-50">{isSubmitting ? "Creating..." : "Add"}</button>
                             </div>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {/* Empty State / No Results */}
-                            {sortedPlayers.length === 0 && (
-                                <div className="col-span-full text-center py-10 text-gray-500">
-                                    <div className="text-[20pt] mb-2">No players found</div>
-                                    <div>Try a different search or create a new player.</div>
-                                    <button
-                                        onClick={() => setIsCreating(true)}
-                                        className="mt-6 bg-green-600 text-white font-bold px-6 py-3 rounded-full text-2xl shadow-md"
-                                    >
-                                        Create New Player
-                                    </button>
+                        <div className="space-y-2">
+                            {localAllPlayers.filter(p => localInRoundIds.includes(p.id)).length === 0 && (
+                                <div className="text-center py-10">
+                                    <p className="text-gray-400 font-bold text-xl uppercase italic tracking-tighter">No players in round</p>
+                                    <p className="text-gray-400 text-sm mt-1">Search for players above to add them to your leaderboard or scoring group.</p>
                                 </div>
                             )}
 
-                            {sortedPlayers.map(player => {
+                            {[...localAllPlayers.filter(p => localInRoundIds.includes(p.id))].sort((a, b) => {
+                                // Priority 1: Current User (YOU)
+                                const isAUser = currentUserId === a.id;
+                                const isBUser = currentUserId === b.id;
+                                if (isAUser && !isBUser) return -1;
+                                if (!isAUser && isBUser) return 1;
+
+                                // Priority 2: Has a score keeper
+                                const hasAScorer = (p: Player) => localSelectedIds.includes(p.id) || !!p.scorerId;
+                                const isAHoved = hasAScorer(a);
+                                const isBHoved = hasAScorer(b);
+                                if (isAHoved && !isBHoved) return -1;
+                                if (!isAHoved && isBHoved) return 1;
+
+                                return a.name.localeCompare(b.name);
+                            }).map(player => {
                                 const isSelected = localSelectedIds.includes(player.id);
-                                const isInRound = playersInRound.includes(player.id);
-                                // Use initial selectedIds to determine if this player was in MY group at modal open
+                                const isInRoundOnServer = playersInRound.includes(player.id);
                                 const wasInMyGroup = selectedIds.includes(player.id);
-                                // Only disable if: not admin, player is in round, multiple groups exist, AND was NOT in my group initially
-                                const isDisabled = !isAdmin && isInRound && hasMultipleGroups && !wasInMyGroup;
+                                const isDisabled = !isAdmin && isInRoundOnServer && hasMultipleGroups && !wasInMyGroup;
 
                                 return (
-                                    <button
-                                        key={player.id}
-                                        onClick={() => togglePlayer(player.id)}
-                                        disabled={isDisabled}
-                                        className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left ${isDisabled
-                                            ? 'border-gray-200 bg-gray-100 opacity-60 cursor-not-allowed'
-                                            : isSelected
-                                                ? 'border-blue-500 bg-blue-50 shadow-sm cursor-pointer'
-                                                : 'border-gray-100 bg-white hover:border-gray-200 cursor-pointer'
-                                            }`}
-                                    >
-                                        <div className={`w-7 h-7 shrink-0 rounded flex items-center justify-center border-2 transition-colors ${isDisabled
-                                            ? 'bg-gray-200 border-gray-300'
-                                            : isSelected
-                                                ? 'bg-blue-600 border-blue-600'
-                                                : 'bg-white border-gray-300'
-                                            }`}>
-                                            {isSelected && (
-                                                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
-                                            )}
-                                        </div>
-                                        <div className="flex-1">
+                                    <div key={player.id} className={`p-4 rounded-xl border-2 transition-all shadow-sm ${isDisabled ? 'bg-gray-100 border-gray-200' : isSelected ? 'bg-green-50 border-green-500' : 'bg-blue-50 border-blue-500'}`}>
+                                        <div className="flex items-center justify-between mb-3">
                                             <div className="flex items-center gap-2">
-                                                <span className={`text-[18pt] font-bold ${isDisabled ? 'text-gray-400' : isSelected ? 'text-blue-800' : 'text-gray-700'
-                                                    }`}>
-                                                    {player.name}
-                                                </span>
-                                                <div className="flex items-center gap-1">
-                                                    {isInRound && (
-                                                        <span className={`px-2 py-0.5 rounded text-[10pt] font-bold uppercase tracking-wider ${isDisabled ? 'bg-gray-200 text-gray-400' : 'bg-green-100 text-green-700'}`}>
-                                                            {isDisabled ? 'Claimed' : 'In My Group'}
-                                                        </span>
-                                                    )}
-                                                    {/* Course Handicap */}
-                                                    {(() => {
-                                                        const courseHcp = getCourseHandicap(player);
-                                                        return courseHcp !== null && (
-                                                            <span className={`text-[14pt] font-semibold ${isDisabled ? 'text-gray-400' : 'text-gray-600'}`}>
-                                                                ({courseHcp})
-                                                            </span>
-                                                        );
-                                                    })()}
-                                                    {/* Tee Box Indicator */}
-                                                    {player.preferred_tee_box && (
-                                                        <span className={`px-2 py-0.5 rounded text-[12pt] font-bold ${isDisabled
-                                                            ? 'bg-gray-200 text-gray-400'
-                                                            : player.preferred_tee_box.toLowerCase().includes('white')
-                                                                ? 'bg-white text-black border border-black'
-                                                                : player.preferred_tee_box.toLowerCase().includes('gold')
-                                                                    ? 'bg-yellow-400 text-black'
-                                                                    : 'bg-gray-300 text-gray-700'
-                                                            }`}>
-                                                            {player.preferred_tee_box.toLowerCase().includes('white')
-                                                                ? 'W'
-                                                                : player.preferred_tee_box.toLowerCase().includes('gold')
-                                                                    ? 'G'
-                                                                    : player.preferred_tee_box.charAt(0).toUpperCase()}
-                                                        </span>
-                                                    )}
-                                                </div>
+                                                <span className={`text-[18pt] font-black italic uppercase tracking-tighter ${isDisabled ? 'text-gray-400' : isSelected ? 'text-green-800' : 'text-blue-800'}`}>{player.name}</span>
+                                                {!isSelected && localInRoundIds.includes(player.id) && !player.scorerId && (
+                                                    <span className="text-[12px] font-black text-red-600 uppercase">
+                                                        No Score Keeper
+                                                    </span>
+                                                )}
+                                                {(() => {
+                                                    const hcp = getCourseHandicap(player);
+                                                    return hcp !== null && <span className="text-[14pt] font-bold text-gray-500">({hcp})</span>;
+                                                })()}
                                             </div>
-                                            {isDisabled && (
-                                                <div className="text-[11pt] text-gray-500 italic mt-0.5">Scored by another device.</div>
-                                            )}
+                                            {player.id === currentUserId && <span className="bg-blue-600 text-white text-[8pt] font-black px-1.5 py-0.5 rounded uppercase italic">YOU</span>}
                                         </div>
-                                    </button>
+                                        <div className="flex items-center gap-6 mt-1">
+                                            {/* Keep Score Checkbox - Show for YOU, if you are ALREADY keeping score, if they have NO score keeper, or if Admin */}
+                                            {(player.id === currentUserId || isSelected || !player.scorerId || isAdmin) && (
+                                                <label className={`flex items-center gap-2.5 cursor-pointer ${isDisabled ? 'opacity-30 cursor-not-allowed' : ''}`}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        disabled={isDisabled}
+                                                        onChange={() => toggleScoring(player.id)}
+                                                        className="w-6 h-6 rounded-md border-2 border-black accent-black cursor-pointer shadow-sm"
+                                                    />
+                                                    <span className={`text-[13pt] font-black uppercase italic tracking-tighter ${isSelected ? 'text-zinc-900' : 'text-zinc-400'}`}>Keep Score</span>
+                                                </label>
+                                            )}
+
+                                            {/* Leaderboard Checkbox */}
+                                            <label className={`flex items-center gap-2.5 cursor-pointer ${isDisabled ? 'opacity-30 cursor-not-allowed' : ''}`}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={localInRoundIds.includes(player.id)}
+                                                    disabled={isDisabled}
+                                                    onChange={() => toggleInRound(player.id)}
+                                                    className="w-6 h-6 rounded-md border-2 border-black accent-black cursor-pointer shadow-sm"
+                                                />
+                                                <span className={`text-[13pt] font-black uppercase italic tracking-tighter ${localInRoundIds.includes(player.id) ? 'text-zinc-900' : 'text-zinc-400'}`}>Leaderboard</span>
+                                            </label>
+                                        </div>
+                                        {isDisabled && <div className="mt-2 text-[10pt] font-black uppercase italic tracking-tighter text-gray-400">Scored by another device</div>}
+                                    </div>
                                 );
                             })}
                         </div>
                     )}
                 </div>
 
-                {/* Footer Actions (Only when not creating) */}
+                {/* Footer */}
                 {!isCreating && (
-                    <div className="px-4 py-5 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 z-10">
-
+                    <div className="p-2 border-t border-gray-100">
                         <button
                             onClick={handleConfirm}
-                            className={`px-4 py-2 rounded-full text-[15pt] font-bold shadow-lg transition-all active:scale-95 ${JSON.stringify(localSelectedIds.slice().sort()) !== JSON.stringify(selectedIds.slice().sort())
-                                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                : 'bg-black text-white hover:bg-gray-800'
-                                }`}
+                            className="w-full py-4 bg-black text-white text-[18pt] font-black uppercase italic tracking-tighter rounded-xl shadow-lg active:scale-[0.98] transition-all"
                         >
-                            Save ({localSelectedIds.length})
+                            Save Round Configuration
                         </button>
                     </div>
                 )}
@@ -507,6 +439,3 @@ export function LivePlayerSelectionModal({
         </div>
     );
 }
-
-
-
