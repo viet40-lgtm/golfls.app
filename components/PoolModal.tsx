@@ -135,31 +135,6 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
                             </div>
                         </div>
 
-                        {/* Admin Action Bar (Replicating Page Style) */}
-                        <div className="bg-white rounded-xl p-1 flex items-center justify-between gap-1 mb-1">
-                            <PoolDateSelector
-                                allRounds={data.allRounds}
-                                currentRoundId={currentRoundId}
-                                onSelect={(id) => setCurrentRoundId(id)}
-                            />
-                            {isAdmin && (
-                                <div className="flex gap-1 shrink-0">
-                                    <PoolCopyButton
-                                        date={data.round.date}
-                                        roundName={data.round.name}
-                                        isTournament={data.round.is_tournament}
-                                        flights={data.processedFlights}
-                                    />
-                                    <button
-                                        className="p-2.5 bg-black rounded-lg hover:bg-gray-800 transition-colors shadow-sm text-white cursor-pointer"
-                                        title="Email Pool Results"
-                                    >
-                                        <Mail className="w-5 h-5" />
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-
                         {/* Main Results Dashboard Card */}
                         <div className="rounded-2xl overflow-hidden bg-white mb-1">
                             {/* Participants Header */}
