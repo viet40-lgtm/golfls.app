@@ -55,7 +55,7 @@ export default function PoolResults({
     };
 
     return (
-        <div className="p-1 space-y-8">
+        <div className="p-1 space-y-4">
             {allPoolParticipants.length === 0 ? (
                 // ... Empty State 1 ...
                 <div className="text-center">No Participants selected.</div>
@@ -77,7 +77,7 @@ export default function PoolResults({
             ) : (
                 <>
                     {processedFlights.map((flight, fIdx) => (
-                        <div key={fIdx} className="space-y-12">
+                        <div key={fIdx} className="space-y-6">
                             {/* Flight Header */}
                             {flights.length > 1 && (
                                 <div className="border-b-2 border-gray-900 pb-2">
@@ -210,7 +210,7 @@ export default function PoolResults({
                     ))}
 
                     {/* Summary Section */}
-                    <div className="pt-10 space-y-6">
+                    <div className="pt-1 space-y-6">
                         <h3 className="text-[14pt] font-bold text-gray-900">Total by Winners:</h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                             {Array.from(winningsMap.entries())

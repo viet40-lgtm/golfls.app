@@ -139,7 +139,7 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
                         <div className="rounded-2xl overflow-hidden bg-white mb-1">
                             {/* Participants Header */}
                             <div className="bg-[#f3f4fa] p-1 flex justify-between items-center">
-                                <h2 className="text-[14pt] font-bold text-gray-700">Pool Participants</h2>
+                                <h2 className="text-[14pt] font-bold text-gray-700">FBT Participants</h2>
                                 <PoolManagementButton
                                     roundId={data.round.id}
                                     allPlayers={data.round.players.map((p: any) => ({ id: p.player_id, name: p.player.name }))}
