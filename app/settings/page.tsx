@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, Navigation, Bell, Shield, Info, Smartphone, User, X, Check, Eye, EyeOff, RefreshCw } from 'lucide-react';
+import { ChevronLeft, Navigation, Bell, Shield, Info, Smartphone, User, X, Check, Eye, EyeOff, RefreshCw, LogOut } from 'lucide-react';
 import { getCurrentPlayerProfile, updatePlayerProfile } from '@/app/actions/update-player';
 import { recalculateAllHandicaps } from '@/app/actions/recalculate-handicaps';
 import { fetchSiteConfig, saveSiteConfig } from '@/app/actions/site-config';
+import { logout } from '@/app/actions/auth';
 import { Tag } from 'lucide-react';
 
 export default function SettingsPage() {
@@ -100,6 +101,14 @@ export default function SettingsPage() {
                             icon={<User className="w-5 h-5" />}
                             label="Player Profile"
                             onClick={() => setIsProfileModalOpen(true)}
+                        />
+                        <SettingsItem
+                            icon={<LogOut className="w-5 h-5" />}
+                            label="Logout"
+                            onClick={async () => {
+                                await logout();
+                                window.location.href = '/';
+                            }}
                         />
                     </div>
                 </section>
