@@ -212,7 +212,7 @@ export const LiveLeaderboardCard = ({
                                         aria-label={`Score for hole ${num}`}
                                         inputMode="numeric"
                                         autoFocus
-                                        className="w-full text-center bg-white text-zinc-900 font-black text-3xl focus:outline-none border-none"
+                                        className="w-full text-center bg-white text-zinc-900 font-black text-3xl focus:outline-none border-none mt-6"
                                         defaultValue={score || ''}
                                         onFocus={(e) => e.target.select()}
                                         onKeyDown={(e) => {
