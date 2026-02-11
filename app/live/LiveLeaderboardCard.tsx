@@ -208,7 +208,7 @@ export const LiveLeaderboardCard = ({
                                 </div>
                                 {isAdmin && summaryEditCell?.playerId === p.id && summaryEditCell?.holeNumber === num ? (
                                     <input
-                                        type="number"
+                                        type="text"
                                         aria-label={`Score for hole ${num}`}
                                         inputMode="numeric"
                                         autoFocus
@@ -274,7 +274,7 @@ export const LiveLeaderboardCard = ({
                                 </div>
                                 {isAdmin && summaryEditCell?.playerId === p.id && summaryEditCell?.holeNumber === num ? (
                                     <input
-                                        type="number"
+                                        type="text"
                                         aria-label={`Score for hole ${num}`}
                                         inputMode="numeric"
                                         autoFocus
