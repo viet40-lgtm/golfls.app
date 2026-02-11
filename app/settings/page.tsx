@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, Navigation, Bell, Shield, Info, Smartphone, User, X, Check, Eye, EyeOff, RefreshCw, LogOut } from 'lucide-react';
+import { ChevronLeft, Navigation, Bell, Shield, Info, Smartphone, User, X, Check, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import { getCurrentPlayerProfile, updatePlayerProfile } from '@/app/actions/update-player';
 import { recalculateAllHandicaps } from '@/app/actions/recalculate-handicaps';
 import { fetchSiteConfig, saveSiteConfig } from '@/app/actions/site-config';
-import { logout } from '@/app/actions/auth';
+import { verifyAdminPassword, adminLogout } from '@/app/actions/auth';
 import { Tag } from 'lucide-react';
 
 export default function SettingsPage() {
@@ -17,6 +17,9 @@ export default function SettingsPage() {
     const [isMetadataModalOpen, setIsMetadataModalOpen] = useState(false);
     const [siteConfig, setSiteConfig] = useState<any>(null);
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [showAdminLogin, setShowAdminLogin] = useState(false);
+    const [adminPassword, setAdminPassword] = useState('');
 
     useEffect(() => {
         // Hydrate GPS pref from localStorage
@@ -46,6 +49,10 @@ export default function SettingsPage() {
         };
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+        // Check admin status
+        const adminCookie = document.cookie.split('; ').find(row => row.startsWith('admin_session='));
+        setIsAdmin(adminCookie?.split('=')[1] === 'true');
 
         return () => {
             window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -90,6 +97,22 @@ export default function SettingsPage() {
         }
     };
 
+    const handleAdminLogin = async () => {
+        const result = await verifyAdminPassword(adminPassword);
+        if (result.success) {
+            setIsAdmin(true);
+            setShowAdminLogin(false);
+            setAdminPassword('');
+        } else {
+            alert('Incorrect admin password');
+        }
+    };
+
+    const handleAdminLogout = async () => {
+        await adminLogout();
+        setIsAdmin(false);
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 pb-20 pt-4">
             <main className="max-w-xl mx-auto p-4 space-y-6">
@@ -102,14 +125,82 @@ export default function SettingsPage() {
                             label="Player Profile"
                             onClick={() => setIsProfileModalOpen(true)}
                         />
-                        <SettingsItem
-                            icon={<LogOut className="w-5 h-5" />}
-                            label="Logout"
-                            onClick={async () => {
-                                await logout();
-                                window.location.href = '/';
-                            }}
-                        />
+                    </div>
+                </section>
+
+                {/* Admin Access Section */}
+                <section className="space-y-3">
+                    <h2 className="text-xl font-black text-gray-400 uppercase tracking-widest ml-1">Admin Access</h2>
+                    <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                        {!isAdmin ? (
+                            <>
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="bg-red-50 p-3 rounded-2xl text-red-600">
+                                        <Shield className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-2xl leading-tight">Admin Mode</h3>
+                                        <p className="text-2xl text-gray-400 font-medium">
+                                            {showAdminLogin ? 'Enter password' : 'Not logged in'}
+                                        </p>
+                                    </div>
+                                </div>
+                                {showAdminLogin ? (
+                                    <div className="space-y-3">
+                                        <input
+                                            type="password"
+                                            value={adminPassword}
+                                            onChange={(e) => setAdminPassword(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleAdminLogin()}
+                                            placeholder="Admin password"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 font-bold text-2xl"
+                                        />
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={handleAdminLogin}
+                                                className="flex-1 bg-black text-white py-3 rounded-xl font-black uppercase tracking-widest text-2xl shadow-md active:scale-95 transition-all"
+                                            >
+                                                Login
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setShowAdminLogin(false);
+                                                    setAdminPassword('');
+                                                }}
+                                                className="px-6 bg-gray-100 text-gray-600 py-3 rounded-xl font-black uppercase text-2xl shadow-md active:scale-95 transition-all"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => setShowAdminLogin(true)}
+                                        className="w-full bg-black text-white py-3 rounded-xl font-black uppercase tracking-widest text-2xl shadow-md active:scale-95 transition-all"
+                                    >
+                                        Login as Admin
+                                    </button>
+                                )}
+                            </>
+                        ) : (
+                            <>
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="bg-green-50 p-3 rounded-2xl text-green-600">
+                                        <Shield className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-2xl leading-tight">Admin Mode Active</h3>
+                                        <p className="text-2xl text-green-600 font-medium">You have admin privileges</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={handleAdminLogout}
+                                    className="w-full bg-red-600 text-white py-3 rounded-xl font-black uppercase tracking-widest text-2xl shadow-md active:scale-95 transition-all"
+                                >
+                                    Logout Admin
+                                </button>
+                            </>
+                        )}
                     </div>
                 </section>
 
