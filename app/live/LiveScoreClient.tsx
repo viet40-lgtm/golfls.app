@@ -10,11 +10,9 @@ import { LivePlayerSelectionModal } from '@/components/LivePlayerSelectionModal'
 import { LiveRoundModal } from '@/components/LiveRoundModal';
 import { GuestPlayerModal } from '@/components/GuestPlayerModal';
 import ConfirmModal from '@/components/ConfirmModal';
-import AddToClubModal from '@/components/AddToClubModal';
 import { PoolModal } from '@/components/PoolModal';
 
 import { createLiveRound, addPlayerToLiveRound, saveLiveScore, deleteLiveRound, addGuestToLiveRound, updateGuestInLiveRound, deleteGuestFromLiveRound, updatePlayerScorers } from '@/app/actions/create-live-round';
-import { copyLiveToClub } from '@/app/actions/copy-live-to-club';
 import { generateScorecardHtml, generateClipboardHtml } from '@/app/lib/scorecard-helper';
 import { LiveLeaderboardCard } from './LiveLeaderboardCard';
 
@@ -124,7 +122,6 @@ export default function LiveScoreClient({
     const [isGuestModalOpen, setIsGuestModalOpen] = useState(false);
     const [guestPlayers, setGuestPlayers] = useState<Player[]>([]);
     const [editingGuest, setEditingGuest] = useState<{ id: string; name: string; index: number; courseHandicap: number } | null>(null);
-    const [isAddToClubModalOpen, setIsAddToClubModalOpen] = useState(false);
     const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
     const [isPoolModalOpen, setIsPoolModalOpen] = useState(false);
     const [isRoundSelectModalOpen, setIsRoundSelectModalOpen] = useState(false);
@@ -861,24 +858,6 @@ export default function LiveScoreClient({
         }
     };
 
-    const handleCopyToClub = async (selectedPlayerIds: string[]) => {
-        if (!liveRoundId) {
-            showAlert('Error', 'No live round selected');
-            return;
-        }
-
-        const result = await copyLiveToClub({
-            liveRoundId,
-            playerIds: selectedPlayerIds
-        });
-
-        if (result.success) {
-            showAlert('Success', result.message || 'Successfully copied to club scores!');
-        } else {
-            showAlert('Error', 'Failed to copy: ' + result.error);
-        }
-    };
-
     const movePlayerOrder = (index: number, direction: 'up' | 'down') => {
         const newSelected = [...selectedPlayers];
         const targetIndex = direction === 'up' ? index - 1 : index + 1;
@@ -1355,15 +1334,6 @@ export default function LiveScoreClient({
                         <div className="flex justify-between items-center">
                             <label htmlFor="round-selector" className="text-base font-black text-zinc-400 uppercase tracking-widest ml-1">Select Round</label>
                             <div className="flex gap-1">
-                                {/* Transfer button - Admin only */}
-                                {liveRoundId && isAdmin && (
-                                    <button
-                                        onClick={() => setIsAddToClubModalOpen(true)}
-                                        className="bg-green-600 text-white text-xl font-bold px-1 py-1 rounded-xl hover:bg-green-700 transition-all shadow-md active:scale-95"
-                                    >
-                                        Transfer
-                                    </button>
-                                )}
                                 {/* Delete button - admin only (for current round) */}
                                 {isAdmin && liveRoundId && (
                                     <button
@@ -2453,18 +2423,10 @@ export default function LiveScoreClient({
                     )
                 }
 
-            </main >
-
-            {/* Add to Club Modal */}
-            < AddToClubModal
-                isOpen={isAddToClubModalOpen}
-                onClose={() => setIsAddToClubModalOpen(false)}
-                players={isAdmin ? rankedPlayers : rankedPlayers.filter(p => effectiveScoringPlayers.some(sp => sp.id === p.id))}
-                liveRoundId={liveRoundId || ''}
-                onSave={handleCopyToClub}
-            />
+            </main>
 
             {/* Stats Modal */}
+
             {
                 isStatsModalOpen && (
                     <div className="fixed inset-0 z-[300] bg-gray-50 overflow-y-auto">
@@ -2607,20 +2569,6 @@ export default function LiveScoreClient({
             }
 
 
-            {
-                isAddToClubModalOpen && (
-                    <AddToClubModal
-                        isOpen={isAddToClubModalOpen}
-                        onClose={() => setIsAddToClubModalOpen(false)}
-                        onSave={async () => {
-                            setIsAddToClubModalOpen(false);
-                        }}
-                        players={allPlayers}
-                        liveRoundId={liveRoundId || ''}
-                    />
-                )
-            }
-
             {/* Pool Modal */}
             {
                 isPoolModalOpen && liveRoundId && (
@@ -2648,7 +2596,7 @@ export default function LiveScoreClient({
                 )
             }
 
-        </div >
+        </div>
     );
 }
 
