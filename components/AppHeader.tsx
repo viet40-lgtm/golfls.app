@@ -71,20 +71,21 @@ export default function AppHeader() {
                             <div className="relative menu-container">
                                 <button
                                     onClick={() => setIsMenuOpen(!isMenuOpen)}
-                                    className="flex items-center gap-2 bg-black text-white border border-black p-1 rounded-xl text-lg font-black transition-all active:scale-95 hover:bg-zinc-800 uppercase tracking-widest"
+                                    className="flex items-center gap-2 bg-black text-white border-2 border-black p-1 px-2 rounded-xl text-xl font-black transition-all active:scale-95 hover:bg-zinc-800 uppercase tracking-widest"
                                 >
-                                    <Menu className="w-4 h-4" />
+                                    <Menu className="w-5 h-5" />
                                     <span>Menu</span>
                                 </button>
 
                                 {isMenuOpen && (
-                                    <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200">
+                                    <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border-2 border-black overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200">
                                         <div className="p-2 space-y-1">
                                             <MenuLink
                                                 href={isAuthenticated ? "/live" : "/"}
                                                 icon={<Home className="w-4 h-4" />}
-                                                label={isAuthenticated ? "Live Round" : "Home"}
+                                                label={isAuthenticated ? "Live score" : "Home"}
                                                 onClick={() => setIsMenuOpen(false)}
+                                                className="border-2 border-black"
                                             />
                                             <MenuLink href="/settings" icon={<Settings className="w-4 h-4" />} label="Settings" onClick={() => setIsMenuOpen(false)} />
                                             <div className="h-px bg-gray-50 my-2 mx-2"></div>
@@ -157,12 +158,12 @@ export default function AppHeader() {
     );
 }
 
-function MenuLink({ href, icon, label, onClick }: { href: string; icon: React.ReactNode; label: string; onClick: () => void }) {
+function MenuLink({ href, icon, label, onClick, className = "" }: { href: string; icon: React.ReactNode; label: string; onClick: () => void; className?: string }) {
     return (
         <Link
             href={href}
             onClick={onClick}
-            className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 font-bold rounded-xl transition-colors text-lg text-gray-700"
+            className={`flex items-center gap-3 px-4 py-3 hover:bg-gray-50 font-bold rounded-xl transition-colors text-xl text-black ${className}`}
         >
             <span className="text-gray-400">{icon}</span>
             {label}

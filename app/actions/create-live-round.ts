@@ -14,23 +14,71 @@ export async function createLiveRound(data: {
     par: number;
     rating: number;
     slope: number;
+    initialPlayerId?: string;
+    initialTeeBoxId?: string;
 }) {
-    console.log('SERVER ACTION: createLiveRound starting...', data.name);
+    console.log('SERVER ACTION: createLiveRound starting...', {
+        name: data.name,
+        date: data.date,
+        courseId: data.courseId,
+        courseName: data.courseName,
+        initialPlayerId: data.initialPlayerId
+    });
+
     try {
-        const liveRound = await prisma.liveRound.create({
-            data: {
-                name: data.name,
-                date: data.date,
-                course: { connect: { id: data.courseId } },
-                courseName: data.courseName,
-                par: data.par,
-                rating: data.rating,
-                slope: data.slope
+        if (!data.courseId) {
+            throw new Error("Course ID is required to create a live round.");
+        }
+
+        // Use a transaction to ensure both round and player are created or neither
+        const result = await prisma.$transaction(async (tx) => {
+            const liveRound = await tx.liveRound.create({
+                data: {
+                    name: data.name,
+                    date: data.date,
+                    course: { connect: { id: data.courseId } },
+                    courseName: data.courseName,
+                    par: data.par,
+                    rating: data.rating,
+                    slope: data.slope
+                }
+            });
+
+            if (data.initialPlayerId && data.initialTeeBoxId) {
+                // Get player handicap index and tee box name
+                const [player, teeBox] = await Promise.all([
+                    tx.player.findUnique({
+                        where: { id: data.initialPlayerId },
+                        select: { handicapIndex: true }
+                    }),
+                    tx.teeBox.findUnique({
+                        where: { id: data.initialTeeBoxId },
+                        select: { name: true }
+                    })
+                ]);
+
+                const handicapIndex = player?.handicapIndex || 0;
+                const courseHandicap = Math.round((handicapIndex * (data.slope / 113)) + (data.rating - data.par));
+
+                await tx.liveRoundPlayer.create({
+                    data: {
+                        liveRoundId: liveRound.id,
+                        playerId: data.initialPlayerId,
+                        teeBoxId: data.initialTeeBoxId,
+                        indexAtTime: handicapIndex,
+                        teeBoxName: teeBox?.name || 'Selected Tee',
+                        courseHandicap: courseHandicap,
+                        scorerId: data.initialPlayerId
+                    }
+                });
             }
+
+            return liveRound;
         });
-        console.log('SERVER ACTION: createLiveRound SUCCESS:', liveRound.id);
-        revalidatePath('/');
-        return { success: true, liveRoundId: liveRound.id };
+
+        console.log('SERVER ACTION: createLiveRound SUCCESS:', result.id);
+        revalidatePath('/live');
+        return { success: true, liveRoundId: result.id };
     } catch (error) {
         console.error('SERVER ACTION: createLiveRound FAILED:', error);
         return {
@@ -209,6 +257,7 @@ export async function addPlayerToLiveRound(data: {
     liveRoundId: string;
     playerId: string;
     teeBoxId: string;
+    scorerId?: string | null;
 }) {
     console.log('SERVER ACTION: addPlayerToLiveRound starting...', data.playerId, 'to', data.liveRoundId);
     try {
@@ -245,11 +294,17 @@ export async function addPlayerToLiveRound(data: {
         });
 
         if (existing) {
+            // Even if they exist, if they don't have a scorer and a scorer was suggested, update it
+            if (!existing.scorerId && data.scorerId) {
+                await prisma.liveRoundPlayer.update({
+                    where: { id: existing.id },
+                    data: { scorerId: data.scorerId }
+                });
+            }
             revalidatePath('/');
             return { success: true, liveRoundPlayerId: existing.id };
         }
 
-        // Create live round player
         // Create live round player
         const liveRoundPlayer = await prisma.liveRoundPlayer.create({
             data: {
@@ -258,7 +313,8 @@ export async function addPlayerToLiveRound(data: {
                 teeBoxId: data.teeBoxId,
                 indexAtTime: handicapIndex, // Snapshot
                 teeBoxName: teeBox.name, // Snapshot
-                courseHandicap: Math.round((handicapIndex * (teeBox.slope / 113)) + (teeBox.rating - par))
+                courseHandicap: Math.round((handicapIndex * (teeBox.slope / 113)) + (teeBox.rating - par)),
+                scorerId: data.scorerId || data.playerId // Default to self as scorer if not specified
             }
         });
 
@@ -333,6 +389,7 @@ export async function addGuestToLiveRound(data: {
     rating: number;
     slope: number;
     par: number;
+    scorerId?: string | null;
 }) {
     try {
         // We typically need a teeBoxId. If 'Guest' tee doesn't exist, we might need a workaround.
@@ -364,7 +421,8 @@ export async function addGuestToLiveRound(data: {
                 teeBoxId: fallbackTeeBox.id,
                 teeBoxName: fallbackTeeBox.name || 'Guest',
                 indexAtTime: data.index,
-                courseHandicap: data.courseHandicap
+                courseHandicap: data.courseHandicap,
+                scorerId: data.scorerId
             }
         });
 

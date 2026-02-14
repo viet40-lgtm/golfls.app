@@ -83,9 +83,9 @@ export function LiveRoundModal({
                     setDate(today);
 
                     // Priority: defaultTeeBoxId -> white tee -> first available
-                    const defaultTee = defaultTeeBoxId ? initialCourse.teeBoxes.find((t: any) => t.id === defaultTeeBoxId) : null;
-                    const whiteTee = initialCourse.teeBoxes.find((t: any) => t.name.toLowerCase().includes('white'));
-                    const initialTee = defaultTee || whiteTee || initialCourse.teeBoxes[0];
+                    const defaultTee = defaultTeeBoxId ? initialCourse.teeBoxes?.find((t: any) => t.id === defaultTeeBoxId) : null;
+                    const whiteTee = initialCourse.teeBoxes?.find((t: any) => t.name.toLowerCase().includes('white'));
+                    const initialTee = defaultTee || whiteTee || (initialCourse.teeBoxes && initialCourse.teeBoxes[0]);
 
                     if (initialTee) {
                         setSelectedTeeId(initialTee.id);
@@ -140,68 +140,59 @@ export function LiveRoundModal({
                     return;
                 }
 
-                // 1. Create the Round
+                // 1. Create the Round (Includes adding current player in one transaction)
+                const course = Array.isArray(allCourses) ? allCourses.find((c: any) => c.id === cId) : null;
+                const courseName = course?.name || 'Unknown Course';
+
+                // Determine best tee: Selected -> Default Prop -> White -> First Available
+                let targetTeeId = selectedTeeId;
+                if (!targetTeeId && course) {
+                    const white = course.teeBoxes?.find((t: any) => t.name.toLowerCase().includes('white'));
+                    const def = defaultTeeBoxId ? course.teeBoxes?.find((t: any) => t.id === defaultTeeBoxId) : null;
+                    targetTeeId = def?.id || white?.id || (course.teeBoxes && course.teeBoxes[0]?.id);
+                }
+
                 const result = await createLiveRound({
                     name: name || 'Live Round',
                     date: date || today,
                     courseId: cId,
-                    courseName: allCourses.find((c: any) => c.id === cId)?.name || 'Unknown Course',
+                    courseName,
                     par: parVal,
                     rating: ratingVal,
-                    slope: slopeVal
+                    slope: slopeVal,
+                    initialPlayerId: currentUserId || undefined,
+                    initialTeeBoxId: targetTeeId || undefined
                 });
 
                 if (result.success && result.liveRoundId) {
-
-                    // 2. Add Current User (Best Effort)
+                    // Update Local storage sync for my group
                     if (currentUserId) {
+                        const saved = localStorage.getItem(`live_scoring_my_group_${result.liveRoundId}`);
+                        let currentIds: string[] = [];
                         try {
-                            const c = allCourses.find(c => c.id === cId);
-                            // Determine best tee: Selected -> Default Prop -> White -> First Available
-                            let targetTeeId = selectedTeeId;
-
-                            if (!targetTeeId && c) {
-                                const white = c.teeBoxes.find((t: any) => t.name.toLowerCase().includes('white'));
-                                const def = defaultTeeBoxId ? c.teeBoxes.find((t: any) => t.id === defaultTeeBoxId) : null;
-                                targetTeeId = def?.id || white?.id || c.teeBoxes[0]?.id;
-                            }
-
-                            if (targetTeeId) {
-                                await addPlayerToLiveRound({
-                                    liveRoundId: result.liveRoundId,
-                                    playerId: currentUserId,
-                                    teeBoxId: targetTeeId
-                                });
-
-                                // Local storage sync
-                                const saved = localStorage.getItem(`live_scoring_my_group_${result.liveRoundId}`);
-                                let currentIds: string[] = saved ? JSON.parse(saved) : [];
-                                if (!currentIds.includes(currentUserId)) {
-                                    currentIds.push(currentUserId);
-                                    localStorage.setItem(`live_scoring_my_group_${result.liveRoundId}`, JSON.stringify(currentIds));
-                                }
-                            }
-                        } catch (addPlayerError) {
-                            console.error("Failed to auto-add player, but round was created:", addPlayerError);
-                            // We do NOT stop here, we still want to redirect to the valid round
+                            currentIds = saved ? JSON.parse(saved) : [];
+                            if (!Array.isArray(currentIds)) currentIds = [];
+                        } catch (e) {
+                            currentIds = [];
+                        }
+                        if (!currentIds.includes(currentUserId)) {
+                            currentIds.push(currentUserId);
+                            localStorage.setItem(`live_scoring_my_group_${result.liveRoundId}`, JSON.stringify(currentIds));
                         }
                     }
 
                     onClose();
-                    router.replace(`/live?roundId=${result.liveRoundId}`);
-                    // Force a hard refresh to ensure state is clean
-                    setTimeout(() => {
-                        window.location.href = `/live?roundId=${result.liveRoundId}`;
-                    }, 500);
-
+                    // Immediate navigation
+                    window.location.href = `/live?roundId=${result.liveRoundId}`;
                 } else {
                     showAlert('Error', 'Creation Failed: ' + (result.error || 'Server Error'));
                     setIsSaving(false);
                 }
             }
         } catch (e) {
-            console.error('CRASH:', e);
-            showAlert('Error', 'A critical error occurred. Please refresh.');
+            console.error('CRASH in LiveRoundModal handleSave:', e);
+            const errorMsg = e instanceof Error ? e.message : String(e);
+            showAlert('Error', `A critical error occurred: ${errorMsg}. Please refresh.`);
             setIsSaving(false);
         }
     };

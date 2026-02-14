@@ -68,36 +68,7 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
         } : {}
     };
 
-    // 1. IMPROVED FALLBACK LOGIC: Prioritize Today's Rounds
-    // First, check for any round today that the user is participating in
-    const roundsToday = await prisma.liveRoundPlayer.findMany({
-        where: {
-            playerId: sessionUserId,
-            liveRound: {
-                date: todayStr
-            }
-        },
-        orderBy: { liveRound: { createdAt: 'desc' } },
-        include: {
-            liveRound: {
-                include: {
-                    course: {
-                        include: {
-                            teeBoxes: true,
-                            holes: holeIncludeConfig
-                        }
-                    },
-                    players: {
-                        include: {
-                            player: true,
-                            scores: { include: { hole: true } }
-                        }
-                    }
-                }
-            }
-        }
-    });
-
+    // 1. IMPROVED FALLBACK LOGIC: Prioritize URL param, then Today, then Recent
     if (roundIdFromUrl) {
         // Load specific round from URL
         activeRound = await prisma.liveRound.findUnique({
@@ -120,21 +91,23 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
         if (activeRound?.course) {
             defaultCourse = activeRound.course;
             lastUsedCourseId = activeRound.courseId;
+            // Also try to find the player entry for this user to get the last used tee box
+            const playerInRound = activeRound.players.find((p: any) => p.playerId === sessionUserId);
+            if (playerInRound) {
+                lastUsedTeeBoxId = playerInRound.teeBoxId;
+            }
         }
-    } else if (roundsToday.length > 0) {
-        // Use the most recent round from today
-        activeRound = roundsToday[0].liveRound;
-        defaultCourse = activeRound.course;
-        lastUsedCourseId = activeRound.courseId;
-        lastUsedTeeBoxId = roundsToday[0].teeBoxId;
     } else {
-        // Failover: Try to find the user's most recent COMPLETE round (18 holes)
-        const recentRoundPlayers = await prisma.liveRoundPlayer.findMany({
-            where: { playerId: sessionUserId },
-            orderBy: { liveRound: { date: 'desc' } },
-            take: 10,
+        // Only perform these queries if we don't have a roundId from the URL
+        const roundsToday = await prisma.liveRoundPlayer.findMany({
+            where: {
+                playerId: sessionUserId,
+                liveRound: {
+                    date: todayStr
+                }
+            },
+            orderBy: { liveRound: { createdAt: 'desc' } },
             include: {
-                scores: true,
                 liveRound: {
                     include: {
                         course: {
@@ -154,19 +127,20 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
             }
         });
 
-        const completeRoundPlayer = recentRoundPlayers.find(rp => (rp.scores?.length || 0) >= 18);
-
-        if (completeRoundPlayer) {
-            activeRound = completeRoundPlayer.liveRound;
-            defaultCourse = completeRoundPlayer.liveRound.course;
-            lastUsedCourseId = completeRoundPlayer.liveRound.courseId;
-            lastUsedTeeBoxId = completeRoundPlayer.teeBoxId;
+        if (roundsToday.length > 0) {
+            // Use the most recent round from today
+            activeRound = roundsToday[0].liveRound;
+            defaultCourse = activeRound.course;
+            lastUsedCourseId = activeRound.courseId;
+            lastUsedTeeBoxId = roundsToday[0].teeBoxId;
         } else {
-            // Absolute last round fallback
-            const lastUserRoundPlayer = await prisma.liveRoundPlayer.findFirst({
+            // Failover: Try to find the user's most recent COMPLETE round (18 holes)
+            const recentRoundPlayers = await prisma.liveRoundPlayer.findMany({
                 where: { playerId: sessionUserId },
-                orderBy: { liveRound: { createdAt: 'desc' } },
+                orderBy: { liveRound: { date: 'desc' } },
+                take: 10,
                 include: {
+                    scores: true,
                     liveRound: {
                         include: {
                             course: {
@@ -186,11 +160,44 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
                 }
             });
 
-            if (lastUserRoundPlayer) {
-                activeRound = lastUserRoundPlayer.liveRound;
-                defaultCourse = lastUserRoundPlayer.liveRound.course;
-                lastUsedCourseId = lastUserRoundPlayer.liveRound.courseId;
-                lastUsedTeeBoxId = lastUserRoundPlayer.teeBoxId;
+            const completeRoundPlayer = recentRoundPlayers.find(rp => (rp.scores?.length || 0) >= 18);
+
+            if (completeRoundPlayer) {
+                activeRound = completeRoundPlayer.liveRound;
+                defaultCourse = completeRoundPlayer.liveRound.course;
+                lastUsedCourseId = completeRoundPlayer.liveRound.courseId;
+                lastUsedTeeBoxId = completeRoundPlayer.teeBoxId;
+            } else {
+                // Absolute last round fallback
+                const lastUserRoundPlayer = await prisma.liveRoundPlayer.findFirst({
+                    where: { playerId: sessionUserId },
+                    orderBy: { liveRound: { createdAt: 'desc' } },
+                    include: {
+                        liveRound: {
+                            include: {
+                                course: {
+                                    include: {
+                                        teeBoxes: true,
+                                        holes: holeIncludeConfig
+                                    }
+                                },
+                                players: {
+                                    include: {
+                                        player: true,
+                                        scores: { include: { hole: true } }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                if (lastUserRoundPlayer) {
+                    activeRound = lastUserRoundPlayer.liveRound;
+                    defaultCourse = lastUserRoundPlayer.liveRound.course;
+                    lastUsedCourseId = lastUserRoundPlayer.liveRound.courseId;
+                    lastUsedTeeBoxId = lastUserRoundPlayer.teeBoxId;
+                }
             }
         }
     }

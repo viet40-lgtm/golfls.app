@@ -803,7 +803,8 @@ export default function LiveScoreClient({
             courseHandicap: guest.courseHandicap,
             rating: initialRound.rating,
             slope: initialRound.slope,
-            par: initialRound.par
+            par: initialRound.par,
+            scorerId: currentUserId
         });
 
         if (result.success && result.guestPlayerId) {
@@ -1167,7 +1168,7 @@ export default function LiveScoreClient({
                         preferred_tee_box: null,
                         isGuest: true,
                         liveRoundPlayerId: p.id, // For guests, the ID is already the LiveRoundPlayer ID
-                        scorerId: p.scorerId,
+                        scorerId: p.scorerId || (selectedPlayers.some(sp => sp.id === p.id) ? currentUserId : null),
                         liveRoundData: {
                             tee_box_name: p.tee_box_name,
                             course_hcp: p.course_handicap
@@ -1181,7 +1182,7 @@ export default function LiveScoreClient({
                         index: p.player.index,
                         preferred_tee_box: p.player.preferred_tee_box,
                         liveRoundPlayerId: p.id, // Store the LiveRoundPlayer ID
-                        scorerId: p.scorerId,
+                        scorerId: p.scorerId || (selectedPlayers.some(sp => sp.id === p.player.id) ? currentUserId : null),
                         liveRoundData: {
                             tee_box_name: p.tee_box_name,
                             course_hcp: p.course_handicap
@@ -1198,7 +1199,7 @@ export default function LiveScoreClient({
         // For admins: show all players in the round (from server)
         // For non-admins: show all players selected by any device
         return Array.from(summaryPlayersMap.values());
-    }, [initialRound, selectedPlayers]);
+    }, [initialRound, selectedPlayers, currentUserId]);
 
     // Admin should always see ALL players in the round for scoring/management
     // Non-admins see their locally selected group for SCORING only

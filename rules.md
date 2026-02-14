@@ -80,7 +80,7 @@ This file defines the core UI/UX standards and coding patterns for the G-GolfLS 
 - **Standardization**: Apply these color rules consistently across all components, modals, and pages.
 
 ## 10. Universal Popup Styling
-- **Fullscreen**: All popups/modals must be fullscreen (`fixed inset-0 z-50 bg-white`).
+- **Fullscreen**: All popups/modals must be fullscreen, covering the entire viewport from all edges (top: 0, bottom: 0, left: 0, right: 0) using `fixed inset-0 z-50 bg-white`.
 - **Padding**: Set padding to 1 on all sides (`p-1`).
 - **Close Button**:
     - **Position**: Top right corner (`absolute top-2 right-2` or similar).

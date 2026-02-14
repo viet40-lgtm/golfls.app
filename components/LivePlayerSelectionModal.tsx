@@ -426,12 +426,12 @@ export function LivePlayerSelectionModal({
 
                 {/* Footer */}
                 {!isCreating && (
-                    <div className="p-2 border-t border-gray-100">
+                    <div className="p-2 border-t border-zinc-100">
                         <button
                             onClick={handleConfirm}
                             className="w-full py-4 bg-black text-white text-[18pt] font-black uppercase italic tracking-tighter rounded-xl shadow-lg active:scale-[0.98] transition-all"
                         >
-                            Save Round Configuration
+                            Save
                         </button>
                     </div>
                 )}
