@@ -91,7 +91,7 @@ export default function AppHeader() {
                                             <MenuLink
                                                 href={isAuthenticated ? "/live" : "/"}
                                                 icon={<Home className="w-8 h-8" />}
-                                                label={isAuthenticated ? "Live Scores" : "Home"}
+                                                label={isAuthenticated ? "Live Scoring" : "Home"}
                                                 onClick={() => setIsMenuOpen(false)}
                                                 isActive={pathname === (isAuthenticated ? "/live" : "/")}
                                             />
