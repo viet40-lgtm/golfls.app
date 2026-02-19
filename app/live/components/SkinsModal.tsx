@@ -278,6 +278,16 @@ export function SkinsModal({
                     </div>
                 )}
             </div>
+
+            {/* Fixed Footer with Full-Width Close Button - Matches FBT Modal */}
+            <div className="bg-white border-t border-gray-100 flex w-full sticky bottom-0 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] p-4">
+                <button
+                    onClick={onClose}
+                    className="flex-1 bg-black text-white py-3 rounded-full text-[15pt] font-bold uppercase tracking-widest hover:bg-gray-800 transition-all shadow-md active:scale-95 cursor-pointer"
+                >
+                    Close
+                </button>
+            </div>
         </div>
     );
 }
