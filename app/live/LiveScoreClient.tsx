@@ -17,7 +17,6 @@ import ConfirmModal from '@/components/ConfirmModal';
 import AddToClubModal from '@/components/AddToClubModal';
 import { PoolModal } from '@/components/PoolModal';
 import { createLiveRound, addPlayerToLiveRound, saveLiveScore, deleteLiveRound, addGuestToLiveRound, updateGuestInLiveRound, deleteGuestFromLiveRound } from '../actions/create-live-round';
-import { joinLiveRoundByShortId } from '../actions/join-live-round';
 import { copyLiveToClub } from '../actions/copy-live-to-club';
 import { deleteUserLiveRound } from '../actions/delete-user-round';
 import { logout } from '../actions/auth';
@@ -1500,7 +1499,7 @@ export default function LiveScoreClient({
             <main className="w-full mx-auto px-1 pt-1 space-y-1">
                 {/* Round Selector - Visibility Controlled by 'Details' toggle */}
                 {showDetails && (
-                    <div className="bg-white rounded-xl p-1 border-2 border-black shadow-xl flex flex-col justify-center space-y-1" style={{ borderColor: 'black' }}>
+                    <div className="bg-white rounded-xl p-1 border-2 border-black shadow-xl flex flex-col justify-center space-y-1">
                         <div className="flex justify-between items-center">
                             <label htmlFor="round-selector" className="text-xs font-black text-zinc-400 uppercase tracking-widest ml-1">Select Round</label>
                             <div className="flex gap-1">
@@ -1606,7 +1605,7 @@ export default function LiveScoreClient({
 
                 {/* Course Info Card */}
                 {showDetails && isToday && (
-                    <div className="bg-white/80 backdrop-blur-xl rounded-xl p-1 border-2 border-black shadow-xl" style={{ borderColor: 'black' }}>
+                    <div className="bg-white/80 backdrop-blur-xl rounded-xl p-1 border-2 border-black shadow-xl">
                         <div className="flex justify-between items-start">
                             <div className="flex-1">
                                 <div className="flex items-center gap-1">
@@ -1728,7 +1727,7 @@ export default function LiveScoreClient({
                 {/* GPS SECTION */}
                 {
                     initialRound && isToday && (
-                        <div className="bg-white/80 backdrop-blur-xl rounded-xl px-2 py-1 border-2 border-black shadow-xl space-y-1" style={{ borderColor: 'black' }}>
+                        <div className="bg-white/80 backdrop-blur-xl rounded-xl px-2 py-1 border-2 border-black shadow-xl space-y-1">
                             <div className="flex justify-between items-center border-b border-zinc-200 pb-1">
                                 <div className="flex items-center gap-1">
                                     <button
@@ -1940,7 +1939,7 @@ export default function LiveScoreClient({
                 {/* PLAYERS SECTION (Scoring) */}
                 {
                     isToday && (
-                        <div id="scoring-section" className="bg-white/80 backdrop-blur-xl rounded-xl px-2 py-1 border-2 border-black shadow-xl space-y-1" style={{ borderColor: 'black' }}>
+                        <div id="scoring-section" className="bg-white/80 backdrop-blur-xl rounded-xl px-2 py-1 border-2 border-black shadow-xl space-y-1">
                             <div className="flex justify-between items-center border-b border-zinc-200 pb-1">
                                 <div className="flex items-center gap-2">
                                     <h2 className="text-lg font-black text-zinc-900 italic uppercase tracking-tighter">Players ({effectiveScoringPlayers.length})</h2>
@@ -2360,7 +2359,7 @@ export default function LiveScoreClient({
                 {/* Live Scores Summary */}
                 {
                     summaryPlayers.length > 0 ? (
-                        <div id="summary-section" className="mt-1 space-y-1 border-2 border-black rounded-xl p-1 shadow-xl" style={{ borderColor: 'black' }}>
+                        <div id="summary-section" className="mt-1 space-y-1 border-2 border-black rounded-xl p-1 shadow-xl">
                             <div className="flex gap-1">
                                 <button
                                     onClick={() => router.refresh()}
