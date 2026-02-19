@@ -2995,6 +2995,16 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                         >
 
                             <div className="bg-white rounded-2xl px-6 py-4 shadow-2xl flex flex-col items-center max-w-sm mx-4 relative">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setBirdiePlayers([]);
+                                    }}
+                                    className="absolute top-2 right-2 p-2 bg-black text-white hover:bg-gray-800 rounded-full transition-colors active:scale-95 z-10 shadow-sm"
+                                    aria-label="Close"
+                                >
+                                    <X className="w-6 h-6" />
+                                </button>
                                 <img
                                     src="/birdie-celebration.png"
                                     alt="Birdie!"
@@ -3016,7 +3026,7 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                                         e.stopPropagation();
                                         setBirdiePlayers([]);
                                     }}
-                                    className="w-full bg-black text-white rounded-full py-2 text-[15pt] font-black hover:bg-gray-800 transition-colors shadow-md active:scale-95 uppercase tracking-wide"
+                                    className="w-full bg-black text-white rounded-full py-3 text-[15pt] font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors shadow-md active:scale-95"
                                 >
                                     CLOSE
                                 </button>
@@ -3038,6 +3048,16 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="bg-white rounded-2xl px-6 py-4 shadow-2xl flex flex-col items-center max-w-sm mx-4 border-4 border-yellow-400 relative">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setEaglePlayers([]);
+                                    }}
+                                    className="absolute top-2 right-2 p-2 bg-black text-white hover:bg-gray-800 rounded-full transition-colors active:scale-95 z-10 shadow-sm"
+                                    aria-label="Close"
+                                >
+                                    <X className="w-6 h-6" />
+                                </button>
                                 <div className="text-[100pt] leading-none mb-2">🦅</div>
                                 <h1 className="text-[30pt] font-black text-yellow-500 mb-4 text-center leading-tight drop-shadow-sm uppercase italic">Awesome Eagle!</h1>
 
