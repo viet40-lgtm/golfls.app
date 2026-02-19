@@ -2589,6 +2589,12 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                                     <span className="text-[25pt] leading-none">🖕</span>
                                 </button>
                                 <button
+                                    onClick={() => setBirdiePlayers(['Test'] as any)}
+                                    className="hidden w-16 h-12 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors shadow-md active:scale-95"
+                                >
+                                    TEST
+                                </button>
+                                <button
                                     onClick={() => setIsPoolModalOpen(true)}
                                     className="px-4 py-2 rounded-full text-[15pt] font-black transition-colors shadow-sm cursor-pointer whitespace-nowrap bg-black text-white border-2 border-black hover:bg-gray-800 uppercase tracking-wide"
                                 >
@@ -2988,7 +2994,16 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                             onClick={(e) => e.stopPropagation()}
                         >
 
-                            <div className="bg-white rounded-2xl px-6 py-4 shadow-2xl flex flex-col items-center max-w-sm mx-4">
+                            <div className="bg-white rounded-2xl px-6 py-4 shadow-2xl flex flex-col items-center max-w-sm mx-4 relative">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setBirdiePlayers([]);
+                                    }}
+                                    className="absolute top-2 right-2 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors active:scale-95 z-10"
+                                >
+                                    <X className="w-6 h-6 text-gray-700" />
+                                </button>
                                 <img
                                     src="/birdie-celebration.png"
                                     alt="Birdie!"
@@ -3031,7 +3046,16 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                             className="animate-in zoom-in-95 duration-500 flex flex-col items-center gap-4"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="bg-white rounded-2xl px-6 py-4 shadow-2xl flex flex-col items-center max-w-sm mx-4 border-4 border-yellow-400">
+                            <div className="bg-white rounded-2xl px-6 py-4 shadow-2xl flex flex-col items-center max-w-sm mx-4 border-4 border-yellow-400 relative">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setEaglePlayers([]);
+                                    }}
+                                    className="absolute top-2 right-2 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors active:scale-95 z-10"
+                                >
+                                    <X className="w-6 h-6 text-gray-700" />
+                                </button>
                                 <div className="text-[100pt] leading-none mb-2">🦅</div>
                                 <h1 className="text-[30pt] font-black text-yellow-500 mb-4 text-center leading-tight drop-shadow-sm uppercase italic">Awesome Eagle!</h1>
 

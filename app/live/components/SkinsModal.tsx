@@ -115,10 +115,10 @@ export function SkinsModal({
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors active:scale-95"
-                            aria-label="Close Skins Modal"
+                            title="Close"
+                            className="px-4 py-2 bg-black text-white rounded-full text-[15pt] font-bold hover:bg-gray-800 transition-all shadow-md active:scale-95"
                         >
-                            <X className="w-6 h-6 text-gray-700" />
+                            <X className="w-8 h-8" />
                         </button>
                     </div>
 
