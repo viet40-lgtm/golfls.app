@@ -3001,6 +3001,7 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                                         setBirdiePlayers([]);
                                     }}
                                     className="absolute top-2 right-2 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors active:scale-95 z-10"
+                                    aria-label="Close"
                                 >
                                     <X className="w-6 h-6 text-gray-700" />
                                 </button>
@@ -3053,6 +3054,7 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                                         setEaglePlayers([]);
                                     }}
                                     className="absolute top-2 right-2 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors active:scale-95 z-10"
+                                    aria-label="Close"
                                 >
                                     <X className="w-6 h-6 text-gray-700" />
                                 </button>

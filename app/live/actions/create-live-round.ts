@@ -213,7 +213,7 @@ export async function updateLiveRound(data: {
                     teeBoxPar: data.par,
                     courseHandicap: courseHandicap,
                     indexAtTime: player.indexAtTime // Ensure indexAtTime is preserved or updated if needed
-                }
+                } as any
             });
         }
 
@@ -294,7 +294,7 @@ export async function addPlayerToLiveRound(data: {
                 courseHandicap: Math.round((handicapIndex * (teeBox.slope / 113)) + (teeBox.rating - par)),
                 scorerId: data.scorerId,
                 inPool: false // Explicitly enforce opt-in only
-            }
+            } as any
         });
 
         revalidatePath('/live');
