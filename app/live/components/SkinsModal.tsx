@@ -1,293 +1,539 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { X, Users, ChevronDown, ChevronUp, CheckSquare, Square } from 'lucide-react';
-import { joinSkins, leaveSkins } from '../actions/skins';
-import { calculateSkins } from '../lib/skins';
-
-interface SkinHole {
-    number: number;
-    par: number;
-    difficulty: number;
-}
-
-interface SkinPlayer {
-    id: string;
-    name: string;
-    courseHandicap: number;
-    scores: Record<number, number>;
-}
+import { useState, useMemo, useEffect } from 'react';
+import { X, Users, CheckSquare, Square, Trash2, Copy } from 'lucide-react';
+import { calculateSkins, type SkinResult } from '@/lib/skins';
+import { updateSkinsParticipants } from '../actions/skins';
+import { Toast } from './Toast';
 
 interface SkinsModalProps {
     isOpen: boolean;
     onClose: () => void;
     liveRoundId: string;
-    holes: SkinHole[];
-    potentialPlayers: SkinPlayer[];
-    participantIds: string[];
-    onParticipantsChange: (ids: string[]) => void;
+    holes: { number: number; par: number; difficulty: number }[];
+    potentialPlayers: { id: string; name: string; courseHandicap: number; scores: Record<number, number>; scorerId?: string | null }[];
+    participantIds: Record<string, string[]>;
+    onParticipantsChange: (ids: Record<string, string[]>) => void;
+    isAdmin?: boolean;
 }
 
 export function SkinsModal({
     isOpen,
     onClose,
-    liveRoundId,
+    liveRoundId, // retained for compatibility if needed
     holes,
     potentialPlayers,
     participantIds,
-    onParticipantsChange
+    onParticipantsChange,
+    isAdmin = false
 }: SkinsModalProps) {
     const [isUpdating, setIsUpdating] = useState(false);
-    const [isSelectionExpanded, setIsSelectionExpanded] = useState(true);
-    const [carryOversEnabled, setCarryOversEnabled] = useState(true);
+    const [activeGroup, setActiveGroup] = useState<string | null>(null);
+    const [carryOversByGroup, setCarryOversByGroup] = useState<Record<string, boolean>>({ '1': true });
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-    // Auto-collapse selection if specific conditions met? 
-    // User requested "on top section", implying always available. 
-    // We'll keep it collapsible but default open if few players.
+    const [initialParticipantIds, setInitialParticipantIds] = useState<Record<string, string[]>>({});
+    const [initialCarryOvers, setInitialCarryOvers] = useState<Record<string, boolean>>({});
+
     useEffect(() => {
-        if (isOpen && participantIds.length > 3) {
-            setIsSelectionExpanded(false);
-        } else {
-            setIsSelectionExpanded(true);
+        if (isOpen) {
+            setInitialParticipantIds(participantIds);
+            setInitialCarryOvers(carryOversByGroup);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen]);
 
-    const activePlayers = useMemo(() => {
-        return potentialPlayers.filter(p => participantIds.includes(p.id));
+    const hasChanges = useMemo(() => {
+        return JSON.stringify(initialParticipantIds) !== JSON.stringify(participantIds) ||
+            JSON.stringify(initialCarryOvers) !== JSON.stringify(carryOversByGroup);
+    }, [initialParticipantIds, participantIds, initialCarryOvers, carryOversByGroup]);
+
+    const handleToggle = (playerId: string) => {
+        if (!activeGroup) return;
+        const currentIds = participantIds[activeGroup] || [];
+        const isParticipating = currentIds.includes(playerId);
+
+        const newGroupIds = isParticipating
+            ? currentIds.filter(id => id !== playerId)
+            : [...currentIds, playerId];
+
+        onParticipantsChange({
+            ...participantIds,
+            [activeGroup]: newGroupIds
+        });
+    };
+
+    const handleNewGroup = () => {
+        const existingGroupIds = Object.keys(participantIds).map(Number).filter(n => !isNaN(n));
+        let nextGroupIdNum = 1;
+        while (existingGroupIds.includes(nextGroupIdNum)) {
+            nextGroupIdNum++;
+        }
+        const nextGroupId = String(nextGroupIdNum);
+
+        onParticipantsChange({
+            ...participantIds,
+            [nextGroupId]: []
+        });
+
+        setCarryOversByGroup(prev => ({
+            ...prev,
+            [nextGroupId]: true
+        }));
+
+        setActiveGroup(nextGroupId);
+    };
+
+    const handleDeleteGroup = (gid: string) => {
+        const newParticipantIds = { ...participantIds };
+        delete newParticipantIds[gid];
+        onParticipantsChange(newParticipantIds);
+
+        const newCarryOvers = { ...carryOversByGroup };
+        delete newCarryOvers[gid];
+        setCarryOversByGroup(newCarryOvers);
+
+        if (activeGroup === gid) {
+            const remaining = Object.keys(newParticipantIds);
+            const nextGroupId = remaining.length > 0 ? remaining[0] : null;
+            setActiveGroup(nextGroupId);
+        }
+    };
+
+    const resultsByGroup = useMemo(() => {
+        const results: Record<string, any> = {};
+        Object.keys(participantIds).forEach(gid => {
+            const pids = participantIds[gid] || [];
+            if (pids.length > 0) {
+                const isCarryOver = carryOversByGroup[gid] ?? true;
+                results[gid] = calculateSkins(potentialPlayers, holes, pids, isCarryOver);
+            }
+        });
+        return results;
+    }, [potentialPlayers, holes, participantIds, carryOversByGroup]);
+
+    const playerDisplayNames = useMemo(() => {
+        const nameMap: Record<string, string> = {};
+        const allPids = Object.values(participantIds).flat();
+        const participants = potentialPlayers.filter(p => allPids.includes(p.id));
+        const firstNames = participants.map(p => p.name.split(' ')[0]);
+
+        potentialPlayers.forEach(p => {
+            const parts = p.name.split(' ');
+            const firstName = parts[0];
+            const hasDuplicate = firstNames.filter(name => name === firstName).length > 1;
+
+            if (hasDuplicate && parts.length > 1) {
+                nameMap[p.id] = `${firstName} ${parts[1][0]}.`;
+            } else {
+                nameMap[p.id] = firstName;
+            }
+        });
+
+        return nameMap;
     }, [potentialPlayers, participantIds]);
 
-    const handleToggle = async (playerId: string) => {
-        if (isUpdating) return;
-        setIsUpdating(true);
-        const isParticipating = participantIds.includes(playerId);
-        let newIds = [...participantIds];
-        try {
-            if (isParticipating) {
-                await leaveSkins(liveRoundId, playerId);
-                newIds = newIds.filter(id => id !== playerId);
-            } else {
-                await joinSkins(liveRoundId, playerId);
-                newIds.push(playerId);
+    const handleCopyEmail = async () => {
+        let html = `<html><body style="margin: 0; padding: 0;"><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #ffffff; padding: 15px; max-width: 600px;">`;
+        html += `<h2 style="margin: 0 0 24px 0; font-weight: 900; font-size: 26px; text-transform: uppercase; color: #000000; letter-spacing: -0.05em;">Skins Results</h2>`;
+
+        let plainText = `Skins Results\n\n`;
+
+        const groupIds = Object.keys(participantIds).sort();
+
+        groupIds.forEach((gid, index) => {
+            const pids = participantIds[gid];
+            if (pids.length < 2) return;
+
+            const groupPlayers = potentialPlayers.filter(p => pids.includes(p.id));
+            const res = resultsByGroup[gid];
+            if (!res) return;
+
+            // Thick black line between groups
+            if (index > 0) {
+                html += `
+                    <br />
+                    <hr size="4" color="#000000" style="height: 4px; background-color: #000000; border: none; margin: 30px 0 10px 0;" />
+                    <br />
+                `;
             }
-            onParticipantsChange(newIds);
+
+            // Group Header - simple div followed by an HR
+            html += `
+                <div style="font-family: inherit; font-weight: 900; font-size: 24px; color: #000000; padding-bottom: 4px; margin-top: ${index === 0 ? '30px' : '0'};">
+                    Grp ${gid} (${pids.length})
+                </div>
+                <!-- Line specifically under the group header -->
+                <hr size="4" color="#000000" style="height: 4px; background-color: #000000; border: none; margin: 0 0 20px 0;" />
+            `;
+            plainText += `Group ${gid}:\n`;
+
+            // Sort by skins won desc
+            const sortedPlayers = [...groupPlayers].sort((a, b) => {
+                const skinsA = res?.playerTotals[a.id]?.skins || 0;
+                const skinsB = res?.playerTotals[b.id]?.skins || 0;
+                if (skinsB !== skinsA) return skinsB - skinsA;
+                return a.name.localeCompare(b.name);
+            });
+
+            sortedPlayers.forEach(p => {
+                const stats = res?.playerTotals[p.id];
+                const mySkins = stats?.skins || 0;
+                const totalSkins = groupPlayers.reduce((sum, ap) => sum + (res?.playerTotals[ap.id]?.skins || 0), 0);
+                const net = (mySkins * groupPlayers.length) - totalSkins;
+
+                const holesWon = [
+                    ...(res?.holeResults.filter((hr: any) => hr.ultimateWinnerId === p.id).map((hr: any) => ({ num: hr.holeNumber, type: 'carry' })) || []),
+                    ...(res?.holeResults.filter((hr: any) => hr.winnerId === p.id).map((hr: any) => ({ num: hr.holeNumber, type: 'direct' })) || [])
+                ].sort((a, b) => a.num - b.num);
+
+                // Player Card
+                html += `
+                    <table width="100%" cellpadding="10" cellspacing="0" border="0" style="margin-bottom: 8px; border: 2px solid #000000; border-radius: 12px; border-collapse: separate; background-color: #ffffff;">
+                        <tr>
+                            <td>
+                                <!-- Row 1: Name and Results -->
+                                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="table-layout: fixed;">
+                                    <tr>
+                                        <td align="left" style="font-family: inherit; font-size: 17px; font-weight: 900; color: #000000; overflow: hidden; white-space: nowrap;">
+                                            ${playerDisplayNames[p.id]}
+                                        </td>
+                                        <td width="110" align="right" style="font-family: inherit; font-size: 17px; font-weight: 900; color: ${mySkins > 0 ? '#16a34a' : '#000000'};">
+                                            ${mySkins} ${mySkins === 1 ? 'Skin' : 'Skins'}
+                                        </td>
+                                        <td width="70" align="right" style="font-family: inherit; font-size: 17px; font-weight: 900; color: ${net > 0 ? '#16a34a' : (net < 0 ? '#ef4444' : '#000000')};">
+                                            ${net > 0 ? '+' : ''}${net}
+                                        </td>
+                                    </tr>
+                                </table>
+                                
+                                <!-- Row 2: Hole Grid (Using nested tables for color compatibility and spacing) -->
+                                <div style="margin-top: 10px;">
+                                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="table-layout: fixed;">
+                                        <tr>
+                                            ${Array.from({ length: 18 }, (_, i) => i + 1).map(num => {
+                    const hw = holesWon.find(h => h.num === num);
+                    const bgColor = hw ? (hw.type === 'direct' ? '#ff3b30' : '#3b82f6') : '';
+                    return `
+                                                    <td align="center" style="width: 5.5%;">
+                                                        ${hw ? `
+                                                            <table width="19" height="19" cellpadding="0" cellspacing="0" border="0" bgcolor="${bgColor}" style="border-radius: 4px; background-color: ${bgColor}; margin: 0 auto;">
+                                                                <tr>
+                                                                    <td align="center" valign="middle" style="font-family: inherit; font-weight: 900; font-size: 14px; color: #ffffff; line-height: 19px;">
+                                                                        ${hw.num}
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        ` : '<div style="width: 19px; height: 19px;"></div>'}
+                                                    </td>
+                                                `;
+                }).join('')}
+                                        </tr>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                `;
+
+                plainText += `- ${playerDisplayNames[p.id]}: ${mySkins} ${mySkins === 1 ? 'Skin' : 'Skins'} (${net > 0 ? '+' : ''}${net})${holesWon.length > 0 ? ` [Holes: ${holesWon.map(h => h.num).join(', ')}]` : ''}\n`;
+            });
+            plainText += `\n`;
+        });
+        html += `</div></body></html>`;
+
+        try {
+            const blobHtml = new Blob([html], { type: 'text/html' });
+            const blobText = new Blob([plainText], { type: 'text/plain' });
+            await navigator.clipboard.write([
+                new ClipboardItem({
+                    'text/html': blobHtml,
+                    'text/plain': blobText
+                })
+            ]);
+            setToast({ message: 'Copied for email!', type: 'success' });
+        } catch (err) {
+            console.error('Failed to copy html:', err);
+            navigator.clipboard.writeText(plainText);
+            setToast({ message: 'Copied (text only)', type: 'error' });
+        }
+    };
+
+    const handleSave = async () => {
+        if (!hasChanges) {
+            onClose();
+            return;
+        }
+
+        setIsUpdating(true);
+        try {
+            await updateSkinsParticipants(liveRoundId, participantIds);
+            setInitialParticipantIds(participantIds);
+            setInitialCarryOvers(carryOversByGroup);
+            onClose();
         } catch (error) {
-            console.error("Failed to toggle skins participation:", error);
+            console.error("Failed to save skins:", error);
+            setToast({ message: 'Failed to save skins', type: 'error' });
         } finally {
             setIsUpdating(false);
         }
     };
 
-    const results = useMemo(() => {
-        return calculateSkins(potentialPlayers, holes, participantIds, carryOversEnabled);
-    }, [potentialPlayers, holes, participantIds, carryOversEnabled]);
-
-    // Helper to chunk holes
-    const holeChunks = useMemo(() => {
-        const sortedHoles = [...holes].sort((a, b) => a.number - b.number);
-        const chunks = [];
-        for (let i = 0; i < sortedHoles.length; i += 6) {
-            chunks.push(sortedHoles.slice(i, i + 6));
-        }
-        return chunks;
-    }, [holes]);
-
-    // Calculate Dynamic Pot and Buy-In
-    const totalWinnings = activePlayers.reduce((sum, p) => sum + (results?.playerTotals[p.id]?.winnings || 0), 0);
-    // If Carry Overs ON: Pot is fixed (Total Holes) as money is always "in play" (pending or won).
-    // If Carry Overs OFF: Pot is reduced to only Realized Winnings (Dead skins are removed from cost).
-    const currentPot = carryOversEnabled ? holes.length : totalWinnings;
-    const buyIn = activePlayers.length > 0 ? currentPot / activePlayers.length : 0;
-    const remainingPot = currentPot - totalWinnings;
-
     if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 h-[100dvh] z-[200] bg-white flex flex-col overflow-hidden font-sans">
+            {/* Sticky Header */}
+            <div className="px-1 py-4 border-b-2 border-black bg-white sticky top-0 z-20 shadow-sm flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <div className="bg-green-100 p-2 rounded-lg">
+                        <span className="text-[15pt] font-black text-green-700">$</span>
+                    </div>
+                    <div>
+                        <h2 className="text-[18pt] font-black text-black leading-none uppercase tracking-tighter">SKINS GAME</h2>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    {isAdmin && (
+                        <button
+                            onClick={handleCopyEmail}
+                            title="Copy for Email"
+                            className="p-2 bg-slate-100 text-black rounded-full hover:bg-slate-200 transition-all shadow-sm active:scale-95 flex items-center justify-center"
+                        >
+                            <Copy className="w-6 h-6" />
+                        </button>
+                    )}
+                    <button
+                        onClick={onClose}
+                        title="Close"
+                        className="px-4 py-2 bg-black text-white rounded-full text-[15pt] font-bold hover:bg-black transition-all shadow-md active:scale-95 flex items-center justify-center min-w-[50px]"
+                    >
+                        <X className="w-6 h-6" />
+                    </button>
+                </div>
+            </div>
+
             <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white">
-                {/* Header & Controls */}
-                <div className="p-4 border-b border-gray-100 bg-white sticky top-0 z-20 shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                            <div className="bg-green-100 p-2 rounded-lg">
-                                <span className="text-[15pt] font-black text-green-700">$</span>
-                            </div>
-                            <div>
-                                <h2 className="text-[15pt] font-black text-gray-900 leading-none">SKINS GAME</h2>
-                            </div>
-                        </div>
-                        <button
-                            onClick={onClose}
-                            title="Close"
-                            className="px-4 py-2 bg-black text-white rounded-full text-[15pt] font-bold hover:bg-gray-800 transition-all shadow-md active:scale-95"
-                        >
-                            <X className="w-8 h-8" />
-                        </button>
-                    </div>
+                <div className="px-1 py-4 space-y-6">
 
-                    {/* Controls Row */}
-                    <div className="flex items-center justify-between py-2">
-                        <button
-                            onClick={() => setCarryOversEnabled(!carryOversEnabled)}
-                            className="flex items-center gap-2 px-3 py-2 rounded bg-gray-50 border border-gray-200 active:scale-95 transition-all w-full justify-center"
-                        >
-                            {carryOversEnabled ? <CheckSquare className="w-5 h-5 text-green-600" /> : <Square className="w-5 h-5 text-gray-400" />}
-                            <span className="text-[15pt] font-bold text-gray-700">Carry Overs</span>
-                        </button>
-                    </div>
-
-                    {/* Player Selection & Summary List */}
-                    <div className="mt-2 space-y-2">
-                        <div className="flex items-center justify-between py-1">
-                            <span className="text-[15pt] font-bold text-gray-900">Players ({activePlayers.length})</span>
+                    {/* Section 1: All Player Assignment Groups Together */}
+                    <div className="space-y-6">
+                        <div className="flex justify-center mb-4">
+                            <button
+                                onClick={handleNewGroup}
+                                className="px-6 py-2 bg-black text-white rounded-full text-[15pt] font-black uppercase tracking-widest active:scale-95 transition-all shadow-md"
+                            >
+                                + New Group
+                            </button>
                         </div>
 
-                        <div className="flex flex-col gap-1 border-t border-gray-100 pt-2 pb-2">
-                            {potentialPlayers.map(p => {
-                                const isSelected = participantIds.includes(p.id);
-                                const stats = results?.playerTotals[p.id];
-                                const mySkins = stats?.skins || 0;
+                        {Object.keys(participantIds).sort().map(gid => {
+                            const pids = participantIds[gid];
+                            // ONLY show if it has players OR if it is being actively edited
+                            if (pids.length === 0 && activeGroup !== gid) return null;
 
-                                // "Fast Way" Formula: Net = (Player's Skins * Total Players) - Total Skins Won by Group
-                                const totalSkins = activePlayers.reduce((sum, ap) => sum + (results?.playerTotals[ap.id]?.skins || 0), 0);
-                                const net = (mySkins * activePlayers.length) - totalSkins;
+                            const groupPlayers = potentialPlayers.filter(p => pids.includes(p.id));
+                            const res = resultsByGroup[gid];
 
-                                return (
-                                    <div
-                                        key={p.id}
-                                        onClick={() => handleToggle(p.id)}
-                                        className={`flex items-center justify-between p-2 rounded border cursor-pointer transition-colors ${isSelected ? 'bg-white border-green-500 shadow-sm' : 'bg-gray-50 border-transparent opacity-60'}`}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-5 h-5 flex items-center justify-center rounded border ${isSelected ? 'bg-green-600 border-green-600' : 'bg-white border-gray-300'}`}>
-                                                {isSelected && <CheckSquare className="w-4 h-4 text-white" />}
-                                            </div>
-                                            <span className={`text-[15pt] font-bold ${isSelected ? 'text-gray-900' : 'text-gray-500'}`}>{p.name}</span>
+                            return (
+                                <div key={gid} className="space-y-4">
+                                    <div className="flex items-center justify-between border-b-4 border-black pb-1">
+                                        <span className="text-[18pt] font-black text-black tracking-tight">
+                                            Grp {gid} ({pids.length})
+                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => setActiveGroup(activeGroup === gid ? null : gid)}
+                                                className={`flex items-center gap-1.5 px-3 py-1 rounded-xl border-2 border-black active:scale-95 transition-all shadow-sm ${activeGroup === gid ? 'bg-black text-white' : 'bg-white text-black'}`}
+                                            >
+                                                <Users className="w-5 h-5" />
+                                                <span className="text-[15pt] font-bold">Players</span>
+                                            </button>
+                                            <button
+                                                onClick={() => setCarryOversByGroup(prev => ({ ...prev, [gid]: !(prev[gid] ?? true) }))}
+                                                className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white border-2 border-black active:scale-95 transition-all shadow-sm"
+                                            >
+                                                {(carryOversByGroup[gid] ?? true) ? <CheckSquare className="w-5 h-5 text-green-600" /> : <Square className="w-5 h-5 text-black" />}
+                                                <span className="text-[15pt] font-black tracking-tighter">Carryover</span>
+                                            </button>
+                                            {pids.length === 0 && (
+                                                <button
+                                                    onClick={() => handleDeleteGroup(gid)}
+                                                    className="p-1.5 rounded-xl border-2 border-red-500 text-red-500 bg-red-50 active:scale-95 transition-all shadow-sm"
+                                                    title="Delete Group"
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
+                                            )}
                                         </div>
-                                        {isSelected && (
-                                            <div className="flex items-center">
-                                                <div className="w-28 text-right">
-                                                    <span className={`text-[15pt] font-black ${mySkins > 0 ? 'text-green-600' : 'text-gray-400'}`}>
-                                                        {mySkins} {mySkins === 1 ? 'Skin' : 'Skins'}
-                                                    </span>
+                                    </div>
+
+                                    <div className="flex flex-col gap-1">
+                                        {[...groupPlayers].sort((a, b) => {
+                                            const skinsA = res?.playerTotals[a.id]?.skins || 0;
+                                            const skinsB = res?.playerTotals[b.id]?.skins || 0;
+                                            if (skinsB !== skinsA) return skinsB - skinsA;
+                                            return a.name.localeCompare(b.name);
+                                        }).map(p => {
+                                            const stats = res?.playerTotals[p.id];
+                                            const mySkins = stats?.skins || 0;
+                                            const totalSkins = groupPlayers.reduce((sum, ap) => sum + (res?.playerTotals[ap.id]?.skins || 0), 0);
+                                            const net = (mySkins * groupPlayers.length) - totalSkins;
+
+                                            return (
+                                                <div
+                                                    key={p.id}
+                                                    onClick={() => handleToggle(p.id)}
+                                                    className="flex flex-col px-1 py-2 rounded-xl border-2 border-black bg-white shadow-sm cursor-pointer active:scale-[0.98] transition-all"
+                                                >
+                                                    <div className="flex items-center justify-between w-full">
+                                                        <span className="text-[18pt] font-black text-black flex-1 truncate mr-2">
+                                                            {playerDisplayNames[p.id]}
+                                                        </span>
+                                                        <div className="flex items-center">
+                                                            <div className="w-[110px] text-right">
+                                                                <span className={`text-[18pt] font-black ${mySkins > 0 ? 'text-green-600' : 'text-black'}`}>
+                                                                    {mySkins} {mySkins === 1 ? 'Skin' : 'Skins'}
+                                                                </span>
+                                                            </div>
+                                                            <div className="w-[60px] text-right">
+                                                                <span className={`text-[18pt] font-black ${net > 0 ? 'text-green-600' : (net < 0 ? 'text-red-500' : 'text-black')}`}>
+                                                                    {net > 0 ? '+' : ''}{net}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {(() => {
+                                                        const holesWon = [
+                                                            ...(res?.holeResults.filter((hr: any) => hr.ultimateWinnerId === p.id).map((hr: any) => ({ num: hr.holeNumber, type: 'carry' })) || []),
+                                                            ...(res?.holeResults.filter((hr: any) => hr.winnerId === p.id).map((hr: any) => ({ num: hr.holeNumber, type: 'direct' })) || [])
+                                                        ].sort((a, b) => a.num - b.num);
+
+                                                        if (holesWon.length === 0) return null;
+
+                                                        return (
+                                                            <div className="mt-1 w-full grid grid-cols-[repeat(18,1fr)] gap-[1px]">
+                                                                {Array.from({ length: 18 }, (_, i) => i + 1).map(num => {
+                                                                    const hw = holesWon.find(h => h.num === num);
+                                                                    return (
+                                                                        <div key={num} className="flex items-center justify-center p-[0.5px]">
+                                                                            {hw ? (
+                                                                                <div
+                                                                                    className={`w-full aspect-square flex items-center justify-center rounded-sm text-[15pt] font-black text-white ${hw.type === 'direct' ? 'bg-[#ff3b30]' : 'bg-[#3b82f6]'} leading-none tracking-tighter`}
+                                                                                >
+                                                                                    {hw.num}
+                                                                                </div>
+                                                                            ) : (
+                                                                                <div className="w-full aspect-square" />
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        );
+                                                    })()}
                                                 </div>
-                                                <div className="w-16 text-right">
-                                                    <span className={`text-[15pt] font-black ${net > 0 ? 'text-green-600' : (net < 0 ? 'text-red-500' : 'text-gray-400')}`}>
-                                                        {net > 0 ? '+' : ''}{net}
-                                                    </span>
-                                                </div>
+                                            );
+                                        })}
+                                        {groupPlayers.length === 0 && (
+                                            <div className="py-6 text-center border-2 border-dashed border-black/10 rounded-xl bg-white/50">
+                                                <span className="text-[15pt] font-bold text-black">TAP AVAILABLE PLAYERS TO ADD TO GROUP {gid}</span>
                                             </div>
                                         )}
                                     </div>
-                                );
-                            })}
+                                </div>
+                            );
+                        })}
+                    </div>
 
+
+
+                </div>
+            </div>
+
+            {/* Player Selection Popup */}
+            {activeGroup !== null && (
+                <div className="fixed inset-0 z-[300] bg-white flex flex-col animate-in slide-in-from-bottom-5 duration-300">
+                    <div className="flex flex-col h-full overflow-hidden">
+                        {/* Header */}
+                        <div className="bg-black text-white px-4 py-4 flex justify-between items-center shadow-md shrink-0">
+                            <h2 className="text-[18pt] font-black uppercase">Grp {activeGroup} Players</h2>
+                            <button
+                                onClick={() => setActiveGroup(null)}
+                                className="text-white p-2 rounded-full hover:bg-gray-800"
+                                title="Close popup"
+                            >
+                                <X className="w-8 h-8" />
+                            </button>
+                        </div>
+                        {/* Body */}
+                        <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+                            <div className="grid grid-cols-1 gap-2">
+                                {[...potentialPlayers].sort((a, b) => {
+                                    // Sort by scorerId (Scorekeeper Group)
+                                    const scorerA = a.scorerId || 'zzzz';
+                                    const scorerB = b.scorerId || 'zzzz';
+                                    if (scorerA !== scorerB) return scorerA.localeCompare(scorerB);
+                                    return a.name.localeCompare(b.name);
+                                }).map(p => {
+                                    const assignedGroup = Object.keys(participantIds).find(gid => participantIds[gid]?.includes(p.id));
+                                    const inThisGroup = assignedGroup === activeGroup;
+                                    const inOtherGroup = assignedGroup && !inThisGroup;
+
+                                    return (
+                                        <div
+                                            key={p.id}
+                                            onClick={() => !inOtherGroup && handleToggle(p.id)}
+                                            className={`flex items-center gap-3 p-4 rounded-2xl border-2 transition-all cursor-pointer active:scale-95 ${inThisGroup
+                                                ? 'bg-green-600 border-green-700 text-white shadow-md'
+                                                : inOtherGroup
+                                                    ? 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed opacity-80'
+                                                    : 'bg-white border-black/10 text-black shadow-sm'
+                                                }`}
+                                        >
+                                            <div className={`w-8 h-8 flex items-center justify-center rounded-lg border-2 ${inThisGroup ? 'bg-white border-white' : inOtherGroup ? 'bg-gray-300 border-gray-400' : 'bg-white border-black/10'}`}>
+                                                {(inThisGroup || inOtherGroup) && <CheckSquare className={`w-6 h-6 ${inThisGroup ? 'text-green-600' : 'text-gray-500'}`} />}
+                                            </div>
+                                            <span className="text-[18pt] font-black truncate flex-1">
+                                                {playerDisplayNames[p.id]}
+                                            </span>
+                                            {inOtherGroup && <span className="text-[15pt] font-bold opacity-60">Grp {assignedGroup}</span>}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                        {/* Footer */}
+                        <div className="p-4 bg-white border-t-2 border-black">
+                            <button
+                                onClick={() => setActiveGroup(null)}
+                                className="w-full bg-black text-white py-4 rounded-full text-[18pt] font-black tracking-widest uppercase active:scale-95 shadow-md flex items-center justify-center"
+                            >
+                                Save
+                            </button>
                         </div>
                     </div>
                 </div>
+            )}
 
-                {/* Scoreboard - Transposed (Holes as Rows) */}
-                {results && (
-                    <div className="overflow-x-auto pb-4">
-                        <table className="w-full border-collapse">
-                            <thead>
-                                <tr>
-                                    <th className="sticky left-0 z-10 bg-gray-50 p-2 border-b border-gray-200 min-w-[3rem] text-center">
-                                        <span className="text-[15pt] font-black text-gray-500">H</span>
-                                    </th>
-                                    {activePlayers.map(p => (
-                                        <th key={p.id} className="p-2 border-b border-gray-200 min-w-[5rem] text-center bg-white">
-                                            <div className="flex flex-col items-center">
-                                                <span className="text-[15pt] font-bold text-gray-900 whitespace-nowrap">{p.name.split(' ')[0]}</span>
-                                            </div>
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {holes.map((h, i) => {
-                                    const res = results.holeResults.find(r => r.holeNumber === h.number);
-                                    // Determine row styling based on skin status
-                                    const hasWinner = !!res?.winnerId;
-
-                                    return (
-                                        <tr key={h.number} className="border-b border-gray-100">
-                                            {/* Hole Number */}
-                                            <td className="sticky left-0 z-10 bg-gray-50 p-2 border-r border-gray-200 text-center">
-                                                <div className="flex flex-col items-center">
-                                                    <span className={`text-[15pt] font-black ${hasWinner ? 'text-gray-900' : 'text-gray-400'}`}>{h.number}</span>
-                                                    <span className="text-[12pt] font-normal text-gray-400">Par {h.par}</span>
-                                                </div>
-                                            </td>
-
-                                            {/* Player Scores */}
-                                            {activePlayers.map(p => {
-                                                const isWinner = res?.winnerId === p.id;
-                                                const isUltimateWinner = res?.ultimateWinnerId === p.id;
-                                                const gross = p.scores[h.number];
-                                                const strokes = results.playerStrokes[p.id]?.[h.number] || 0;
-                                                const net = gross ? gross - strokes : undefined;
-
-                                                const winnerBorderClass = isWinner
-                                                    ? 'border-2 border-red-500 bg-red-50/50'
-                                                    : (isUltimateWinner ? 'border-2 border-green-500 bg-green-50/50' : '');
-
-                                                const highlightClass = isWinner
-                                                    ? 'text-gray-900 underline decoration-red-600 decoration-4 underline-offset-4'
-                                                    : (isUltimateWinner ? 'text-gray-900 underline decoration-green-600 decoration-4 underline-offset-4' : 'text-gray-900');
-
-                                                return (
-                                                    <td key={p.id} className={`p-1 text-center border-r border-gray-50 ${(isWinner || isUltimateWinner) ? 'bg-yellow-50' : ''}`}>
-                                                        <div className={`flex flex-col items-center justify-center min-w-[3.2rem] min-h-[3.2rem] rounded-full transition-all ${winnerBorderClass}`}>
-                                                            {net !== undefined ? (
-                                                                <>
-                                                                    <span className={`text-[15pt] font-black leading-none ${highlightClass}`}>
-                                                                        {net}
-                                                                    </span>
-                                                                    <span className="text-[12pt] text-gray-400 leading-none mt-1">
-                                                                        {gross}
-                                                                        {strokes > 0 && (
-                                                                            <span className="ml-1 text-[11pt] text-gray-500 font-bold">
-                                                                                /-{strokes}
-                                                                            </span>
-                                                                        )}
-                                                                    </span>
-                                                                </>
-                                                            ) : (
-                                                                <span className="text-[15pt] text-gray-200">-</span>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                );
-                                            })}
-                                        </tr>
-                                    );
-                                })}
-                                {/* Totals Row */}
-                                <tr className="bg-gray-50 border-t-2 border-gray-200">
-                                    <td className="sticky left-0 z-10 bg-gray-50 p-2 border-r border-gray-200 text-center">
-                                        <span className="text-[15pt] font-black text-gray-900">TOT</span>
-                                    </td>
-                                    {activePlayers.map(p => (
-                                        <td key={p.id} className="p-2 text-center border-r border-gray-200">
-                                            <div className="flex flex-col">
-                                                <span className="text-[15pt] font-black text-green-700">{results.playerTotals[p.id]?.skins || 0}</span>
-                                            </div>
-                                        </td>
-                                    ))}
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
-
-            {/* Fixed Footer with Full-Width Close Button - Matches FBT Modal */}
-            <div className="bg-white border-t border-gray-100 flex w-full sticky bottom-0 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] p-4">
+            {/* Footer */}
+            <div className="bg-white border-t-2 border-black flex w-full px-1 py-4 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
                 <button
-                    onClick={onClose}
-                    className="flex-1 bg-black text-white py-3 rounded-full text-[15pt] font-bold uppercase tracking-widest hover:bg-gray-800 transition-all shadow-md active:scale-95 cursor-pointer"
+                    onClick={hasChanges ? handleSave : onClose}
+                    disabled={isUpdating}
+                    title={hasChanges ? 'Save changes' : 'Close'}
+                    className={`flex-1 py-4 rounded-full text-[15pt] font-bold uppercase tracking-widest transition-all shadow-md active:scale-95 cursor-pointer ${hasChanges ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-black text-white hover:bg-black'}`}
                 >
-                    Close
+                    {hasChanges ? 'Save' : 'Close'}
                 </button>
             </div>
+
+            {toast && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast(null)}
+                />
+            )}
         </div>
     );
 }
+

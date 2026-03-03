@@ -7,7 +7,7 @@ interface Player {
     id: string;
     name: string;
     index?: number;
-    preferred_tee_box?: string | null;
+    preferredTeeBox?: string | null;
 }
 
 interface TeeBox {
@@ -25,7 +25,9 @@ export function LivePlayerSelectionModal({
     isOpen,
     onClose,
     courseData,
-    isAdmin = false
+    isAdmin = false,
+    clientScorerId = '',
+    playerScorers = {}
 }: {
     allPlayers: Player[];
     selectedIds: string[];
@@ -43,6 +45,8 @@ export function LivePlayerSelectionModal({
         } | null;
     } | null;
     isAdmin?: boolean;
+    clientScorerId?: string;
+    playerScorers?: Record<string, string>;
 }) {
     const [localSelectedIds, setLocalSelectedIds] = useState<string[]>(selectedIds);
     const [initialSelection, setInitialSelection] = useState<string[]>([]);
@@ -126,10 +130,10 @@ export function LivePlayerSelectionModal({
 
         let teeBox: TeeBox | undefined;
 
-        if (player.preferred_tee_box) {
+        if (player.preferredTeeBox) {
             // Use player's preferred tee if it exists on this course
             teeBox = courseData.teeBoxes.find(t =>
-                t.name.toLowerCase().includes(player.preferred_tee_box!.toLowerCase())
+                t.name.toLowerCase().includes(player.preferredTeeBox!.toLowerCase())
             );
         }
 
@@ -244,18 +248,18 @@ export function LivePlayerSelectionModal({
                                                     );
                                                 })()}
                                                 {/* Tee Box Indicator */}
-                                                {player.preferred_tee_box && (
-                                                    <span className={`px-2 py-0.5 rounded text-[12pt] font-bold ${player.preferred_tee_box.toLowerCase().includes('white')
+                                                {player.preferredTeeBox && (
+                                                    <span className={`px-2 py-0.5 rounded text-[12pt] font-bold ${player.preferredTeeBox.toLowerCase().includes('white')
                                                         ? 'bg-white text-black border border-black'
-                                                        : player.preferred_tee_box.toLowerCase().includes('gold')
+                                                        : player.preferredTeeBox.toLowerCase().includes('gold')
                                                             ? 'bg-yellow-400 text-black'
                                                             : 'bg-gray-300 text-gray-700'
                                                         }`}>
-                                                        {player.preferred_tee_box.toLowerCase().includes('white')
+                                                        {player.preferredTeeBox.toLowerCase().includes('white')
                                                             ? 'W'
-                                                            : player.preferred_tee_box.toLowerCase().includes('gold')
+                                                            : player.preferredTeeBox.toLowerCase().includes('gold')
                                                                 ? 'G'
-                                                                : player.preferred_tee_box.charAt(0).toUpperCase()}
+                                                                : player.preferredTeeBox.charAt(0).toUpperCase()}
                                                     </span>
                                                 )}
                                             </div>

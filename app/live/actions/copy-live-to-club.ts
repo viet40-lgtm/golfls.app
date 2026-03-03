@@ -3,7 +3,8 @@
 
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import { recalculateAllHandicaps } from './recalculate-handicaps';
+import { recalculateAllHandicaps } from '../../actions/recalculate-handicaps';
+import { recalculatePayouts } from '../../actions/recalculate-payouts';
 
 /**
  * Copies selected players' scores from a live round to the main club scores
@@ -14,7 +15,7 @@ export async function copyLiveToClub(data: {
 }) {
     try {
         // Get the live round with all its data
-        const liveRound = await (prisma.liveRound as any).findUnique({
+        const liveRound = await prisma.liveRound.findUnique({
             where: { id: data.liveRoundId },
             include: {
                 course: {
@@ -48,7 +49,7 @@ export async function copyLiveToClub(data: {
         }
 
         // Check if a round already exists for this date and course
-        let mainRound = await (prisma.round as any).findFirst({
+        let mainRound = await prisma.round.findFirst({
             where: {
                 date: liveRound.date,
                 courseId: liveRound.courseId
@@ -57,18 +58,17 @@ export async function copyLiveToClub(data: {
 
         // Create main round if it doesn't exist
         if (!mainRound) {
-            mainRound = await (prisma.round as any).create({
+            mainRound = await prisma.round.create({
                 data: {
                     date: liveRound.date,
                     courseId: liveRound.courseId,
                     courseName: liveRound.courseName || liveRound.course.name,
-                    name: liveRound.name,
-                    completed: true
+                    name: liveRound.name
                 }
             });
         } else if (!mainRound.courseName) {
-            // Update existing round if courseName is missing
-            await (prisma.round as any).update({
+            // Update existing round if course_name is missing
+            await prisma.round.update({
                 where: { id: mainRound.id },
                 data: { courseName: liveRound.courseName || liveRound.course.name }
             });
@@ -79,14 +79,14 @@ export async function copyLiveToClub(data: {
 
         // Copy/Update each selected player's data
         for (const livePlayer of selectedPlayers) {
-            // Skip guest players (they don't have a playerId)
+            // Skip guest players (they don't have a player_id)
             if (livePlayer.isGuest || !livePlayer.playerId) {
                 skippedCount++;
                 continue;
             }
 
             // Check if this player already has scores in the main round
-            const existingRoundPlayer = await (prisma.roundPlayer as any).findFirst({
+            const existingRoundPlayer = await prisma.roundPlayer.findFirst({
                 where: {
                     roundId: mainRound.id,
                     playerId: livePlayer.playerId
@@ -96,11 +96,10 @@ export async function copyLiveToClub(data: {
             let roundPlayer;
             if (existingRoundPlayer) {
                 // UPDATE existing player
-                roundPlayer = await (prisma.roundPlayer as any).update({
+                roundPlayer = await prisma.roundPlayer.update({
                     where: { id: existingRoundPlayer.id },
                     data: {
-                        teeBoxId: livePlayer.teeBoxId,
-                        teeBoxName: livePlayer.teeBoxName,
+                        teeBoxId: livePlayer.teeBoxId ?? '',
                         teeBoxPar: livePlayer.teeBoxPar,
                         teeBoxRating: livePlayer.teeBoxRating,
                         teeBoxSlope: livePlayer.teeBoxSlope,
@@ -112,18 +111,13 @@ export async function copyLiveToClub(data: {
                         inPool: livePlayer.inPool
                     }
                 });
-                // Delete old scores for this player before re-adding
-                await (prisma.score as any).deleteMany({
-                    where: { roundPlayerId: roundPlayer.id }
-                });
             } else {
                 // CREATE new round player entry
-                roundPlayer = await (prisma.roundPlayer as any).create({
+                roundPlayer = await prisma.roundPlayer.create({
                     data: {
                         roundId: mainRound.id,
                         playerId: livePlayer.playerId,
-                        teeBoxId: livePlayer.teeBoxId,
-                        teeBoxName: livePlayer.teeBoxName,
+                        teeBoxId: livePlayer.teeBoxId ?? '',
                         teeBoxPar: livePlayer.teeBoxPar,
                         teeBoxRating: livePlayer.teeBoxRating,
                         teeBoxSlope: livePlayer.teeBoxSlope,
@@ -139,7 +133,7 @@ export async function copyLiveToClub(data: {
 
             // Copy all hole scores
             for (const liveScore of livePlayer.scores) {
-                await (prisma.score as any).create({
+                await prisma.score.create({
                     data: {
                         roundPlayerId: roundPlayer.id,
                         holeId: liveScore.holeId,
@@ -151,10 +145,46 @@ export async function copyLiveToClub(data: {
             copiedCount++;
         }
 
+        // 5. Transfer Skins (MoneyEvents) for selected players
+        const playerIdsToClean = selectedPlayers.map(p => p.playerId).filter((id): id is string => !!id);
+        if (playerIdsToClean.length > 0) {
+            // Remove existing to avoid duplicates on re-transfer
+            await prisma.moneyEvent.deleteMany({
+                where: {
+                    roundId: mainRound.id,
+                    playerId: { in: playerIdsToClean },
+                    eventType: { startsWith: 'SKINS_ENTRY' }
+                }
+            });
+
+            // Fetch from live round
+            const liveSkins = await prisma.moneyEvent.findMany({
+                where: {
+                    roundId: liveRound.id,
+                    playerId: { in: playerIdsToClean },
+                    eventType: { startsWith: 'SKINS_ENTRY' }
+                }
+            });
+
+            // Clone to main round
+            if (liveSkins.length > 0) {
+                const clones = liveSkins.map(e => ({
+                    roundId: mainRound!.id,
+                    playerId: e.playerId,
+                    eventType: e.eventType,
+                    amount: e.amount,
+                    holeNumber: e.holeNumber
+                }));
+                await prisma.moneyEvent.createMany({ data: clones });
+            }
+        }
+
         // Recalculate handicaps after adding/updating scores
         if (copiedCount > 0) {
             console.log('Recalculating handicaps after copying live scores...');
             await recalculateAllHandicaps();
+            console.log('Recalculating payouts after copying live scores...');
+            await recalculatePayouts();
         }
 
         revalidatePath('/scores');

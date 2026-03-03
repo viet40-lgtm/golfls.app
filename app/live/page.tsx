@@ -39,6 +39,14 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
         orderBy: { name: 'asc' }
     });
 
+    // --- CRITICAL ORDER OF OPERATIONS (DO NOT CHANGE) ---
+    // 1. CLEANUP: Clear old unfinished rounds first to avoid resolving to them.
+    // 2. URL PRIORITY: Honor direct links to specific rounds.
+    // 3. TODAY'S ACTIVITY: Auto-join unfinished or newest round for today.
+    // 4. AUTO-CREATE: If absolutely no round exists for today, create one instantly.
+    // 5. REDIRECT: Ensure the browser URL always reflects the resolved Round ID.
+    // ----------------------------------------------------
+
     // 2. Resolve Today's Date (Chicago)
     const formatter = new Intl.DateTimeFormat('en-CA', {
         timeZone: 'America/Chicago',
@@ -48,29 +56,29 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
     });
     const todayStr = formatter.format(new Date()); // Returns YYYY-MM-DD
 
-    // --- CLEANUP: Delete unfinished rounds from previous days ---
+    // --- OPTIMIZED CLEANUP: Delete unfinished rounds from previous days ---
     try {
-        const oldRounds = await prisma.liveRound.findMany({
+        const oldUnfinishedRounds = await prisma.liveRound.findMany({
             where: { date: { lt: todayStr } },
             include: { players: { include: { scores: true } } }
         });
 
-        for (const round of oldRounds) {
-            // A round is unfinished if it has players and at least one player has < 18 scores
-            const isUnfinished = round.players.length > 0 && round.players.some(p => p.scores.length < 18);
-            if (isUnfinished) {
-                console.log(`[Cleanup] Deleting unfinished old round: ${round.name} (${round.date})`);
-                await prisma.liveRound.delete({ where: { id: round.id } });
-            }
+        const idsToDelete = oldUnfinishedRounds
+            .filter(r => r.players.length === 0 || r.players.some(p => p.scores.length < 18))
+            .map(r => r.id);
+
+        if (idsToDelete.length > 0) {
+            console.log(`[Cleanup] Deleting ${idsToDelete.length} unfinished old rounds`);
+            await prisma.liveRound.deleteMany({ where: { id: { in: idsToDelete } } });
         }
     } catch (error) {
         console.error('[Cleanup] Failed to delete unfinished old rounds:', error);
     }
     // -----------------------------------------------------------
 
-    let activeRound = null;
+    let activeRound: any = null;
 
-    // 3. Priority A: Load from URL (Admin only for old rounds)
+    // 3. Priority A: Load from URL
     if (roundIdFromUrl) {
         activeRound = await prisma.liveRound.findUnique({
             where: { id: roundIdFromUrl },
@@ -83,69 +91,65 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
                 }
             }
         });
-
-        // If non-admin user tries to access an old round, redirect to today's round
-        // Check removed to allow non-admins to see old rounds
-        if (activeRound && !isAdmin && activeRound.date !== todayStr) {
-            // Allow access
-        }
-
         if (activeRound) console.log('LOG-4: Loaded URL round:', activeRound.name);
     }
 
-    // 4. Priority B: Load Latest Round (priority: today, then last Saturday, then any Saturday, then latest)
+    // 4. Priority B: Auto-Resolve Today's Activity
     if (!activeRound) {
-        // Get recent rounds to check dates
-        const recentRounds = await prisma.liveRound.findMany({
-            orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
-            take: 20,
-            select: { id: true, date: true }
+        // Find if there's any round for today
+        const todaysRounds = await prisma.liveRound.findMany({
+            where: { date: todayStr },
+            orderBy: { createdAt: 'desc' },
+            include: {
+                players: {
+                    include: {
+                        player: true,
+                        scores: { include: { hole: true } }
+                    }
+                }
+            }
         });
 
-        if (recentRounds.length > 0) {
-            // Selection Logic:
-            // ALWAYS default to the absolute latest round (as per rules.md)
-            const targetId = recentRounds[0]?.id;
+        // 4a. If rounds exist for today, find the first active/unfinished one
+        activeRound = todaysRounds.find(r =>
+            r.players.length === 0 || r.players.some(p => p.scores.length < 18)
+        );
 
-            if (targetId) {
-                activeRound = await prisma.liveRound.findUnique({
-                    where: { id: targetId },
-                    include: {
-                        players: {
-                            include: {
-                                player: true,
-                                scores: { include: { hole: true } }
-                            }
+        // 4b. If no round exists for today at all, auto-create one (Fastest Path)
+        if (!activeRound && todaysRounds.length === 0) {
+            const { createDefaultLiveRound } = await import('@/app/live/actions/create-live-round');
+            const result = await createDefaultLiveRound(todayStr);
+            if (result.success && result.roundId) {
+                console.log('LOG-5: Auto-created new round for today:', result.roundId);
+                return redirect(`/live?roundId=${result.roundId}`);
+            }
+        }
+
+        // 4c. If all today's rounds are finished, or we still don't have one, fallback to latest
+        if (!activeRound) {
+            activeRound = await prisma.liveRound.findFirst({
+                orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
+                include: {
+                    players: {
+                        include: {
+                            player: true,
+                            scores: { include: { hole: true } }
                         }
                     }
-                });
-                if (activeRound) console.log('LOG-4: Loaded target round:', activeRound.name, activeRound.date);
-            }
+                }
+            });
         }
     }
 
-
-    // 6. If still no round exists, redirect to home
-    // 6. If still no round exists, proceed with null activeRound
-    if (!activeRound) {
-        console.log('LOG-13: No rounds exist. Rendering empty state.');
-    }
-
-    // 7. Final safety check: Non-admin users should only see today's round
-    // Safety check removed so non-admins can view old rounds
-    if (!isAdmin && activeRound && activeRound.date !== todayStr) {
-        // Allow access
-    }
-
-    // 8. Redirect to ensure ID is in URL
+    // 5. Redirect to ensure ID is in URL (Fastest path to join)
     if (!roundIdFromUrl && activeRound) {
         return redirect(`/live?roundId=${activeRound.id}`);
     }
 
-    // 9. If activeRound has a specific course_id, use that as the defaultCourse
+    // 9. If activeRound has a specific courseId, use that as the defaultCourse
     if (activeRound?.courseId) {
         const roundCourse = await prisma.course.findUnique({
-            where: { id: (activeRound as any).courseId },
+            where: { id: activeRound.courseId },
             include: {
                 teeBoxes: true,
                 holes: { include: { elements: true }, orderBy: { holeNumber: 'asc' } }
@@ -165,11 +169,11 @@ export default async function LiveScorePage(props: { searchParams: Promise<{ rou
 
     return (
         <LiveScoreClient
-            allPlayers={await (prisma.player as any).findMany({
-                where: {},
+            allPlayers={(await prisma.player.findMany({
+                where: {}, // Assuming archived doesn't exist in new schema or is not needed
                 orderBy: { name: 'asc' },
                 select: { id: true, name: true, handicapIndex: true, preferredTeeBox: true, email: true }
-            })}
+            })).map(p => ({ ...p, index: p.handicapIndex ?? 0 }))}
             defaultCourse={defaultCourse ? JSON.parse(JSON.stringify(defaultCourse)) : null}
             allCourses={JSON.parse(JSON.stringify(allCourses))}
             initialRound={activeRound ? JSON.parse(JSON.stringify(activeRound)) : null}

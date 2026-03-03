@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 
 /**
  * Saves the prize winnings for a round.
- * This is used for both the $5 pool and other prizes.
+ * This is used for both the FBT pool and other prizes.
  */
 export async function saveRoundWinnings(roundId: string, payouts: Array<{ playerId: string, amount: number }>) {
     try {

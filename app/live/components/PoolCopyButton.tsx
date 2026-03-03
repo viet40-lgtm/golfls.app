@@ -19,7 +19,7 @@ export function PoolCopyButton({ date, roundName, isTournament, flights }: PoolC
         let html = `
             <div style="font-family: Arial, sans-serif; color: #333; max-width: 650px; background: white; padding: 20px; border: 1px solid #e5e7eb;">
                 <div style="text-align: center; border-bottom: 2px solid #16a34a; padding-bottom: 15px; margin-bottom: 20px;">
-                    <h1 style="margin: 0; font-size: 24px; color: #16a34a;">$5 POOL RESULTS</h1>
+                    <h1 style="margin: 0; font-size: 24px; color: #16a34a;">FBT POOL RESULTS</h1>
                     <div style="margin-top: 5px; font-size: 18px; color: #4b5563;">
                         ${dateStr} ${roundName ? ` - ${roundName}` : ''}
                     </div>

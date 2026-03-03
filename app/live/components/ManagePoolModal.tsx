@@ -78,7 +78,7 @@ export function ManagePoolModal({
 
                 {/* Header */}
                 <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-[#f8fafc]">
-                    <h2 className="text-[14pt] font-black text-gray-800 tracking-tight">Manage Pool Participants</h2>
+                    <h2 className="text-[14pt] font-black text-gray-800 tracking-tight">Manage FBT Participants</h2>
                     <button
                         onClick={onClose}
                         title="Close"
@@ -155,7 +155,7 @@ export function ManagePoolModal({
                                     Saving...
                                 </>
                             ) : (
-                                'Save Pool'
+                                'Save FBT Game'
                             )}
                         </button>
                     ) : (

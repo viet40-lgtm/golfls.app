@@ -92,7 +92,7 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
         // Prepare payouts
         const payouts = Object.entries(data.winningsMap || {}).map(([name, amount]) => {
             const p = data.round.players.find((rp: any) => rp.player.name === name);
-            return { playerId: p?.player_id || '', amount: amount as number };
+            return { playerId: p?.playerId || '', amount: amount as number };
         });
 
         setConfirmConfig({
