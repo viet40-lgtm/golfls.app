@@ -7,12 +7,15 @@ export interface Round {
     rating: number;
     slope: number;
     pcc?: number; // Playing Conditions Calculation (default 0)
+    par?: number; // Added for provisional handicap computation
 }
 
 export interface DifferentialRound {
     id: string;
     date: string;
     differential: number;
+    score?: number;
+    par?: number;
 }
 
 export type HandicapInput = Round | DifferentialRound;
@@ -22,6 +25,8 @@ export interface Differential {
     date: string;
     value: number;
     used: boolean; // if it was used in the calculation
+    score?: number;
+    par?: number;
 }
 
 export interface CalculationResult {
@@ -55,19 +60,20 @@ export function calculateScoreDifferential(
  */
 function getDifferentialsConfiguration(count: number): {
     itemsToUse: number;
+    adjustment: number;
 } {
-    if (count < 3) return { itemsToUse: 0 };
-    if (count === 3) return { itemsToUse: 1 };
-    if (count === 4) return { itemsToUse: 1 };
-    if (count === 5) return { itemsToUse: 1 };
-    if (count === 6) return { itemsToUse: 2 };
-    if (count <= 8) return { itemsToUse: 2 };
-    if (count <= 11) return { itemsToUse: 3 };
-    if (count <= 14) return { itemsToUse: 4 };
-    if (count <= 16) return { itemsToUse: 5 };
-    if (count <= 18) return { itemsToUse: 6 };
-    if (count === 19) return { itemsToUse: 7 };
-    return { itemsToUse: 8 }; // 20+
+    if (count < 3) return { itemsToUse: 0, adjustment: 0 };
+    if (count === 3) return { itemsToUse: 1, adjustment: -2.0 };
+    if (count === 4) return { itemsToUse: 1, adjustment: -1.0 };
+    if (count === 5) return { itemsToUse: 1, adjustment: 0 };
+    if (count === 6) return { itemsToUse: 2, adjustment: -1.0 };
+    if (count <= 8) return { itemsToUse: 2, adjustment: 0 };
+    if (count <= 11) return { itemsToUse: 3, adjustment: 0 };
+    if (count <= 14) return { itemsToUse: 4, adjustment: 0 };
+    if (count <= 16) return { itemsToUse: 5, adjustment: 0 };
+    if (count <= 18) return { itemsToUse: 6, adjustment: 0 };
+    if (count === 19) return { itemsToUse: 7, adjustment: 0 };
+    return { itemsToUse: 8, adjustment: 0 }; // 20+
 }
 
 /**
@@ -102,9 +108,19 @@ export function calculateHandicap(
     const recentDifferentials = allDifferentials.slice(0, 20);
     const count = recentDifferentials.length;
 
-    if (count < 6) {
+    if (count < 3) {
+        let tempIndex = 0;
+
+        // Provisisonal index is calculated using differentials to properly account for slope & rating difficulty
+        if (recentDifferentials.length === 1) {
+            tempIndex = recentDifferentials[0].value * 0.8;
+        } else if (recentDifferentials.length === 2) {
+            const avgDiff = (recentDifferentials[0].value + recentDifferentials[1].value) / 2;
+            tempIndex = avgDiff * 0.9;
+        }
+
         return {
-            handicapIndex: 0, // 0 until 6 rounds (WHS uses fewer, but user requested 5+)
+            handicapIndex: Number(tempIndex.toFixed(1)), // Provisional index
             differentials: recentDifferentials,
             isSoftCapped: false,
             isHardCapped: false,
@@ -112,7 +128,7 @@ export function calculateHandicap(
     }
 
     // 4. Determine how many to use
-    const { itemsToUse } = getDifferentialsConfiguration(count);
+    const { itemsToUse, adjustment } = getDifferentialsConfiguration(count);
 
     // 5. Find the lowest differentials among the recent ones
     // We need to clone to sort without affecting the date order of 'recentDifferentials' if we want to preserve that
@@ -129,10 +145,10 @@ export function calculateHandicap(
 
     // 6. Calculate Average
     const sum = usedDifferentials.reduce((acc, d) => acc + d.value, 0);
-    const average = sum / itemsToUse;
+    const rawIndex = (sum / itemsToUse) + adjustment;
 
     // Round to 1 decimal place (USGA/WHS rules)
-    let index = Number(average.toFixed(1));
+    let index = Number(rawIndex.toFixed(1));
 
     // 7. Apply Caps (Soft and Hard)
     // Only applies if user has at least 20 scores? No, WHS says caps apply once 20 scores exist usually,

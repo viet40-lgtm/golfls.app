@@ -56,6 +56,8 @@ export default function AppHeader() {
         }
     };
 
+    if (pathname?.startsWith('/live')) return null;
+
     return (
         <>
             <header className="sticky top-0 z-50 px-1 py-1">
@@ -86,7 +88,7 @@ export default function AppHeader() {
                                 </button>
 
                                 {isMenuOpen && (
-                                    <div className="absolute top-[calc(100%+12px)] right-[-4px] w-[calc(100vw-16px)] max-w-none bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border-4 border-black overflow-hidden z-[100] animate-in fade-in slide-in-from-top-4 duration-300">
+                                    <div className="absolute top-[calc(100%+12px)] right-0 w-[85vw] max-w-[320px] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border-4 border-black overflow-hidden z-[100] animate-in fade-in slide-in-from-top-4 duration-300">
                                         <div className="p-3 space-y-2">
                                             <MenuLink
                                                 href={isAuthenticated ? "/live" : "/"}

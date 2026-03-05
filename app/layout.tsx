@@ -32,6 +32,14 @@ export const metadata: Metadata = {
     },
 };
 
+export const viewport = {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    themeColor: "#ffffff",
+};
+
 import AppHeader from "@/components/AppHeader";
 import GlobalEnterNavigation from "@/components/GlobalEnterNavigation";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";

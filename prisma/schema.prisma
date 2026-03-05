@@ -18,6 +18,7 @@ model Player {
   dateStarted      String?
   preferredTeeBox  String?
   handicapIndex    Float             @default(0)
+  lowHandicapIndex Float?            @map("low_handicap_index")
   resetToken       String?           @unique
   resetTokenExpiry DateTime?
   createdAt        DateTime          @default(now())
@@ -26,6 +27,7 @@ model Player {
   clubMemberships  ClubMember[]
   liveRounds       LiveRoundPlayer[]
   rounds           RoundPlayer[]
+  manualRounds     HandicapRound[]
 
   @@map("players")
 }
@@ -267,4 +269,18 @@ model MoneyEvent {
   @@index([playerId])
   @@index([roundId])
   @@map("money_events")
+}
+
+model HandicapRound {
+  id                String   @id @default(uuid())
+  playerId          String   @map("player_id")
+  datePlayed        String   @map("date_played")
+  scoreDifferential Float    @map("score_differential")
+  grossScore        Int?     @map("gross_score")
+  createdAt         DateTime @default(now()) @map("created_at")
+  player            Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId])
+  @@index([datePlayed])
+  @@map("handicap_rounds")
 }

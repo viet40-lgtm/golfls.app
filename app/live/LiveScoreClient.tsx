@@ -13,6 +13,7 @@ import ConfirmModal from './components/ConfirmModal';
 import AddToClubModal from './components/AddToClubModal';
 import { PoolModal } from './components/PoolModal';
 import { SkinsModal } from './components/SkinsModal';
+import { HandicapHistoryModal } from './components/HandicapHistoryModal';
 import { calculateSkins } from '../../lib/skins';
 import { createLiveRound, addPlayerToLiveRound, saveLiveScore, deleteLiveRound, addGuestToLiveRound, updateGuestInLiveRound, deleteGuestFromLiveRound, createDefaultLiveRound } from './actions/create-live-round';
 import { copyLiveToClub } from './actions/copy-live-to-club';
@@ -109,6 +110,8 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
     const [isRoundSelectModalOpen, setIsRoundSelectModalOpen] = useState(false);
     const [birdiePlayers, setBirdiePlayers] = useState<Array<{ name: string; totalBirdies: number }>>([]);
     const [eaglePlayers, setEaglePlayers] = useState<Array<{ name: string; totalEagles: number }>>([]);
+    const [isHandicapHistoryModalOpen, setIsHandicapHistoryModalOpen] = useState(false);
+    const [selectedHistoryPlayerId, setSelectedHistoryPlayerId] = useState<string | null>(null);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     // Track pending (unsaved) scores for the current hole only
     const [pendingScores, setPendingScores] = useState<Map<string, number>>(new Map());
@@ -1472,15 +1475,7 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
 
     return (
         <div className="min-h-screen bg-gray-50 pb-20">
-            {/* Header */}
-            <header className="bg-white shadow-sm sticky top-0 z-50 px-1 py-1 overflow-hidden">
-                <div className="w-full flex justify-between items-center gap-2">
-                    <h1 className="text-[16pt] sm:text-[18pt] font-bold text-green-700 tracking-tight flex-1 text-left ml-3 truncate min-w-0">Live Scoring</h1>
-                    <Link href="/" className="px-4 py-2 bg-black text-white rounded-full text-[14pt] sm:text-[15pt] font-bold hover:bg-gray-800 transition-colors flex-shrink-0">
-                        Home
-                    </Link>
-                </div>
-            </header>
+            <div className="pt-2"></div>
 
             <main className="w-full px-1 pt-1 m-0 space-y-1">
                 {/* Round Selector - Visibility Controlled by 'Details' toggle (Pinned open for non-admins on past rounds) */}
@@ -1604,22 +1599,21 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                 )}
 
 
-                {/* Course Info Card - Show if details toggle is on (Always allowed for Admin) */}
+                {/* Course Info Card - Optimized for Mobile */}
                 {showDetails && (!isPastRound || isAdmin) &&
                     (
-                        <div className="bg-white rounded-xl shadow-lg p-1 border-4 border-gray-300">
-                            <div className="flex justify-between items-start">
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2">
-                                        <h2 className="text-[15pt] font-bold text-gray-900">{defaultCourse?.name || 'Round'}</h2>
-                                    </div>
-                                    <div className="flex flex-nowrap gap-x-2 text-[13pt] text-gray-500 mt-1 overflow-x-auto">
+                        <div className="bg-white rounded-xl shadow-lg p-2 border-4 border-gray-300">
+                            <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
+                                <div className="flex-1 w-full text-center sm:text-left">
+                                    <h2 className="text-[14pt] font-black text-gray-900 leading-tight">
+                                        {defaultCourse?.name || 'Round'}
+                                    </h2>
+                                    <div className="flex flex-wrap justify-center sm:justify-start gap-x-2 text-[11pt] text-gray-500 mt-1 font-bold">
                                         <span className="whitespace-nowrap">{initialRound?.date || todayStr}</span>
                                         <span className="whitespace-nowrap">P:{initialRound?.par ?? defaultCourse?.holes?.reduce((a, b) => a + b.par, 0)}</span>
                                         <span className="whitespace-nowrap">R:{initialRound?.rating ?? defaultCourse?.teeBoxes?.[0]?.rating}</span>
                                         <span className="whitespace-nowrap">S:{initialRound?.slope ?? defaultCourse?.teeBoxes?.[0]?.slope}</span>
                                         {(() => {
-                                            // Find the tee box name based on rating and slope
                                             const teeBox = defaultCourse?.teeBoxes?.find(t =>
                                                 t.rating === (initialRound?.rating ?? defaultCourse?.teeBoxes?.[0]?.rating) &&
                                                 t.slope === (initialRound?.slope ?? defaultCourse?.teeBoxes?.[0]?.slope)
@@ -1628,31 +1622,26 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                                             const teeIndicator = teeName.toLowerCase().includes('white') ? 'W'
                                                 : teeName.toLowerCase().includes('gold') ? 'G'
                                                     : teeName.charAt(0).toUpperCase();
-                                            return teeIndicator && <span className="px-2 py-0.5 rounded text-[12pt] font-bold bg-white text-black border border-black whitespace-nowrap">{teeIndicator}</span>;
+                                            return teeIndicator && <span className="px-1.5 py-0.5 rounded text-[10pt] font-black bg-black text-white border border-black">{teeIndicator}</span>;
                                         })()}
                                     </div>
                                 </div>
-                                <div className="flex flex-col gap-1">
-
-                                    <div className="flex flex-col gap-1">
-                                        <button
-                                            onClick={() => setIsPlayerModalOpen(true)}
-                                            className="bg-black text-white text-[15pt] font-black px-4 py-1.5 rounded-full hover:bg-gray-800 transition-all shadow-md active:scale-95 tracking-wide"
-                                        >
-                                            Players
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                setRoundModalMode('edit');
-                                                setIsRoundModalOpen(true);
-                                            }}
-                                            className="bg-black text-white text-[15pt] font-black px-4 py-1.5 rounded-full hover:bg-gray-800 transition-all shadow-md active:scale-95 tracking-wide"
-                                        >
-                                            Course
-                                        </button>
-                                    </div>
-
-
+                                <div className="flex flex-row sm:flex-col gap-2 w-full sm:w-auto">
+                                    <button
+                                        onClick={() => setIsPlayerModalOpen(true)}
+                                        className="flex-1 bg-black text-white text-[13pt] font-black px-6 py-2.5 rounded-full hover:bg-gray-800 transition-all shadow-md active:scale-95 uppercase tracking-wide"
+                                    >
+                                        Players
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setRoundModalMode('edit');
+                                            setIsRoundModalOpen(true);
+                                        }}
+                                        className="flex-1 bg-black text-white text-[13pt] font-black px-6 py-2.5 rounded-full hover:bg-gray-800 transition-all shadow-md active:scale-95 uppercase tracking-wide"
+                                    >
+                                        Course
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -1827,7 +1816,7 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                                                 {renderElement('RIGHT', 1, 'bottom-2 right-2')}
 
                                                 <p className="font-black text-[90pt] leading-none text-center mt-2">
-                                                    {dist || (dist === 0 ? '0' : '--')}
+                                                    {dist <= 10 && dist > 0 ? `${dist * 3}ft` : (dist || (dist === 0 ? '0' : '--'))}
                                                 </p>
                                             </div>
                                         );
@@ -1836,10 +1825,14 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                                     {/* Shot history boxes - Manual Start/Stop */}
                                     <div className="flex gap-2 justify-center w-full mb-2">
                                         <div className="flex-1 bg-white rounded-xl p-2 flex flex-col justify-center items-center border border-black shadow-sm min-h-[60px]">
-                                            <span className="text-[35pt] font-black text-black leading-none">{previousShotDistance ?? '--'}</span>
+                                            <span className="text-[35pt] font-black text-black leading-none">
+                                                {previousShotDistance !== null && previousShotDistance <= 10 && previousShotDistance > 0 ? `${previousShotDistance * 3}ft` : (previousShotDistance ?? '--')}
+                                            </span>
                                         </div>
                                         <div className="flex-1 bg-white rounded-xl p-2 flex flex-col justify-center items-center border border-black shadow-sm min-h-[60px]">
-                                            <span className="text-[35pt] font-black text-black leading-none">{isTrackingShot ? currentShotDistance : '--'}</span>
+                                            <span className="text-[35pt] font-black text-black leading-none">
+                                                {isTrackingShot ? (currentShotDistance <= 10 && currentShotDistance > 0 ? `${currentShotDistance * 3}ft` : currentShotDistance) : '--'}
+                                            </span>
                                         </div>
                                         <button
                                             onClick={() => {
@@ -1899,13 +1892,13 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                                             key={hole.holeNumber}
                                             onClick={() => setActiveHole(hole.holeNumber)}
                                             className={`
-                                            flex flex-col items-center justify-center py-3 rounded-2xl transition-all
+                                            flex flex-col items-center justify-center p-1 rounded-2xl transition-all
                                             ${btnClass}
                                         `}
                                         >
-                                            <div className="flex items-baseline">
-                                                <span className="text-[20pt] font-black leading-none">{hole.holeNumber}</span>
-                                                <span className="text-[15pt] font-bold leading-none opacity-80">/{hole.par}</span>
+                                            <div className="flex flex-col items-center">
+                                                <span className="text-[18pt] font-black leading-none">{hole.holeNumber}</span>
+                                                <span className="text-[15pt] font-bold leading-none opacity-80">{hole.par}/{hole.difficulty}</span>
                                             </div>
                                         </button>
                                     );
@@ -2893,10 +2886,19 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        <div className="flex flex-col items-center">
-                                                            <div className="text-[11pt] text-white font-bold tracking-tight">HCP</div>
-                                                            <div className="text-[17pt] font-bold text-white leading-none">{p.strokesReceivedSoFar}/{p.courseHcp}</div>
-                                                        </div>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setSelectedHistoryPlayerId(p.id);
+                                                                setIsHandicapHistoryModalOpen(true);
+                                                            }}
+                                                            className="flex flex-col items-center bg-black hover:bg-gray-900 text-white rounded-lg px-2 py-1 transition-all active:scale-95 shadow-md border border-gray-800 min-w-[4rem]"
+                                                        >
+                                                            <div className="text-[9pt] font-black tracking-tighter leading-tight opacity-90 uppercase">HCP</div>
+                                                            <div className="text-[15pt] font-black leading-tight whitespace-nowrap">
+                                                                {p.strokesReceivedSoFar}/{p.courseHcp}
+                                                            </div>
+                                                        </button>
                                                         <div className="flex flex-col items-center">
                                                             <div className="text-[11pt] text-white font-bold tracking-tight">NET</div>
                                                             <div className="text-[17pt] font-bold text-white leading-none">{p.totalNet}</div>
@@ -2906,7 +2908,7 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                                             </div>
 
                                             {/* Score Grid */}
-                                            <div className="p-1 border border-black rounded shadow-sm overflow-hidden">
+                                            <div className="p-0 border border-black rounded shadow-sm overflow-hidden w-full">
                                                 {/* Row 1: Holes 1-9 */}
                                                 <div className="grid grid-cols-9 border-b border-black">
                                                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => {
@@ -3311,6 +3313,13 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                     />
                 )
             }
+            {/* Handicap History Modal */}
+            <HandicapHistoryModal
+                isOpen={isHandicapHistoryModalOpen}
+                onClose={() => setIsHandicapHistoryModalOpen(false)}
+                playerId={selectedHistoryPlayerId || ''}
+            />
+
             {toast && (
                 <Toast
                     message={toast.message}

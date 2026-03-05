@@ -44,7 +44,8 @@ body {
   font-size: 17pt;
   font-weight: 500;
   overflow-x: hidden;
-  /* Default to a solid weight, not thin */
+  position: relative;
+  width: 100%;
 }
 
 /* Enforce "No Gray" on common text utilities if they rely on opacity or lighter colors */
