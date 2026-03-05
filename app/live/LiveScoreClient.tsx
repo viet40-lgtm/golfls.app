@@ -1816,7 +1816,7 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                                                 {renderElement('RIGHT', 1, 'bottom-2 right-2')}
 
                                                 <p className="font-black text-[90pt] leading-none text-center mt-2">
-                                                    {dist <= 10 && dist > 0 ? `${dist * 3}ft` : (dist || (dist === 0 ? '0' : '--'))}
+                                                    {dist || (dist === 0 ? '0' : '--')}
                                                 </p>
                                             </div>
                                         );
@@ -1825,14 +1825,10 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                                     {/* Shot history boxes - Manual Start/Stop */}
                                     <div className="flex gap-2 justify-center w-full mb-2">
                                         <div className="flex-1 bg-white rounded-xl p-2 flex flex-col justify-center items-center border border-black shadow-sm min-h-[60px]">
-                                            <span className="text-[35pt] font-black text-black leading-none">
-                                                {previousShotDistance !== null && previousShotDistance <= 10 && previousShotDistance > 0 ? `${previousShotDistance * 3}ft` : (previousShotDistance ?? '--')}
-                                            </span>
+                                            <span className="text-[35pt] font-black text-black leading-none">{previousShotDistance ?? '--'}</span>
                                         </div>
                                         <div className="flex-1 bg-white rounded-xl p-2 flex flex-col justify-center items-center border border-black shadow-sm min-h-[60px]">
-                                            <span className="text-[35pt] font-black text-black leading-none">
-                                                {isTrackingShot ? (currentShotDistance <= 10 && currentShotDistance > 0 ? `${currentShotDistance * 3}ft` : currentShotDistance) : '--'}
-                                            </span>
+                                            <span className="text-[35pt] font-black text-black leading-none">{isTrackingShot ? currentShotDistance : '--'}</span>
                                         </div>
                                         <button
                                             onClick={() => {
