@@ -12,6 +12,8 @@ interface SkinsModalProps {
     potentialPlayers: { id: string; name: string; courseHandicap: number; scores: Record<number, number>; scorerId?: string | null }[];
     participantIds: Record<string, string[]>;
     onParticipantsChange: (ids: Record<string, string[]>) => void;
+    carryOvers: Record<string, boolean>;
+    onCarryOversChange: (cos: Record<string, boolean>) => void;
     isAdmin?: boolean;
 }
 
@@ -23,6 +25,8 @@ export function SkinsModal({
     potentialPlayers,
     participantIds,
     onParticipantsChange,
+    carryOvers,
+    onCarryOversChange,
     isAdmin = false
 }: SkinsModalProps) {
     const [isUpdating, setIsUpdating] = useState(false);
@@ -36,7 +40,8 @@ export function SkinsModal({
     useEffect(() => {
         if (isOpen) {
             setInitialParticipantIds(participantIds);
-            setInitialCarryOvers(carryOversByGroup);
+            setCarryOversByGroup(carryOvers);
+            setInitialCarryOvers(carryOvers);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen]);
@@ -265,9 +270,10 @@ export function SkinsModal({
 
         setIsUpdating(true);
         try {
-            await updateSkinsParticipants(liveRoundId, participantIds);
+            await updateSkinsParticipants(liveRoundId, participantIds, carryOversByGroup);
             setInitialParticipantIds(participantIds);
             setInitialCarryOvers(carryOversByGroup);
+            onCarryOversChange(carryOversByGroup);
             onClose();
         } catch (error) {
             console.error("Failed to save skins:", error);
@@ -451,7 +457,7 @@ export function SkinsModal({
 
             {/* Player Selection Popup */}
             {activeGroup !== null && (
-                <div className="fixed inset-0 z-[300] bg-white flex flex-col animate-in slide-in-from-bottom-5 duration-300">
+                <div className="fixed inset-0 z-300 bg-white flex flex-col animate-in slide-in-from-bottom-5 duration-300">
                     <div className="flex flex-col h-full overflow-hidden">
                         {/* Header */}
                         <div className="bg-black text-white px-4 py-4 flex justify-between items-center shadow-md shrink-0">

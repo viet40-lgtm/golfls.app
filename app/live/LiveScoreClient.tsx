@@ -116,11 +116,46 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
     // Track pending (unsaved) scores for the current hole only
     const [pendingScores, setPendingScores] = useState<Map<string, number>>(new Map());
 
-    const [skinsParticipantIds, setSkinsParticipantIds] = useState<Record<string, string[]>>({ A: [], B: [] });
+    interface SyncItem {
+        id: string;
+        liveRoundId: string;
+        holeNumber: number;
+        playerScores: Array<{ playerId: string; strokes: number }>;
+        timestamp: number;
+    }
+    const [syncQueue, setSyncQueue] = useState<SyncItem[]>([]);
+    const [isSyncing, setIsSyncing] = useState(false);
+
+    // Load initial sync queue from localStorage
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const savedQueue = localStorage.getItem(`live_scoring_sync_queue_${liveRoundId}`);
+            if (savedQueue) {
+                try {
+                    setSyncQueue(JSON.parse(savedQueue));
+                } catch (e) {
+                    console.error('Failed to parse sync queue:', e);
+                }
+            }
+        }
+    }, [liveRoundId]);
+
+    // Persist sync queue whenever it changes
+    useEffect(() => {
+        if (typeof window !== 'undefined' && liveRoundId) {
+            localStorage.setItem(`live_scoring_sync_queue_${liveRoundId}`, JSON.stringify(syncQueue));
+        }
+    }, [syncQueue, liveRoundId]);
+
+    const [skinsParticipantIds, setSkinsParticipantIds] = useState<Record<string, string[]>>({ '1': [] });
+    const [skinsCarryOvers, setSkinsCarryOvers] = useState<Record<string, boolean>>({ '1': true });
 
     useEffect(() => {
         if (liveRoundId) {
-            getSkinsParticipants(liveRoundId).then(setSkinsParticipantIds);
+            getSkinsParticipants(liveRoundId).then((res: any) => {
+                setSkinsParticipantIds(res.participants || { '1': [] });
+                setSkinsCarryOvers(res.carryOvers || { '1': true });
+            });
         }
     }, [liveRoundId, isSkinsModalOpen]); // Refresh when modal opens
     const [summaryEditCell, setSummaryEditCell] = useState<{ playerId: string, holeNumber: number } | null>(null);
@@ -136,7 +171,78 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
     const activeHoleRef = useRef<number | null>(null);
     const defaultCourseRef = useRef<any>(null);
 
+    // Unique ID for this scoring device
+    // Use hydration-safe initialization
+    const [clientScorerId, setClientScorerId] = useState('');
+    useEffect(() => {
+        let id = localStorage.getItem('live_scoring_device_id');
+        if (!id) {
+            id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            localStorage.setItem('live_scoring_device_id', id);
+        }
+        setClientScorerId(id);
+    }, []);
 
+
+    // Background Sync Process
+    useEffect(() => {
+        if (syncQueue.length === 0 || isSyncing || !liveRoundId) return;
+
+        const processQueue = async () => {
+            setIsSyncing(true);
+            const item = syncQueue[0];
+
+            console.log(`[Sync] Attempting to sync hole ${item.holeNumber}...`);
+
+            try {
+                // Use standard fetch to the API route instead of the Next.js Server Action
+                // This prevents Next.js from automatically re-rendering the entire /live page (which takes 4-5s)
+                const res = await fetch('/api/sync-score', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        liveRoundId: item.liveRoundId,
+                        holeNumber: item.holeNumber,
+                        playerScores: item.playerScores,
+                        scorerId: clientScorerId
+                    })
+                });
+
+                const result = await res.json();
+
+                if (result.success) {
+                    console.log(`[Sync] Successfully synced hole ${item.holeNumber}`);
+                    // Remove successfully synced item
+                    setSyncQueue(prev => prev.slice(1));
+                    // We DO NOT call router.refresh() here because:
+                    // 1. It takes 6+ seconds to re-render the whole page on the server
+                    // 2. The local UI state is already perfectly up to date
+                } else {
+                    console.error(`[Sync] Failed to sync hole ${item.holeNumber}:`, result.error);
+
+                    if (result.error && result.error.includes('locked by another device')) {
+                        showAlert('Sync Conflict', `Hole ${item.holeNumber} could not be saved because another device claimed one of the players. Your local scores are still kept for reference.`);
+                        // Remove from queue to prevent infinite loop of failing syncs
+                        setSyncQueue(prev => prev.slice(1));
+                    } else {
+                        // For other errors, wait and retry later
+                        // Move it to the end of the queue? Or just wait?
+                        // Let's just wait 10 seconds before next attempt for this item
+                        await new Promise(resolve => setTimeout(resolve, 10000));
+                    }
+                }
+            } catch (error) {
+                console.error(`[Sync] Error during sync for hole ${item.holeNumber}:`, error);
+                // Wait and retry
+                await new Promise(resolve => setTimeout(resolve, 10000));
+            } finally {
+                setIsSyncing(false);
+            }
+        };
+
+        const timer = setTimeout(processQueue, 100); // short delay to batch rapid saves
+        return () => clearTimeout(timer);
+    }, [syncQueue, isSyncing, liveRoundId, clientScorerId]);
     const [confirmConfig, setConfirmConfig] = useState<{
         isOpen: boolean;
         title: string;
@@ -149,18 +255,6 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
     } | null>(null);
 
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-
-    // Unique ID for this scoring device
-    // Use hydration-safe initialization
-    const [clientScorerId, setClientScorerId] = useState('');
-    useEffect(() => {
-        let id = localStorage.getItem('live_scoring_device_id');
-        if (!id) {
-            id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-            localStorage.setItem('live_scoring_device_id', id);
-        }
-        setClientScorerId(id);
-    }, []);
 
     // Restore selected players from localStorage on mount
     useEffect(() => {
@@ -397,6 +491,8 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
 
     const [scores, setScores] = useState<Map<string, Map<number, number>>>(() => {
         const initialMap = new Map();
+
+        // 1. Load server scores
         if (initialRound?.players) {
             initialRound.players.forEach((p: any) => {
                 const playerScores = new Map<number, number>();
@@ -407,16 +503,46 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                         }
                     });
                 }
-                // Use LiveRoundPlayer ID for guests, player.id for regular players
                 const playerId = p.isGuest ? p.id : p.player.id;
                 initialMap.set(playerId, playerScores);
             });
         }
+
+        // 2. Override with local un-synced scores if available
+        if (typeof window !== 'undefined' && liveRoundId) {
+            const savedScoresRaw = localStorage.getItem(`live_scoring_scores_${liveRoundId}`);
+            if (savedScoresRaw) {
+                try {
+                    const savedArray = JSON.parse(savedScoresRaw);
+                    savedArray.forEach(([playerId, holeMapData]: [string, [number, number][]]) => {
+                        const localPlayerScores = initialMap.get(playerId) || new Map<number, number>();
+                        holeMapData.forEach(([holeNumber, strokes]) => {
+                            // Give precedence to local scores
+                            localPlayerScores.set(holeNumber, strokes);
+                        });
+                        initialMap.set(playerId, localPlayerScores);
+                    });
+                } catch (e) {
+                    console.error('Failed to parse local scores:', e);
+                }
+            }
+        }
+
         return initialMap;
     });
 
-
-
+    // Save scores to localStorage whenever they change
+    useEffect(() => {
+        if (typeof window !== 'undefined' && liveRoundId) {
+            const serializeMap = (map: Map<string, Map<number, number>>) => {
+                return Array.from(map.entries()).map(([playerId, holeMap]) => [
+                    playerId,
+                    Array.from(holeMap.entries())
+                ]);
+            };
+            localStorage.setItem(`live_scoring_scores_${liveRoundId}`, JSON.stringify(serializeMap(scores)));
+        }
+    }, [scores, liveRoundId]);
 
     // Sync local scores with server data when it updates (e.g. after refresh)
     useEffect(() => {
@@ -456,15 +582,36 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                             }
                         });
                     }
-                    // Update local map with server data
-                    // Use LiveRoundPlayer ID for guests, player.id for regular players
+
                     const playerId = p.isGuest ? p.id : p.player.id;
-                    next.set(playerId, serverPlayerScores);
+                    const existingLocalScores = next.get(playerId) || new Map<number, number>();
+
+                    // We need to merge carefully.
+                    // If a hole is in our sync queue, we KEEP our local version.
+                    // Otherwise, we accept the server's version.
+                    const syncedHolesForPlayer = new Set(
+                        syncQueue.flatMap(item =>
+                            item.playerScores.filter(ps => ps.playerId === playerId).map(() => item.holeNumber)
+                        )
+                    );
+
+                    // Start with server scores
+                    const mergedScores = new Map(serverPlayerScores);
+
+                    // Override with local scores that are currently queued for sync
+                    existingLocalScores.forEach((strokes, holeNumber) => {
+                        if (syncedHolesForPlayer.has(holeNumber)) {
+                            // This hole is queued to sync, trust local state
+                            mergedScores.set(holeNumber, strokes);
+                        }
+                    });
+
+                    next.set(playerId, mergedScores);
                 });
                 return next;
             });
         }
-    }, [initialRound]);
+    }, [initialRound, syncQueue, clientScorerId, liveRoundId]);
 
 
 
@@ -1030,20 +1177,20 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
     /*
     useEffect(() => {
         if (!liveRoundId || selectedPlayers.length === 0) return;
-
+    
         const syncMissingPlayers = async () => {
             const missingFromServer = selectedPlayers.filter(p => {
                 // Ignore guests (handled separately)
                 if (p.isGuest) return false;
-
+    
                 // Check if player is in the server-provided initialRound
                 const existsOnServer = initialRound?.players?.some((rp: any) => rp.player?.id === p.id);
                 return !existsOnServer;
             });
-
+    
             if (missingFromServer.length > 0) {
                 console.log("Found players missing from server (Ghost Players). Attempting repair:", missingFromServer.map(p => p.name));
-
+    
                 let restoredCount = 0;
                 for (const p of missingFromServer) {
                     const teeBox = getPlayerTee(p);
@@ -1056,14 +1203,14 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                         if (res.success) restoredCount++;
                     }
                 }
-
+    
                 if (restoredCount > 0) {
                     console.log(`Repaired ${restoredCount} ghost players. Refreshing...`);
                     router.refresh();
                 }
             }
         };
-
+    
         // Debounce check to avoid spamming while initialRound loads
         const timer = setTimeout(syncMissingPlayers, 3000);
         return () => clearTimeout(timer);
@@ -1412,14 +1559,15 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
         // Combine findings from all groups for visualization
         const allHoleResults: any[] = [];
         Object.keys(skinsParticipantIds).forEach(groupKey => {
-            const groupRes = calculateSkins(sPlayers, sHoles, skinsParticipantIds[groupKey]);
+            const isCarryOver = skinsCarryOvers[groupKey] ?? true;
+            const groupRes = calculateSkins(sPlayers, sHoles, skinsParticipantIds[groupKey], isCarryOver);
             if (groupRes) {
                 allHoleResults.push(...groupRes.holeResults);
             }
         });
 
         return { holeResults: allHoleResults };
-    }, [defaultCourse, summaryPlayers, scores, skinsParticipantIds]);
+    }, [defaultCourse, summaryPlayers, scores, skinsParticipantIds, skinsCarryOvers]);
 
     // SAFE MODE: If no active round, render a simplified dashboard to prevent crashes in complex UI
     if (!initialRound && !liveRoundId && !isRoundModalOpen) {
@@ -1556,7 +1704,7 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
 
                         {/* Full Screen Round Selection Modal */}
                         {isRoundSelectModalOpen && (
-                            <div className="fixed inset-0 z-[100] bg-white flex flex-col animate-in slide-in-from-bottom-5 duration-200">
+                            <div className="fixed inset-0 z-100 bg-white flex flex-col animate-in slide-in-from-bottom-5 duration-200">
                                 <div className="bg-black text-white px-4 py-4 flex justify-between items-center shadow-md shrink-0">
                                     <h2 className="text-[18pt] font-bold">Select Round</h2>
                                     <button
@@ -1917,7 +2065,7 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                                         <button
                                             onClick={() => {
                                                 if (!liveRoundId || isSaving) return;
-                                                // Prevent double clicks but don't block
+                                                // Prevent double clicks
                                                 setIsSaving(true);
 
                                                 // Capture current state values for async operation
@@ -1951,87 +2099,82 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                                                     // Add to updates for server
                                                     updates.push({ playerId: p.id, strokes: finalScore });
 
-                                                    // Check if this hole is a birdie
+                                                    // Check for celebrations
                                                     if (finalScore === activeHolePar - 1) {
-                                                        // Register birdie locally to prevent global watcher duplicate trigger
                                                         if (!knownBirdiesRef.current.has(p.id)) {
                                                             knownBirdiesRef.current.set(p.id, new Set());
                                                         }
-
                                                         const wasKnown = knownBirdiesRef.current.get(p.id)!.has(currentHole);
                                                         knownBirdiesRef.current.get(p.id)!.add(currentHole);
 
-                                                        // Only show popup if this is a NEW birdie (prevents spam on re-save)
                                                         if (!wasKnown) {
-                                                            // Calculate total birdies for this player in the round
                                                             let totalBirdies = 0;
                                                             playerScores.forEach((strokes, holeNum) => {
                                                                 const hole = defaultCourse?.holes.find(h => h.holeNumber === holeNum);
                                                                 const holePar = hole?.par || 4;
-                                                                if (strokes === holePar - 1) {
-                                                                    totalBirdies++;
-                                                                }
+                                                                if (strokes === holePar - 1) totalBirdies++;
                                                             });
                                                             birdiePlayerData.push({ name: p.name, totalBirdies });
                                                         }
                                                     }
 
-                                                    // Check if this hole is an eagle (or better)
                                                     if (finalScore <= activeHolePar - 2) {
-                                                        // Register eagle locally to prevent global watcher duplicate trigger
                                                         if (!knownEaglesRef.current.has(p.id)) {
                                                             knownEaglesRef.current.set(p.id, new Set());
                                                         }
-
                                                         const wasKnown = knownEaglesRef.current.get(p.id)!.has(currentHole);
                                                         knownEaglesRef.current.get(p.id)!.add(currentHole);
 
-                                                        // Only show popup if this is a NEW eagle
                                                         if (!wasKnown) {
-                                                            // Calculate total eagles for this player in the round
                                                             let totalEagles = 0;
                                                             playerScores.forEach((strokes, holeNum) => {
                                                                 const hole = defaultCourse?.holes.find(h => h.holeNumber === holeNum);
                                                                 const holePar = hole?.par || 4;
-                                                                if (strokes <= holePar - 2) {
-                                                                    totalEagles++;
-                                                                }
+                                                                if (strokes <= holePar - 2) totalEagles++;
                                                             });
                                                             eaglePlayerData.push({ name: p.name, totalEagles });
                                                         }
                                                     }
                                                 });
 
-                                                // 1. UPDATE LOCAL STATE IMMEDIATELY (Optimistic)
+                                                // 1. QUEUE FOR SERVER SAVE (upsert – replace any existing item for same hole)
+                                                if (updates.length > 0) {
+                                                    const syncItem: SyncItem = {
+                                                        id: `${currentHole}`, // stable ID = holeNumber for deduplication
+                                                        liveRoundId,
+                                                        holeNumber: currentHole,
+                                                        playerScores: updates,
+                                                        timestamp: Date.now()
+                                                    };
+
+                                                    setSyncQueue(prev => {
+                                                        // Replace any existing entry for this hole, otherwise append
+                                                        const without = prev.filter(i => i.holeNumber !== currentHole);
+                                                        return [...without, syncItem];
+                                                    });
+                                                }
+
+                                                // 2. ADVANCE UI IMMEDIATELY
                                                 setScores(newScores);
 
-                                                // Show celebration if there's a birdie or eagle on this hole
-                                                if (birdiePlayerData.length > 0) {
-                                                    setBirdiePlayers(birdiePlayerData);
-                                                }
-                                                if (eaglePlayerData.length > 0) {
-                                                    setEaglePlayers(eaglePlayerData);
-                                                }
+                                                if (birdiePlayerData.length > 0) setBirdiePlayers(birdiePlayerData);
+                                                if (eaglePlayerData.length > 0) setEaglePlayers(eaglePlayerData);
 
-                                                // Clear pending scores and reset unsaved flag
                                                 setPendingScores(new Map());
                                                 setHasUnsavedChanges(false);
 
                                                 // Determine next hole
-                                                let nextHoleToSet = currentHole;
                                                 if (!wasAlreadyScored) {
+                                                    let nextHoleToSet = currentHole;
                                                     if (currentHole < 18) {
                                                         nextHoleToSet = currentHole + 1;
                                                     } else {
-                                                        // After 18th hole, find the first hole that has missing scores.
-                                                        // Default to current hole (18) if everything is finished.
                                                         let foundNext = currentHole;
                                                         for (let h = 1; h <= 18; h++) {
                                                             const isHoleIncomplete = effectiveScoringPlayers.some(p => {
                                                                 const pScores = newScores.get(p.id);
                                                                 return !pScores || !pScores.has(h);
                                                             });
-
                                                             if (isHoleIncomplete) {
                                                                 foundNext = h;
                                                                 break;
@@ -2040,51 +2183,14 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                                                         nextHoleToSet = foundNext;
                                                     }
                                                     setActiveHole(nextHoleToSet);
-
-                                                    // Auto-hide details when advancing to next hole
                                                     setShowDetails(false);
-
-                                                    // Turn off GPS if hole 18 was just scored
-                                                    if (currentHole === 18) {
-                                                        setIsGPSEnabled(false);
-                                                    }
+                                                    if (currentHole === 18) setIsGPSEnabled(false);
                                                 }
 
-                                                // 2. RELEASE UI LOCK IMMEDIATELY
                                                 setIsSaving(false);
-
-                                                // 3. BACKGROUND SERVER SAVE
-                                                if (updates.length > 0) {
-                                                    saveLiveScore({
-                                                        liveRoundId,
-                                                        holeNumber: currentHole,
-                                                        playerScores: updates,
-                                                        scorerId: clientScorerId
-                                                    }).then((result) => {
-                                                        if (!result.success) {
-                                                            console.error("Save failed:", result.error);
-                                                            if (result.error && result.error.includes('locked by another device')) {
-                                                                showAlert('Error', result.error);
-                                                                // Force sync to remove stolen players
-                                                                router.refresh();
-                                                            } else {
-                                                                showAlert('Error', "Failed to save scores: " + (result.error || "Unknown error"));
-                                                            }
-                                                            return;
-                                                        }
-                                                        // Silent refresh to keep server data in sync
-                                                        router.refresh();
-                                                    }).catch((error) => {
-                                                        console.error("Background save failed:", error);
-                                                        showAlert('Error', "Failed to save scores to server. Please check your connection.");
-                                                    });
-                                                }
                                             }}
                                             disabled={isSaving}
                                             className={`${(() => {
-                                                // Check if this hole has been scored for all selected players
-                                                // Blue if: has unsaved changes OR hole is not yet scored
-                                                // Black if: hole is scored AND no unsaved changes
                                                 return (hasUnsavedChanges || !isHoleScored) ? 'bg-blue-600 hover:bg-blue-700' : 'bg-black hover:bg-gray-800';
                                             })()} w-auto whitespace-nowrap text-white font-bold px-8 py-3 mt-1 rounded-full shadow-sm transition-colors text-[18pt] flex items-center justify-center gap-2 ${isSaving ? 'opacity-70 disabled:cursor-not-allowed' : ''}`}
                                         >
@@ -2102,6 +2208,27 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                                     )
                                 }
                             </div>
+                            {/* Sync status badge */}
+                            {syncQueue.length > 0 && (
+                                <div className="flex items-center justify-end gap-1.5 pr-1 pb-1">
+                                    {isSyncing ? (
+                                        <>
+                                            <svg className="animate-spin h-3.5 w-3.5 text-blue-500" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                            </svg>
+                                            <span className="text-[9pt] text-blue-500 font-semibold">Uploading…</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="h-3.5 w-3.5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <span className="text-[9pt] text-orange-400 font-semibold">{syncQueue.length} hole{syncQueue.length > 1 ? 's' : ''} pending upload</span>
+                                        </>
+                                    )}
+                                </div>
+                            )}
                             <div className="space-y-0">
                                 {effectiveScoringPlayers.length === 0 && (
                                     <div className="flex flex-col items-center justify-center py-6">
@@ -2208,10 +2335,10 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        <div className="text-gray-700 text-[15pt] leading-tight break-words w-full">{splitName(player.name).last}</div>
+                                                        <div className="text-gray-700 text-[15pt] leading-tight wrap-break-word w-full">{splitName(player.name).last}</div>
                                                     </div>
 
-                                                    <div className="flex items-center justify-center min-w-[3.5rem] shrink-0 ml-auto mr-1">
+                                                    <div className="flex items-center justify-center min-w-14 shrink-0 ml-auto mr-1">
                                                         <div className={`bg-white font-black rounded px-1.5 h-8 flex items-center justify-center text-[19pt] min-w-[2.8rem] shadow-sm border border-gray-100 ${toParClass}`}>
                                                             {toParStr}
                                                         </div>
@@ -2230,7 +2357,7 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                                                                 -
                                                             </button>
                                                         )}
-                                                        <div className="w-[3.5rem] text-center font-bold text-[40pt] text-gray-800 leading-none">
+                                                        <div className="w-14 text-center font-bold text-[40pt] text-gray-800 leading-none">
                                                             {score || <span className="text-gray-800">{activeHolePar}</span>}
                                                         </div>
                                                         {canUpdate && (
@@ -2246,7 +2373,7 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                                             </div>
                                         );
                                     })}
-                            </div>
+                            </div>{/* end space-y-0 */}
                         </div>
                     )
                 }
@@ -2779,6 +2906,8 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                                 liveRoundId={liveRoundId || ''}
                                 participantIds={skinsParticipantIds}
                                 onParticipantsChange={setSkinsParticipantIds}
+                                carryOvers={skinsCarryOvers}
+                                onCarryOversChange={setSkinsCarryOvers}
                                 holes={defaultCourse?.holes.map(h => ({
                                     number: h.holeNumber,
                                     par: h.par,
@@ -2797,6 +2926,7 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                                         return rec;
                                     })()
                                 }))}
+                                isAdmin={isAdmin}
                             />
 
                             <div className="space-y-1">
@@ -2868,7 +2998,7 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex gap-4 items-center flex-shrink-0">
+                                                    <div className="flex gap-4 items-center shrink-0">
                                                         <div className={`bg-white font-black rounded px-1.5 h-8 flex items-center justify-center text-[19pt] min-w-[2.8rem] ${toParClass}`}>
                                                             {toParStr}
                                                         </div>
@@ -3081,7 +3211,7 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
             </main >
 
             {/* Add to Club Modal */}
-            <AddToClubModal
+            < AddToClubModal
                 isOpen={isAddToClubModalOpen}
                 onClose={() => setIsAddToClubModalOpen(false)}
                 players={activePlayers}
@@ -3092,7 +3222,7 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
             {/* Stats Modal */}
             {
                 isStatsModalOpen && (
-                    <div className="fixed inset-0 z-[300] bg-gray-50 flex flex-col overflow-hidden">
+                    <div className="fixed inset-0 z-300 bg-gray-50 flex flex-col overflow-hidden">
                         {/* Header */}
                         <div className="bg-white border-b border-gray-200 px-6 py-5 flex items-center justify-between shadow-sm sticky top-0 z-10 shrink-0">
                             <h1 className="text-[18pt] font-black text-gray-900 tracking-tight text-left">Round Stats</h1>
@@ -3202,7 +3332,7 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
             {
                 birdiePlayers.length > 0 && (
                     <div
-                        className="fixed inset-0 z-[400] flex items-center justify-center bg-black/70 animate-in fade-in duration-300"
+                        className="fixed inset-0 z-400 flex items-center justify-center bg-black/70 animate-in fade-in duration-300"
                         onClick={() => setBirdiePlayers([])}
                     >
                         <div
@@ -3246,7 +3376,7 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
             {
                 eaglePlayers.length > 0 && (
                     <div
-                        className="fixed inset-0 z-[400] flex items-center justify-center bg-black/70 animate-in fade-in duration-300"
+                        className="fixed inset-0 z-400 flex items-center justify-center bg-black/70 animate-in fade-in duration-300"
                         onClick={() => setEaglePlayers([])}
                     >
                         <div
@@ -3286,13 +3416,15 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
 
 
             {/* Pool Modal */}
-            {isPoolModalOpen && (
-                <PoolModal
-                    roundId={liveRoundId || 'latest'}
-                    isOpen={isPoolModalOpen}
-                    onClose={() => setIsPoolModalOpen(false)}
-                />
-            )}
+            {
+                isPoolModalOpen && (
+                    <PoolModal
+                        roundId={liveRoundId || 'latest'}
+                        isOpen={isPoolModalOpen}
+                        onClose={() => setIsPoolModalOpen(false)}
+                    />
+                )
+            }
 
             {
                 confirmConfig && (
@@ -3316,13 +3448,15 @@ export default function LiveScoreClient({ allPlayers, defaultCourse, initialRoun
                 playerId={selectedHistoryPlayerId || ''}
             />
 
-            {toast && (
-                <Toast
-                    message={toast.message}
-                    type={toast.type}
-                    onClose={() => setToast(null)}
-                />
-            )}
+            {
+                toast && (
+                    <Toast
+                        message={toast.message}
+                        type={toast.type}
+                        onClose={() => setToast(null)}
+                    />
+                )
+            }
         </div >
     );
 }

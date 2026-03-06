@@ -134,7 +134,7 @@ export function PoolModal({ roundId: initialRoundId, isOpen, onClose }: PoolModa
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-white overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-100 flex flex-col bg-white overflow-hidden animate-in fade-in zoom-in duration-200">
             {/* Header */}
             <header className="bg-white border-b border-gray-200 px-6 py-5 flex items-center justify-between shadow-sm sticky top-0 z-10 shrink-0">
                 <div className="flex flex-col">

@@ -163,7 +163,7 @@ export function LivePlayerSelectionModal({
 
                 {/* Warning Modal Overlay */}
                 {playerToRemove && (
-                    <div className="absolute inset-0 z-[300] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="absolute inset-0 z-300 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
                         <div className="bg-white rounded-2xl p-6 shadow-2xl max-w-sm w-full border border-red-100 transform scale-100 animate-in zoom-in duration-150">
                             <h3 className="text-xl font-black text-red-600 mb-2">Warning: Remove Player?</h3>
                             <p className="text-gray-700 mb-6 text-lg leading-snug">

@@ -468,110 +468,136 @@ export async function saveLiveScore(data: {
     playerScores: Array<{ playerId: string; strokes: number }>;
     scorerId?: string;
 }) {
+    const start = Date.now();
     try {
-        // Get the live round with course and holes
+        console.log(`[saveLiveScore] Starting for hole ${data.holeNumber}`);
+        // 1. Initial Fetch
         const liveRound = await prisma.liveRound.findUnique({
             where: { id: data.liveRoundId },
-            include: {
-                course: {
-                    include: {
-                        holes: true
-                    }
-                }
+            include: { course: { include: { holes: true } } }
+        });
+
+        if (!liveRound) throw new Error('Live round not found');
+        const hole = liveRound.course.holes.find(h => h.holeNumber === data.holeNumber);
+        if (!hole) throw new Error(`Hole ${data.holeNumber} not found`);
+
+        const mid = Date.now();
+        console.log(`[saveLiveScore] Initial fetch took ${mid - start}ms`);
+
+        // 2. Fetch all relevant LiveRoundPlayers and existing LiveScores in ONE query each
+        const playerIds = data.playerScores.map(ps => ps.playerId);
+
+        const liveRoundPlayers = await prisma.liveRoundPlayer.findMany({
+            where: {
+                liveRoundId: data.liveRoundId,
+                OR: [{ playerId: { in: playerIds } }, { id: { in: playerIds } }]
             }
         });
 
-        if (!liveRound) {
-            throw new Error('Live round not found');
-        }
+        const liveRoundPlayerIds = liveRoundPlayers.map(p => p.id);
 
-        const hole = liveRound.course.holes.find(h => h.holeNumber === data.holeNumber);
-        if (!hole) {
-            throw new Error(`Hole ${data.holeNumber} not found`);
-        }
+        const existingScores = await prisma.liveScore.findMany({
+            where: {
+                liveRoundPlayerId: { in: liveRoundPlayerIds },
+                holeId: hole.id
+            }
+        });
 
-        // Check if user is admin
-        const cookieStore = await cookies();
-        const isAdmin = cookieStore.get('admin_session')?.value === 'true';
+        // We also need ALL scores for these players to calculate totals accurately
+        const allScoresForPlayers = await prisma.liveScore.findMany({
+            where: { liveRoundPlayerId: { in: liveRoundPlayerIds } },
+            include: { hole: { select: { holeNumber: true } } }
+        });
 
-        // Save scores for each player
-        for (const ps of data.playerScores) {
-            // Find the live round player (could be by player_id OR direct LiveRoundPlayer id for guests)
-            const liveRoundPlayer = await prisma.liveRoundPlayer.findFirst({
-                where: {
-                    liveRoundId: data.liveRoundId,
-                    OR: [
-                        { playerId: ps.playerId },
-                        { id: ps.playerId }
-                    ]
-                }
-            });
+        // 3. Prepare the massive transaction operations array
+        const transactionOps: any[] = [];
 
-            if (!liveRoundPlayer) {
-                console.warn(`Player ${ps.playerId} not found in live round`);
-                continue;
+        liveRoundPlayers.forEach(player => {
+            // Find the submitted strokes for this player
+            const targetScore = data.playerScores.find(ps => ps.playerId === player.playerId || ps.playerId === player.id)?.strokes;
+            if (targetScore === undefined) return;
+
+            // A. Update Scorer if needed
+            if (player.scorerId !== data.scorerId) {
+                transactionOps.push(
+                    prisma.liveRoundPlayer.update({
+                        where: { id: player.id },
+                        data: { scorerId: data.scorerId }
+                    })
+                );
             }
 
-            // ENFORCE OWNERSHIP -> RELAXED TO "LAST WRITER WINS"
-            // If scorer_id is different, we "steal" ownership and update it.
-            // This works in tandem with the Client-Side "Auto-Unselect" to resolve conflicts.
-            if (liveRoundPlayer.scorerId !== data.scorerId) {
-                await prisma.liveRoundPlayer.update({
-                    where: { id: liveRoundPlayer.id },
-                    data: { scorerId: data.scorerId }
-                });
-            }
-
-            // Save or update the score
-            const existingScore = await prisma.liveScore.findFirst({
-                where: {
-                    liveRoundPlayerId: liveRoundPlayer.id,
-                    holeId: hole.id
-                }
-            });
-
+            // B. Upsert Score
+            const existingScore = existingScores.find(s => s.liveRoundPlayerId === player.id);
             if (existingScore) {
-                await prisma.liveScore.update({
-                    where: { id: existingScore.id },
-                    data: { strokes: ps.strokes }
-                });
+                transactionOps.push(
+                    prisma.liveScore.update({
+                        where: { id: existingScore.id },
+                        data: { strokes: targetScore }
+                    })
+                );
             } else {
-                await prisma.liveScore.create({
-                    data: {
-                        liveRoundPlayerId: liveRoundPlayer.id,
-                        holeId: hole.id,
-                        strokes: ps.strokes
-                    }
-                });
+                transactionOps.push(
+                    prisma.liveScore.create({
+                        data: {
+                            liveRoundPlayerId: player.id,
+                            holeId: hole.id,
+                            strokes: targetScore
+                        }
+                    })
+                );
             }
 
-            // Recalculate totals
-            const allScores = await prisma.liveScore.findMany({
-                where: { liveRoundPlayerId: liveRoundPlayer.id },
-                include: { hole: { select: { holeNumber: true } } }
-            });
-
+            // C. Calculate Totals (using all fetched scores + the new score we are currently saving)
             let gross = 0;
             let front = 0;
             let back = 0;
+            let foundCurrentHole = false;
 
-            allScores.forEach(s => {
-                gross += s.strokes;
-                if (s.hole?.holeNumber && s.hole.holeNumber <= 9) front += s.strokes;
-                else back += s.strokes;
-            });
+            allScoresForPlayers
+                .filter(s => s.liveRoundPlayerId === player.id)
+                .forEach(s => {
+                    // Replace the score in our manual calculation if it's the current hole being updated
+                    const isCurrentHole = s.hole?.holeNumber === data.holeNumber;
+                    const effectiveStrokes = isCurrentHole ? targetScore : s.strokes;
 
-            await prisma.liveRoundPlayer.update({
-                where: { id: liveRoundPlayer.id },
-                data: {
-                    grossScore: gross,
-                    frontNine: front > 0 ? front : null,
-                    backNine: back > 0 ? back : null
-                }
-            });
-        }
+                    if (isCurrentHole) foundCurrentHole = true;
+                    if (!s.hole?.holeNumber) return;
 
-        revalidatePath('/live');
+                    gross += effectiveStrokes;
+                    if (s.hole.holeNumber <= 9) front += effectiveStrokes;
+                    else back += effectiveStrokes;
+                });
+
+            // If it was a create (not in allScoresForPlayers yet), add it to totals now
+            if (!foundCurrentHole) {
+                gross += targetScore;
+                if (data.holeNumber <= 9) front += targetScore;
+                else back += targetScore;
+            }
+
+            // Push calculation update
+            transactionOps.push(
+                prisma.liveRoundPlayer.update({
+                    where: { id: player.id },
+                    data: {
+                        grossScore: gross,
+                        frontNine: front > 0 ? front : null,
+                        backNine: back > 0 ? back : null
+                    }
+                })
+            );
+        });
+
+        // 4. Execute all queries in a single transaction
+        const beforeTx = Date.now();
+        await prisma.$transaction(transactionOps);
+
+        const end = Date.now();
+        console.log(`[saveLiveScore] Transaction took ${end - beforeTx}ms. Total: ${end - start}ms`);
+
+        // Skipping revalidatePath('/live') - it causes a 7-11s server re-render on every save.
+        // Client manages its own state via the offline-first sync queue.
         return { success: true };
     } catch (error) {
         console.error('Failed to save live score:', error);
@@ -627,3 +653,4 @@ export async function getAllLiveRounds() {
         };
     }
 }
+
