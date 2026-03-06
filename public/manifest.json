@@ -6,7 +6,7 @@
     "start_url": "/",
     "scope": "/",
     "display": "standalone",
-    "display_override": ["standalone", "browser"],
+    "display_override": ["window-controls-overlay", "tabbed", "standalone", "browser"],
     "background_color": "#ffffff",
     "theme_color": "#000000",
     "orientation": "portrait-primary",
@@ -71,5 +71,35 @@
             "text": "text",
             "url": "url"
         }
+    },
+    "widgets": [
+        {
+            "name": "Live Scores Widget",
+            "description": "Quick view of live golf scores",
+            "tag": "live-scores",
+            "ms_ac_template": "/widgets/live-scores-template.json",
+            "data": "/widgets/live-scores-data.json",
+            "type": "application/json",
+            "screenshots": [
+                {
+                    "src": "/images/login-bg.png",
+                    "sizes": "1024x1024",
+                    "label": "Live Scores Widget screenshot"
+                }
+            ],
+            "icons": [
+                {
+                    "src": "/icon-192x192.png",
+                    "sizes": "192x192",
+                    "type": "image/jpeg"
+                }
+            ]
+        }
+    ],
+    "edge_side_panel": {
+        "preferred_width": 400
+    },
+    "note_taking": {
+        "new_note_url": "/?note=new"
     }
 }
